@@ -1,0 +1,31 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# testing
+coverage/
+
+# Next.js & build outputs
+.next/
+out/
+build/
+
+# misc
+.DS_Store
+*.log
+
+# environment files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE/editor
+.vscode/
+.idea/
+*.iml
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
