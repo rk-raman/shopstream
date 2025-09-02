@@ -80,15 +80,15 @@ app.use("*", (req, res) => {
 });
 
 // Global error handler
-app.use(errorMiddleware.errorHandler);
+//app.use(errorMiddleware.errorHandler);
 
 // Initialize databases and services
 const initializeServices = async () => {
   try {
     // Connect to databases
     await connectDB();
-    await connectRedis();
-    await initElasticsearch();
+    // await connectRedis();
+    // await initElasticsearch();
 
     console.log("All services initialized successfully");
   } catch (error) {
