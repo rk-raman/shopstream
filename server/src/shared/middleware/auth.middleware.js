@@ -1,18 +1,19 @@
-const jwt = require("jsonwebtoken");
 const User = require("../../modules/user/models/User.model");
 const ApiError = require("../utils/apiError");
 const asyncHandler = require("../utils/asyncHandler");
+const { verifyAccessToken, extractTokenFromHeader } = require("../utils/jwt");
 
 // Middleware to authenticate JWT token
 const authenticate = asyncHandler(async (req, res, next) => {
   let token;
 
-  // Get token from header
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    token = req.headers.authorization.split(" ")[1];
+  // Extract token from header
+  if (req.headers.authorization) {
+    try {
+      token = extractTokenFromHeader(req.headers.authorization);
+    } catch (err) {
+      throw new ApiError(401, err.message);
+    }
   }
 
   if (!token) {
@@ -21,60 +22,36 @@ const authenticate = asyncHandler(async (req, res, next) => {
 
   try {
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+    const decoded = verifyAccessToken(token);
 
     // Get user from token
     const user = await User.findById(decoded.userId).select("-password");
 
-    if (!user) {
-      throw new ApiError(401, "User no longer exists");
-    }
+    if (!user) throw new ApiError(401, "User no longer exists");
+    if (!user.isActive) throw new ApiError(401, "Account is deactivated");
+    if (user.isLocked) throw new ApiError(401, "Account is temporarily locked");
 
-    if (!user.isActive) {
-      throw new ApiError(401, "Account is deactivated");
-    }
-
-    // Check if account is locked
-    if (user.isLocked) {
-      throw new ApiError(401, "Account is temporarily locked");
-    }
-
-    // Add user to request object
+    // Add user to request
     req.user = user;
     next();
   } catch (error) {
-    if (error.name === "JsonWebTokenError") {
-      throw new ApiError(401, "Invalid token");
-    } else if (error.name === "TokenExpiredError") {
-      throw new ApiError(401, "Token expired");
-    } else {
-      throw error;
-    }
+    throw error; // errors already normalized in jwt.utils
   }
 });
 
 // Middleware to check if user is authenticated (optional)
 const optionalAuth = asyncHandler(async (req, res, next) => {
-  let token;
-
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    token = req.headers.authorization.split(" ")[1];
-  }
-
-  if (token) {
+  if (req.headers.authorization) {
     try {
-      const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
-      const user = await User.findById(decoded.userId).select("-password");
+      const token = extractTokenFromHeader(req.headers.authorization);
+      const decoded = verifyAccessToken(token);
 
+      const user = await User.findById(decoded.userId).select("-password");
       if (user && user.isActive && !user.isLocked) {
         req.user = user;
       }
-    } catch (error) {
-      // Ignore errors for optional auth
-      console.log("Optional auth failed:", error.message);
+    } catch (err) {
+      console.log("Optional auth failed:", err.message);
     }
   }
 
@@ -82,43 +59,32 @@ const optionalAuth = asyncHandler(async (req, res, next) => {
 });
 
 // Middleware to authorize user roles
-const authorize = (...roles) => {
-  return (req, res, next) => {
-    if (!req.user) {
-      throw new ApiError(401, "Authentication required");
-    }
-
+const authorize =
+  (...roles) =>
+  (req, res, next) => {
+    if (!req.user) throw new ApiError(401, "Authentication required");
     if (!roles.includes(req.user.role)) {
       throw new ApiError(403, "Insufficient permissions");
     }
-
     next();
   };
-};
 
 // Middleware to check if user owns the resource
-const checkOwnership = (resourceIdParam = "id") => {
-  return asyncHandler(async (req, res, next) => {
-    if (!req.user) {
-      throw new ApiError(401, "Authentication required");
-    }
+const checkOwnership = (resourceIdParam = "id") =>
+  asyncHandler(async (req, res, next) => {
+    if (!req.user) throw new ApiError(401, "Authentication required");
 
     const resourceId = req.params[resourceIdParam];
     const userId = req.user._id.toString();
 
-    // Admin can access any resource
-    if (req.user.role === "admin") {
-      return next();
-    }
+    if (req.user.role === "admin") return next();
 
-    // Check if user owns the resource
     if (resourceId !== userId) {
       throw new ApiError(403, "Access denied");
     }
 
     next();
   });
-};
 
 // Middleware to verify email
 const requireEmailVerification = (req, res, next) => {
@@ -139,7 +105,6 @@ const requirePhoneVerification = (req, res, next) => {
 // Middleware to update last active time
 const updateLastActive = asyncHandler(async (req, res, next) => {
   if (req.user) {
-    // Update last active time without waiting
     User.findByIdAndUpdate(req.user._id, {
       lastActiveAt: new Date(),
       "deviceInfo.lastIP": req.ip,
@@ -153,7 +118,6 @@ const updateLastActive = asyncHandler(async (req, res, next) => {
 const checkAccountStatus = asyncHandler(async (req, res, next) => {
   const user = req.user;
 
-  // Check if account is locked
   if (user.accountLockedUntil && user.accountLockedUntil > Date.now()) {
     const lockTimeRemaining = Math.ceil(
       (user.accountLockedUntil - Date.now()) / (1000 * 60)
@@ -164,7 +128,6 @@ const checkAccountStatus = asyncHandler(async (req, res, next) => {
     );
   }
 
-  // If lock time has expired, reset it
   if (user.accountLockedUntil && user.accountLockedUntil <= Date.now()) {
     await User.findByIdAndUpdate(user._id, {
       $unset: { accountLockedUntil: 1 },
@@ -175,13 +138,9 @@ const checkAccountStatus = asyncHandler(async (req, res, next) => {
   next();
 });
 
-// Middleware for admin only routes
+// Predefined middlewares
 const adminOnly = authorize("admin");
-
-// Middleware for seller and admin routes
 const sellerOrAdmin = authorize("seller", "admin");
-
-// Middleware for customer routes (authenticated users)
 const customerOnly = authorize("customer", "seller", "admin");
 
 module.exports = {
