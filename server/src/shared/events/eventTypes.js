@@ -1,10 +1,55 @@
 const USER_EVENTS = {
+  // Authentication Events
   USER_REGISTERED: "user.registered",
-  USER_UPDATED: "user.updated",
   USER_LOGGED_IN: "user.logged_in",
   USER_LOGGED_OUT: "user.logged_out",
+  USER_LOGIN_FAILED: "user.login_failed",
+  USER_ACCOUNT_LOCKED: "user.account_locked",
+  USER_ACCOUNT_UNLOCKED: "user.account_unlocked",
+
+  // Profile Events
+  USER_UPDATED: "user.updated",
+  USER_PROFILE_COMPLETED: "user.profile_completed",
+  USER_AVATAR_UPDATED: "user.avatar_updated",
+  USER_PREFERENCES_UPDATED: "user.preferences_updated",
+
+  // Security Events
   PASSWORD_CHANGED: "user.password_changed",
+  PASSWORD_RESET_REQUESTED: "user.password_reset_requested",
+  PASSWORD_RESET_COMPLETED: "user.password_reset_completed",
   EMAIL_VERIFIED: "user.email_verified",
+  PHONE_VERIFIED: "user.phone_verified",
+  TWO_FACTOR_ENABLED: "user.two_factor_enabled",
+  TWO_FACTOR_DISABLED: "user.two_factor_disabled",
+
+  // Address Events
+  ADDRESS_ADDED: "user.address_added",
+  ADDRESS_UPDATED: "user.address_updated",
+  ADDRESS_DELETED: "user.address_deleted",
+  DEFAULT_ADDRESS_CHANGED: "user.default_address_changed",
+
+  // Wishlist Events
+  WISHLIST_UPDATED: "user.wishlist_updated",
+  WISHLIST_ITEM_ADDED: "user.wishlist_item_added",
+  WISHLIST_ITEM_REMOVED: "user.wishlist_item_removed",
+  WISHLIST_CLEARED: "user.wishlist_cleared",
+
+  // Account Status Events
+  USER_ACTIVATED: "user.activated",
+  USER_DEACTIVATED: "user.deactivated",
+  USER_DELETED: "user.deleted",
+  USER_ROLE_CHANGED: "user.role_changed",
+
+  // Activity Events
+  USER_ACTIVITY_TRACKED: "user.activity_tracked",
+  USER_SESSION_STARTED: "user.session_started",
+  USER_SESSION_ENDED: "user.session_ended",
+  USER_DEVICE_CHANGED: "user.device_changed",
+
+  // Social Events
+  USER_SOCIAL_LOGIN: "user.social_login",
+  USER_SOCIAL_ACCOUNT_LINKED: "user.social_account_linked",
+  USER_SOCIAL_ACCOUNT_UNLINKED: "user.social_account_unlinked",
 };
 
 const PRODUCT_EVENTS = {
