@@ -17,7 +17,7 @@
     "seed": "node scripts/seedData.js",
     "db:migrate": "node scripts/migrate.js"
   },
-  "author": "Jonas Schmedtmann",
+  "author": "Raman",
   "license": "ISC",
   "dependencies": {
     "@elastic/elasticsearch": "^8.7.0",
