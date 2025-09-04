@@ -103,7 +103,6 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const compression = require("compression");
-const rateLimit = require("express-rate-limit");
 
 // Import middleware
 const logger = require("./shared/middleware/logger.middleware");
@@ -114,8 +113,15 @@ const {
 
 // Import routes
 const routes = require("./routes");
+const {
+  apiLimiter,
+  speedLimiter,
+} = require("./shared/middleware/rateLimiter.middleware");
 
 const app = express();
+// Apply to all requests
+app.use(apiLimiter);
+app.use(speedLimiter);
 
 // Trust proxy (for rate limiting behind reverse proxy)
 app.set("trust proxy", 1);
@@ -137,17 +143,6 @@ app.use(
   })
 );
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === "production" ? 100 : 1000, // requests per windowMs
-  message: {
-    success: false,
-    message: "Too many requests from this IP, please try again later.",
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
 app.use("/api/", limiter);
 
 // Body parsing middleware

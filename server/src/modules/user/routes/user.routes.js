@@ -1,14 +1,13 @@
 const express = require("express");
 const userController = require("../controllers/user.controller");
 const userValidators = require("../validators/user.validators");
-const auth = require("../../../shared/middleware/auth");
-const adminAuth = require("../../../shared/middleware/adminAuth");
+const { authenticate, adminOnly } = require("../../../shared/middleware/auth");
 const upload = require("../../../shared/middleware/upload");
 
 const router = express.Router();
 
-// Apply authentication middleware to all routes
-router.use(auth);
+// 🔹 Apply authentication middleware to all profile & wishlist routes
+router.use(authenticate);
 
 // Profile routes
 router.get("/profile", userController.getProfile);
@@ -30,8 +29,8 @@ router.post(
 router.delete("/wishlist/:productId", userController.removeFromWishlist);
 router.delete("/wishlist", userController.clearWishlist);
 
-// Admin only routes
-router.use(adminAuth);
+// 🔹 Admin-only routes
+router.use(adminOnly);
 router.get("/", userController.getAllUsers);
 router.get("/:userId", userController.getUserById);
 router.put(

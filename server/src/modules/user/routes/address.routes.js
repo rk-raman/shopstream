@@ -1,12 +1,12 @@
 const express = require("express");
 const addressController = require("../controllers/address.controller");
 const userValidators = require("../validators/user.validators");
-const auth = require("../../../shared/middleware/auth");
+const { authenticate } = require("../../../shared/middleware/auth.middleware");
 
 const router = express.Router();
 
 // Apply authentication middleware to all routes
-router.use(auth);
+router.use(authenticate); // apply authentication globally
 
 // Address CRUD routes
 router.get("/", addressController.getAddresses);
