@@ -1,7 +1,10 @@
 const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
 const mongoosePaginate = require("mongoose-paginate-v2");
 const addressSchema = require("./Address.model");
+const {
+  hashPassword,
+  comparePassword,
+} = require("../../../shared/utils/bcrypt");
 
 const userSchema = new mongoose.Schema(
   {
@@ -284,7 +287,7 @@ userSchema.pre("save", async function (next) {
   try {
     // Hash password if modified
     if (this.isModified("password") && this.password) {
-      this.password = await bcrypt.hash(this.password, 12);
+      this.password = await hashPassword(this.password, 12);
     }
 
     // Update lastActiveAt on every save
@@ -323,7 +326,7 @@ userSchema.pre("save", async function (next) {
 // Instance methods
 userSchema.methods.comparePassword = async function (candidatePassword) {
   if (!this.password) return false;
-  return await bcrypt.compare(candidatePassword, this.password);
+  return await comparePassword(candidatePassword, this.password);
 };
 
 userSchema.methods.getDefaultAddress = function () {
