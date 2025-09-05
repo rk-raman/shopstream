@@ -15,11 +15,7 @@ const register = asyncHandler(async (req, res) => {
   // Set refresh token as httpOnly cookie using utility
   setRefreshTokenCookie(res, refreshToken);
 
-  res.status(201).json({
-    success: true,
-    message: "User registered successfully",
-    data: { user, accessToken },
-  });
+  return res.created({ user, accessToken }, "User registered successfully");
 });
 
 // Login
@@ -31,12 +27,7 @@ const login = asyncHandler(async (req, res) => {
 
   // Set refresh token cookie using utility
   setRefreshTokenCookie(res, refreshToken);
-
-  res.json({
-    success: true,
-    message: "Login successful",
-    data: { user, accessToken },
-  });
+  return res.success({ user, accessToken }, "Login successful");
 });
 
 // Logout
@@ -47,7 +38,7 @@ const logout = asyncHandler(async (req, res) => {
   // Clear refresh token cookie using utility
   clearRefreshTokenCookie(res);
 
-  res.json({ success: true, message: "Logged out successfully" });
+  return res.success(null, "Logged out successfully");
 });
 
 // Refresh token
@@ -60,7 +51,7 @@ const refreshToken = asyncHandler(async (req, res) => {
   // Set new refresh token cookie using utility
   setRefreshTokenCookie(res, newRefreshToken);
 
-  res.json({ success: true, data: { accessToken } });
+  return res.success({ accessToken }, "Token refreshed successfully");
 });
 
 // Change password
@@ -71,36 +62,36 @@ const changePassword = asyncHandler(async (req, res) => {
     req.body.newPassword
   );
 
-  res.json({ success: true, message: "Password changed successfully" });
+  return res.success(null, "Password changed successfully");
 });
 
 // Forgot password
 const forgotPassword = asyncHandler(async (req, res) => {
   await authService.forgotPassword(req.body.email);
-  res.json({ success: true, message: "Password reset email sent" });
+  return res.success(null, "Password reset email sent");
 });
 
 // Reset password
 const resetPassword = asyncHandler(async (req, res) => {
   await authService.resetPassword(req.body.token, req.body.newPassword);
-  res.json({ success: true, message: "Password reset successful" });
+  return res.success(null, "Password reset successful");
 });
 
 // Verify email
 const verifyEmail = asyncHandler(async (req, res) => {
   await authService.verifyEmail(req.params.token);
-  res.json({ success: true, message: "Email verified successfully" });
+  return res.success(null, "Email verified successfully");
 });
 
 // Resend verification email
 const resendVerificationEmail = asyncHandler(async (req, res) => {
   await authService.resendVerificationEmail(req.user._id);
-  res.json({ success: true, message: "Verification email sent" });
+  return res.success(null, "Verification email sent");
 });
 
 // Get current user
 const getMe = asyncHandler(async (req, res) => {
-  res.json({ success: true, data: { user: req.user } });
+  return res.success({ user: req.user }, "User profile retrieved successfully");
 });
 
 module.exports = {

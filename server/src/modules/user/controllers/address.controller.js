@@ -2,17 +2,16 @@ const userService = require("../services/user.service");
 const ApiError = require("../../../shared/utils/apiError");
 const asyncHandler = require("../../../shared/utils/asyncHandler");
 
-// Get all addresses for current user
 const getAddresses = asyncHandler(async (req, res) => {
   const user = await userService.getUserById(req.user._id);
 
-  res.json({
-    success: true,
-    data: {
+  return res.success(
+    {
       addresses: user.addresses,
       count: user.addresses.length,
     },
-  });
+    "Addresses retrieved successfully"
+  );
 });
 
 // Get single address by ID
@@ -22,15 +21,10 @@ const getAddress = asyncHandler(async (req, res) => {
 
   const address = user.addresses.id(addressId);
   if (!address) {
-    throw new ApiError(404, "Address not found");
+    throw ApiError.notFound("Address not found", "ADDRESS_NOT_FOUND");
   }
 
-  res.json({
-    success: true,
-    data: {
-      address,
-    },
-  });
+  return res.success({ address }, "Address retrieved successfully");
 });
 
 // Add new address
@@ -39,14 +33,7 @@ const addAddress = asyncHandler(async (req, res) => {
   const addressData = req.body;
 
   const address = await userService.addAddress(userId, addressData);
-
-  res.status(201).json({
-    success: true,
-    message: "Address added successfully",
-    data: {
-      address,
-    },
-  });
+  return res.created({ address }, "Address added successfully");
 });
 
 // Update existing address
@@ -60,14 +47,7 @@ const updateAddress = asyncHandler(async (req, res) => {
     addressId,
     updateData
   );
-
-  res.json({
-    success: true,
-    message: "Address updated successfully",
-    data: {
-      address,
-    },
-  });
+  return res.success({ address }, "Address updated successfully");
 });
 
 // Delete address
@@ -76,11 +56,7 @@ const deleteAddress = asyncHandler(async (req, res) => {
   const { addressId } = req.params;
 
   await userService.deleteAddress(userId, addressId);
-
-  res.json({
-    success: true,
-    message: "Address deleted successfully",
-  });
+  return res.success(null, "Address deleted successfully");
 });
 
 // Set address as default
@@ -92,13 +68,7 @@ const setDefaultAddress = asyncHandler(async (req, res) => {
     isDefault: true,
   });
 
-  res.json({
-    success: true,
-    message: "Default address updated successfully",
-    data: {
-      address,
-    },
-  });
+  return res.success({ address }, "Default address updated successfully");
 });
 
 // Get default address
@@ -107,21 +77,13 @@ const getDefaultAddress = asyncHandler(async (req, res) => {
   const defaultAddress = user.getDefaultAddress();
 
   if (!defaultAddress) {
-    return res.json({
-      success: true,
-      message: "No default address found",
-      data: {
-        address: null,
-      },
-    });
+    return res.success({ address: null }, "No default address found");
   }
 
-  res.json({
-    success: true,
-    data: {
-      address: defaultAddress,
-    },
-  });
+  return res.success(
+    { address: defaultAddress },
+    "Default address retrieved successfully"
+  );
 });
 
 // Get addresses by type
@@ -131,13 +93,13 @@ const getAddressesByType = asyncHandler(async (req, res) => {
 
   const addresses = user.addresses.filter((address) => address.type === type);
 
-  res.json({
-    success: true,
-    data: {
+  return res.success(
+    {
       addresses,
       count: addresses.length,
     },
-  });
+    `${type} addresses retrieved successfully`
+  );
 });
 
 module.exports = {

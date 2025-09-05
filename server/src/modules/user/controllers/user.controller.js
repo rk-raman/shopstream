@@ -5,13 +5,7 @@ const asyncHandler = require("../../../shared/utils/asyncHandler");
 // Get user profile
 const getProfile = asyncHandler(async (req, res) => {
   const user = await userService.getUserById(req.user._id);
-
-  res.json({
-    success: true,
-    data: {
-      user,
-    },
-  });
+  return res.success({ user }, "Profile retrieved successfully");
 });
 
 // Update user profile
@@ -26,14 +20,7 @@ const updateProfile = asyncHandler(async (req, res) => {
   delete updateData.refreshTokens;
 
   const user = await userService.updateUser(userId, updateData);
-
-  res.json({
-    success: true,
-    message: "Profile updated successfully",
-    data: {
-      user,
-    },
-  });
+  return res.success({ user }, "Profile updated successfully");
 });
 
 // Upload avatar
@@ -55,13 +42,7 @@ const uploadAvatar = asyncHandler(async (req, res) => {
 
   const user = await userService.updateUser(userId, avatarData);
 
-  res.json({
-    success: true,
-    message: "Avatar uploaded successfully",
-    data: {
-      user,
-    },
-  });
+  return res.success({ user }, "Avatar uploaded successfully");
 });
 
 // Delete user account (soft delete)
@@ -72,39 +53,27 @@ const deleteAccount = asyncHandler(async (req, res) => {
 
   // Clear cookies
   res.clearCookie("refreshToken");
-
-  res.json({
-    success: true,
-    message: "Account deleted successfully",
-  });
+  return res.success(null, "Account deleted successfully");
 });
 
 // Get user's addresses
 const getAddresses = asyncHandler(async (req, res) => {
   const user = await userService.getUserById(req.user._id);
-
-  res.json({
-    success: true,
-    data: {
+  return res.success(
+    {
       addresses: user.addresses,
+      count: user.addresses.length,
     },
-  });
+    "Addresses retrieved successfully"
+  );
 });
 
 // Add new address
 const addAddress = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const addressData = req.body;
-
   const address = await userService.addAddress(userId, addressData);
-
-  res.status(201).json({
-    success: true,
-    message: "Address added successfully",
-    data: {
-      address,
-    },
-  });
+  return res.created({ address }, "Address added successfully");
 });
 
 // Update address
@@ -119,13 +88,7 @@ const updateAddress = asyncHandler(async (req, res) => {
     updateData
   );
 
-  res.json({
-    success: true,
-    message: "Address updated successfully",
-    data: {
-      address,
-    },
-  });
+  return res.success({ address }, "Address updated successfully");
 });
 
 // Delete address
@@ -135,25 +98,15 @@ const deleteAddress = asyncHandler(async (req, res) => {
 
   await userService.deleteAddress(userId, addressId);
 
-  res.json({
-    success: true,
-    message: "Address deleted successfully",
-  });
+  return res.success(null, "Address deleted successfully");
 });
 
 // Get wishlist
 const getWishlist = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const { populate = "true" } = req.query;
-
   const wishlist = await userService.getWishlist(userId, populate === "true");
-
-  res.json({
-    success: true,
-    data: {
-      wishlist,
-    },
-  });
+  return res.success({ wishlist }, "Wishlist retrieved successfully");
 });
 
 // Add to wishlist
@@ -162,11 +115,7 @@ const addToWishlist = asyncHandler(async (req, res) => {
   const { productId } = req.body;
 
   await userService.addToWishlist(userId, productId);
-
-  res.status(201).json({
-    success: true,
-    message: "Product added to wishlist",
-  });
+  return res.created(null, "Product added to wishlist");
 });
 
 // Remove from wishlist
@@ -175,23 +124,14 @@ const removeFromWishlist = asyncHandler(async (req, res) => {
   const { productId } = req.params;
 
   await userService.removeFromWishlist(userId, productId);
-
-  res.json({
-    success: true,
-    message: "Product removed from wishlist",
-  });
+  return res.success(null, "Product removed from wishlist");
 });
 
 // Clear entire wishlist
 const clearWishlist = asyncHandler(async (req, res) => {
   const userId = req.user._id;
-
   await userService.updateUser(userId, { wishlist: [] });
-
-  res.json({
-    success: true,
-    message: "Wishlist cleared successfully",
-  });
+  return res.success(null, "Wishlist cleared successfully");
 });
 
 // Admin only: Get all users
@@ -232,54 +172,31 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
   const users = await User.paginate(filter, options);
 
-  res.json({
-    success: true,
-    data: users,
-  });
+  return res.paginated(users, "Users retrieved successfully");
 });
 
 // Admin only: Get user by ID
 const getUserById = asyncHandler(async (req, res) => {
   const { userId } = req.params;
   const user = await userService.getUserById(userId);
-
-  res.json({
-    success: true,
-    data: {
-      user,
-    },
-  });
+  return res.success({ user }, "User retrieved successfully");
 });
 
 // Admin only: Update user
 const updateUserById = asyncHandler(async (req, res) => {
   const { userId } = req.params;
   const updateData = req.body;
-
   // Prevent updating password through this endpoint
   delete updateData.password;
-
   const user = await userService.updateUser(userId, updateData);
-
-  res.json({
-    success: true,
-    message: "User updated successfully",
-    data: {
-      user,
-    },
-  });
+  return res.success({ user }, "User updated successfully");
 });
 
 // Admin only: Delete user
 const deleteUserById = asyncHandler(async (req, res) => {
   const { userId } = req.params;
-
   await userService.deleteUser(userId);
-
-  res.json({
-    success: true,
-    message: "User deleted successfully",
-  });
+  return res.success(null, "User deleted successfully");
 });
 
 module.exports = {
