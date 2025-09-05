@@ -97,6 +97,29 @@ const REVIEW_EVENTS = {
 };
 
 const NOTIFICATION_EVENTS = {
+  // Notification lifecycle events
+  NOTIFICATION_CREATED: "notification.created",
+  NOTIFICATION_SENT: "notification.sent",
+  NOTIFICATION_DELIVERED: "notification.delivered",
+  NOTIFICATION_READ: "notification.read",
+  NOTIFICATION_CLICKED: "notification.clicked",
+  NOTIFICATION_DISMISSED: "notification.dismissed",
+  NOTIFICATION_FAILED: "notification.failed",
+  NOTIFICATION_EXPIRED: "notification.expired",
+
+  // Template events
+  TEMPLATE_CREATED: "notification.template.created",
+  TEMPLATE_UPDATED: "notification.template.updated",
+  TEMPLATE_DELETED: "notification.template.deleted",
+
+  // Bulk operations
+  BULK_NOTIFICATION_SENT: "notification.bulk.sent",
+
+  // Analytics and system events
+  NOTIFICATION_ANALYTICS: "notification.analytics",
+  NOTIFICATION_SYSTEM_HEALTH: "notification.system.health",
+
+  // Legacy events (for backward compatibility)
   EMAIL_SENT: "notification.email_sent",
   SMS_SENT: "notification.sms_sent",
   PUSH_NOTIFICATION_SENT: "notification.push_sent",
