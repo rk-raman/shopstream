@@ -46,6 +46,7 @@
 
 const express = require("express");
 const router = express.Router();
+const userRoutes = require("../modules/user/routes");
 
 // Health check endpoint
 router.get("/health", (req, res) => {
@@ -60,6 +61,8 @@ router.get("/health", (req, res) => {
     },
   });
 });
+
+router.use(userRoutes);
 
 // API Info endpoint
 router.get("/", (req, res) => {

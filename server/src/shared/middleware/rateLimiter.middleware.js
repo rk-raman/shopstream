@@ -1,30 +1,24 @@
 const rateLimit = require("express-rate-limit");
 const slowDown = require("express-slow-down");
 const RedisStore = require("rate-limit-redis");
-const redis = require("redis");
 const ApiError = require("../utils/apiError");
+const { getRedisClient } = require("../../config/redis"); // centralized redis client
 
-// Create Redis client if available
-let redisClient;
-try {
-  if (process.env.REDIS_URL) {
-    redisClient = redis.createClient({
-      url: process.env.REDIS_URL,
+// Helper to get Redis store or fallback
+const getRedisStore = () => {
+  try {
+    const client = getRedisClient();
+    return new RedisStore({
+      sendCommand: (...args) => client.sendCommand(args),
     });
-
-    redisClient.on("error", (err) => {
-      console.log("Redis Client Error", err);
-    });
-
-    redisClient.connect();
+  } catch (err) {
+    console.log("⚠️ Redis not available for rate limiter, using memory store");
+    return undefined; // fallback to in-memory store
   }
-} catch (error) {
-  console.log("Redis connection failed, using memory store for rate limiting");
-}
+};
 
 // Custom key generator for rate limiting
 const generateKey = (req) => {
-  // Use user ID if authenticated, otherwise use IP
   if (req.user) {
     return `${req.user._id}:${req.route?.path || req.path}`;
   }
@@ -39,190 +33,139 @@ const rateLimitHandler = (req, res, next) => {
 
 // General API rate limiter
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-  store: redisClient
-    ? new RedisStore({
-        sendCommand: (...args) => redisClient.sendCommand(args),
-      })
-    : undefined,
+  store: getRedisStore(),
   keyGenerator: generateKey,
   handler: rateLimitHandler,
-  skip: (req) => {
-    // Skip rate limiting for admin users
-    return req.user && req.user.role === "admin";
-  },
+  skip: (req) => req.user?.role === "admin",
 });
 
-// Strict rate limiter for auth endpoints
+// Auth endpoints limiter
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 auth requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 5,
   standardHeaders: true,
   legacyHeaders: false,
-  store: redisClient
-    ? new RedisStore({
-        sendCommand: (...args) => redisClient.sendCommand(args),
-      })
-    : undefined,
+  store: getRedisStore(),
   keyGenerator: (req) => req.ip,
   handler: rateLimitHandler,
-  skipSuccessfulRequests: true, // Don't count successful requests
+  skipSuccessfulRequests: true,
 });
 
-// Login rate limiter
+// Login limiter
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 login attempts per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 5,
   standardHeaders: true,
   legacyHeaders: false,
-  store: redisClient
-    ? new RedisStore({
-        sendCommand: (...args) => redisClient.sendCommand(args),
-      })
-    : undefined,
+  store: getRedisStore(),
   keyGenerator: (req) => `login:${req.body.email || req.ip}`,
   handler: rateLimitHandler,
   skipSuccessfulRequests: true,
 });
 
-// Password reset rate limiter
+// Password reset limiter
 const passwordResetLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3, // limit to 3 password reset requests per hour
+  windowMs: 60 * 60 * 1000,
+  max: 3,
   standardHeaders: true,
   legacyHeaders: false,
-  store: redisClient
-    ? new RedisStore({
-        sendCommand: (...args) => redisClient.sendCommand(args),
-      })
-    : undefined,
+  store: getRedisStore(),
   keyGenerator: (req) => `password-reset:${req.body.email || req.ip}`,
   handler: rateLimitHandler,
 });
 
-// Email verification rate limiter
+// Email verification limiter
 const emailVerificationLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3, // limit to 3 email verification requests per hour
+  windowMs: 60 * 60 * 1000,
+  max: 3,
   standardHeaders: true,
   legacyHeaders: false,
-  store: redisClient
-    ? new RedisStore({
-        sendCommand: (...args) => redisClient.sendCommand(args),
-      })
-    : undefined,
+  store: getRedisStore(),
   keyGenerator: generateKey,
   handler: rateLimitHandler,
 });
 
-// Upload rate limiter
+// Upload limiter
 const uploadLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10, // limit to 10 uploads per hour
+  windowMs: 60 * 60 * 1000,
+  max: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  store: redisClient
-    ? new RedisStore({
-        sendCommand: (...args) => redisClient.sendCommand(args),
-      })
-    : undefined,
+  store: getRedisStore(),
   keyGenerator: generateKey,
   handler: rateLimitHandler,
 });
 
-// Wishlist operations rate limiter
+// Wishlist limiter
 const wishlistLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000, // 5 minutes
-  max: 20, // limit to 20 wishlist operations per 5 minutes
+  windowMs: 5 * 60 * 1000,
+  max: 20,
   standardHeaders: true,
   legacyHeaders: false,
-  store: redisClient
-    ? new RedisStore({
-        sendCommand: (...args) => redisClient.sendCommand(args),
-      })
-    : undefined,
+  store: getRedisStore(),
   keyGenerator: generateKey,
   handler: rateLimitHandler,
 });
 
-// Search rate limiter
+// Search limiter
 const searchLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 30, // limit to 30 searches per minute
+  windowMs: 60 * 1000,
+  max: 30,
   standardHeaders: true,
   legacyHeaders: false,
-  store: redisClient
-    ? new RedisStore({
-        sendCommand: (...args) => redisClient.sendCommand(args),
-      })
-    : undefined,
+  store: getRedisStore(),
   keyGenerator: generateKey,
   handler: rateLimitHandler,
 });
 
-// Speed limiter for high-frequency endpoints
+// Speed limiter
 const speedLimiter = slowDown({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  delayAfter: 50, // allow 50 requests per windowMs without delay
-  delayMs: 100, // add 100ms delay after delayAfter is reached
-  maxDelayMs: 20000, // max delay of 20 seconds
+  windowMs: 15 * 60 * 1000,
+  delayAfter: 50,
+  delayMs: 100,
+  maxDelayMs: 20000,
   keyGenerator: generateKey,
-  store: redisClient
-    ? new RedisStore({
-        sendCommand: (...args) => redisClient.sendCommand(args),
-      })
-    : undefined,
+  store: getRedisStore(),
 });
 
-// IP-based strict limiter for suspicious activity
+// Suspicious activity limiter
 const suspiciousActivityLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 1, // Only 1 request per hour
+  windowMs: 60 * 60 * 1000,
+  max: 1,
   standardHeaders: true,
   legacyHeaders: false,
-  store: redisClient
-    ? new RedisStore({
-        sendCommand: (...args) => redisClient.sendCommand(args),
-      })
-    : undefined,
+  store: getRedisStore(),
   keyGenerator: (req) => `suspicious:${req.ip}`,
   handler: rateLimitHandler,
 });
 
-// Admin operations rate limiter (more lenient)
+// Admin limiter
 const adminLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500, // Higher limit for admin operations
+  windowMs: 15 * 60 * 1000,
+  max: 500,
   standardHeaders: true,
   legacyHeaders: false,
-  store: redisClient
-    ? new RedisStore({
-        sendCommand: (...args) => redisClient.sendCommand(args),
-      })
-    : undefined,
+  store: getRedisStore(),
   keyGenerator: generateKey,
   handler: rateLimitHandler,
-  skip: (req) => {
-    // Only apply to non-admin users
-    return req.user && req.user.role !== "admin";
-  },
+  skip: (req) => (req.user?.role === "admin" ? false : true),
 });
 
-// Dynamic rate limiter based on user role
+// Dynamic limiter
 const createDynamicLimiter = (
   customerMax,
   sellerMax,
   adminMax,
   windowMs = 15 * 60 * 1000
-) => {
-  return rateLimit({
+) =>
+  rateLimit({
     windowMs,
     max: (req) => {
       if (!req.user) return customerMax;
-
       switch (req.user.role) {
         case "admin":
           return adminMax;
@@ -235,45 +178,36 @@ const createDynamicLimiter = (
     },
     standardHeaders: true,
     legacyHeaders: false,
-    store: redisClient
-      ? new RedisStore({
-          sendCommand: (...args) => redisClient.sendCommand(args),
-        })
-      : undefined,
+    store: getRedisStore(),
     keyGenerator: generateKey,
     handler: rateLimitHandler,
   });
-};
 
-// Middleware to reset rate limit on successful login
-const resetRateLimitOnLogin = (req, res, next) => {
-  if (redisClient && req.body.email) {
-    const key = `login:${req.body.email}`;
-    redisClient.del(key).catch((err) => {
-      console.log("Error resetting rate limit:", err);
-    });
+// Reset rate limit on successful login
+const resetRateLimitOnLogin = async (req, res, next) => {
+  try {
+    const client = getRedisClient();
+    if (req.body.email) await client.del(`login:${req.body.email}`);
+  } catch (err) {
+    console.log("Error resetting rate limit:", err);
   }
   next();
 };
 
-// Middleware to track failed attempts
+// Track failed attempts
 const trackFailedAttempts = (req, res, next) => {
   const originalSend = res.send;
 
   res.send = function (data) {
-    // If response indicates failure, don't reset rate limit
-    if (res.statusCode >= 400 && redisClient && req.body.email) {
-      const key = `failed:${req.body.email}`;
-      redisClient
-        .incr(key)
-        .then(() => {
-          redisClient.expire(key, 3600); // Expire in 1 hour
-        })
-        .catch((err) => {
-          console.log("Error tracking failed attempts:", err);
-        });
+    if (res.statusCode >= 400 && req.body.email) {
+      try {
+        const client = getRedisClient();
+        client.incr(`failed:${req.body.email}`);
+        client.expire(`failed:${req.body.email}`, 3600);
+      } catch (err) {
+        console.log("Error tracking failed attempts:", err);
+      }
     }
-
     originalSend.call(this, data);
   };
 

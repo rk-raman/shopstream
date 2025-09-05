@@ -1,8 +1,11 @@
 const express = require("express");
 const userController = require("../controllers/user.controller");
 const userValidators = require("../validators/user.validators");
-const { authenticate, adminOnly } = require("../../../shared/middleware/auth");
-const upload = require("../../../shared/middleware/upload");
+const {
+  authenticate,
+  adminOnly,
+} = require("../../../shared/middleware/auth.middleware");
+const upload = require("../../../shared/middleware/upload.middleware");
 
 const router = express.Router();
 
@@ -16,7 +19,7 @@ router.put(
   userValidators.validateUpdateProfile,
   userController.updateProfile
 );
-router.post("/avatar", upload.single("avatar"), userController.uploadAvatar);
+//router.post("/avatar", upload.single("avatar"), userController.uploadAvatar);
 router.delete("/account", userController.deleteAccount);
 
 // Wishlist routes

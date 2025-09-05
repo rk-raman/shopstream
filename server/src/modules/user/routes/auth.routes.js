@@ -9,9 +9,8 @@ const {
   emailVerificationLimiter,
   resetRateLimitOnLogin,
   trackFailedAttempts,
-} = require("../../../shared/middleware/rateLimiter");
-
-const auth = require("../../../shared/middleware/auth");
+} = require("../../../shared/middleware/rateLimiter.middleware");
+const { authenticate } = require("../../../shared/middleware/auth.middleware");
 
 const router = express.Router();
 
@@ -59,7 +58,7 @@ router.post("/refresh-token", authController.refreshToken);
 router.post("/logout", authController.logout);
 
 // Protected routes
-router.use(auth);
+router.use(authenticate);
 router.get("/me", authController.getMe);
 router.post(
   "/change-password",

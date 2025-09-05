@@ -70,4 +70,4 @@ module.exports = { connectRedis, getRedisClient };
 // // In any other file
 // const redisClient = getRedisClient();
 // await redisClient.set('key', 'value');
-const value = await redisClient.get("key");
+//const value = await redisClient.get("key");

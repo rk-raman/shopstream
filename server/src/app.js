@@ -8,6 +8,7 @@ const mongoSanitize = require("express-mongo-sanitize");
 // Import configurations
 const { connectDB } = require("./config/database");
 const { connectRedis } = require("./config/redis");
+
 const { initElasticsearch } = require("./config/elasticsearch");
 
 // Import middleware
