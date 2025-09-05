@@ -117,9 +117,6 @@ const userRegistrationSchema = Joi.object({
   gender: Joi.string().valid("male", "female", "other").optional().messages({
     "any.only": "Gender must be male, female, or other",
   }),
-  acceptTerms: Joi.boolean().valid(true).required().messages({
-    "any.only": "You must accept the terms and conditions",
-  }),
   marketingConsent: Joi.boolean().optional(),
 });
 

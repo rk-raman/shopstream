@@ -313,16 +313,12 @@ const validateConditional = (condition, schema) => {
 // ==================== COMPOSITE VALIDATORS ====================
 
 /**
- * Complete User Registration with Terms
- * Combines registration validation with terms acceptance
+ * Complete User Registration
+ * Validates user registration data
  */
 const validateCompleteRegistration = [
   sanitizeMiddleware,
   validateJoiBody(userRegistrationSchema),
-  validateCustom(
-    (req) => req.body.acceptTerms === true,
-    "You must accept the terms and conditions"
-  ),
 ];
 
 /**

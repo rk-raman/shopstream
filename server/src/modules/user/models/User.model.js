@@ -15,7 +15,6 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
-      match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please enter a valid email"],
       index: true,
     },
     password: {
@@ -256,6 +255,10 @@ userSchema.index({ createdAt: -1 });
 userSchema.index({ lastLoginAt: -1 });
 userSchema.index({ "addresses.pincode": 1 });
 userSchema.index({ "addresses.city": 1, "addresses.state": 1 });
+userSchema.index({ isEmailVerified: 1, isActive: 1 });
+userSchema.index({ googleId: 1, facebookId: 1 }, { sparse: true });
+userSchema.index({ lastActiveAt: -1, isActive: 1 });
+userSchema.index({ accountLockedUntil: 1, loginAttempts: 1 });
 
 // Text index for search functionality
 userSchema.index({
@@ -285,30 +288,33 @@ userSchema.virtual("isLocked").get(function () {
 // Pre-save middleware
 userSchema.pre("save", async function (next) {
   try {
-    // Hash password if modified
-    if (this.isModified("password") && this.password) {
+    // Hash password only if it's a new password (not already hashed)
+    if (
+      this.isModified("password") &&
+      this.password &&
+      !this.password.startsWith("$2b$")
+    ) {
       this.password = await hashPassword(this.password, 12);
     }
 
-    // Update lastActiveAt on every save
-    if (this.isModified() && !this.isNew) {
+    // Update lastActiveAt only on significant changes
+    if (
+      this.isModified() &&
+      !this.isNew &&
+      this.isModified([
+        "firstName",
+        "lastName",
+        "email",
+        "phone",
+        "preferences",
+      ])
+    ) {
       this.lastActiveAt = new Date();
     }
 
-    // Ensure only one default address
+    // Optimize address default logic
     if (this.isModified("addresses") && this.addresses.length > 0) {
-      const defaultAddresses = this.addresses.filter((addr) => addr.isDefault);
-
-      if (defaultAddresses.length > 1) {
-        // Keep the last modified one as default
-        this.addresses.forEach((addr, index) => {
-          addr.isDefault =
-            index === this.addresses.length - 1 && addr.isDefault;
-        });
-      } else if (defaultAddresses.length === 0) {
-        // If no default address, make the first one default
-        this.addresses[0].isDefault = true;
-      }
+      this._normalizeDefaultAddress();
     }
 
     // Clear login attempts on successful operations
@@ -338,15 +344,29 @@ userSchema.methods.addAddress = function (addressData) {
   // If this is the first address, make it default
   if (this.addresses.length === 0) {
     addressData.isDefault = true;
-  }
-
-  // If new address is set as default, remove default from others
-  if (addressData.isDefault) {
+  } else if (addressData.isDefault) {
+    // If new address is set as default, remove default from others
     this.addresses.forEach((addr) => (addr.isDefault = false));
   }
 
   this.addresses.push(addressData);
   return this.addresses[this.addresses.length - 1];
+};
+
+// Helper method to normalize default address
+userSchema.methods._normalizeDefaultAddress = function () {
+  const defaultAddresses = this.addresses.filter((addr) => addr.isDefault);
+
+  if (defaultAddresses.length > 1) {
+    // Keep only the last one as default
+    this.addresses.forEach((addr, index) => {
+      addr.isDefault =
+        index === this.addresses.length - 1 && defaultAddresses.includes(addr);
+    });
+  } else if (defaultAddresses.length === 0 && this.addresses.length > 0) {
+    // If no default address, make the first one default
+    this.addresses[0].isDefault = true;
+  }
 };
 
 userSchema.methods.updateAddress = function (addressId, updateData) {
@@ -382,7 +402,7 @@ userSchema.methods.removeAddress = function (addressId) {
 };
 
 userSchema.methods.addToWishlist = function (productId) {
-  if (!this.wishlist.includes(productId)) {
+  if (!this.wishlist.some((id) => id.toString() === productId.toString())) {
     this.wishlist.push(productId);
     return true;
   }
@@ -390,7 +410,9 @@ userSchema.methods.addToWishlist = function (productId) {
 };
 
 userSchema.methods.removeFromWishlist = function (productId) {
-  const index = this.wishlist.indexOf(productId);
+  const index = this.wishlist.findIndex(
+    (id) => id.toString() === productId.toString()
+  );
   if (index > -1) {
     this.wishlist.splice(index, 1);
     return true;
@@ -399,7 +421,7 @@ userSchema.methods.removeFromWishlist = function (productId) {
 };
 
 userSchema.methods.isInWishlist = function (productId) {
-  return this.wishlist.includes(productId);
+  return this.wishlist.some((id) => id.toString() === productId.toString());
 };
 
 // Handle failed login attempts

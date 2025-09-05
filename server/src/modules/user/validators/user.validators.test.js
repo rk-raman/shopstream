@@ -19,7 +19,6 @@ const testData = {
     firstName: "John",
     lastName: "Doe",
     phone: "9876543210",
-    acceptTerms: true,
     marketingConsent: false,
   },
 
@@ -29,7 +28,6 @@ const testData = {
     firstName: "J",
     lastName: "",
     phone: "1234567890",
-    acceptTerms: false,
   },
 
   validLogin: {

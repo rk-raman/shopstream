@@ -82,13 +82,22 @@ const addressSchema = new mongoose.Schema(
   }
 );
 
-// Index for better query performance
+// Indexes for better query performance
 addressSchema.index({ pincode: 1 });
 addressSchema.index({ city: 1, state: 1 });
 addressSchema.index({ isDefault: 1 });
+addressSchema.index({ type: 1, isDefault: 1 });
+addressSchema.index(
+  { "coordinates.latitude": 1, "coordinates.longitude": 1 },
+  { sparse: true }
+);
 
-// Virtual for full address
+// Virtual for full address (cached for performance)
 addressSchema.virtual("fullAddress").get(function () {
+  if (this._fullAddressCache) {
+    return this._fullAddressCache;
+  }
+
   const parts = [
     this.addressLine1,
     this.addressLine2,
@@ -98,23 +107,57 @@ addressSchema.virtual("fullAddress").get(function () {
     this.country,
   ].filter(Boolean);
 
-  return parts.join(", ");
+  this._fullAddressCache = parts.join(", ");
+  return this._fullAddressCache;
 });
 
 // Method to format address for display
 addressSchema.methods.getFormattedAddress = function () {
   return {
+    id: this._id,
     name: this.fullName,
     address: this.fullAddress,
     phone: this.phone,
     type: this.type,
     isDefault: this.isDefault,
+    coordinates: this.coordinates,
   };
 };
 
-// Pre-save middleware to ensure only one default address per user
+// Method to check if coordinates are valid
+addressSchema.methods.hasValidCoordinates = function () {
+  return (
+    this.coordinates &&
+    typeof this.coordinates.latitude === "number" &&
+    typeof this.coordinates.longitude === "number" &&
+    this.coordinates.latitude >= -90 &&
+    this.coordinates.latitude <= 90 &&
+    this.coordinates.longitude >= -180 &&
+    this.coordinates.longitude <= 180
+  );
+};
+
+// Pre-save middleware
 addressSchema.pre("save", function (next) {
-  // This will be handled at the parent document level
+  // Clear cache when address fields change
+  if (
+    this.isModified([
+      "addressLine1",
+      "addressLine2",
+      "city",
+      "state",
+      "pincode",
+      "country",
+    ])
+  ) {
+    this._fullAddressCache = null;
+  }
+
+  // Normalize phone number
+  if (this.isModified("phone") && this.phone) {
+    this.phone = this.phone.replace(/\D/g, "");
+  }
+
   next();
 });
 
