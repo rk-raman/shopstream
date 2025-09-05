@@ -12,7 +12,7 @@ class EmailService {
     try {
       // Create transporter based on configuration
       if (emailConfig.service === "gmail") {
-        this.transporter = nodemailer.createTransporter({
+        this.transporter = nodemailer.createTransport({
           service: "gmail",
           auth: {
             user: emailConfig.user,
@@ -20,7 +20,7 @@ class EmailService {
           },
         });
       } else if (emailConfig.service === "smtp") {
-        this.transporter = nodemailer.createTransporter({
+        this.transporter = nodemailer.createTransport({
           host: emailConfig.host,
           port: emailConfig.port,
           secure: emailConfig.secure,
@@ -30,7 +30,7 @@ class EmailService {
           },
         });
       } else if (emailConfig.service === "sendgrid") {
-        this.transporter = nodemailer.createTransporter({
+        this.transporter = nodemailer.createTransport({
           service: "SendGrid",
           auth: {
             user: "apikey",
@@ -38,7 +38,7 @@ class EmailService {
           },
         });
       } else if (emailConfig.service === "mailgun") {
-        this.transporter = nodemailer.createTransporter({
+        this.transporter = nodemailer.createTransport({
           service: "Mailgun",
           auth: {
             user: emailConfig.user,
