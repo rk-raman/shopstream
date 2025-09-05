@@ -37,8 +37,8 @@ const getUserEventListenersHealth = async () => {
   return await userSubscriberManager.healthCheck();
 };
 
-// Auto-initialize when this module is loaded
-initializeUserEventListeners().catch(console.error);
+// Note: Auto-initialization removed to prevent circular dependency
+// The event system manager will handle initialization
 
 module.exports = {
   initializeUserEventListeners,

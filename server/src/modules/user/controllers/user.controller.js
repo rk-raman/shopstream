@@ -175,6 +175,50 @@ const getAllUsers = asyncHandler(async (req, res) => {
   return res.paginated(users, "Users retrieved successfully");
 });
 
+// Admin only: Search users
+const searchUsers = asyncHandler(async (req, res) => {
+  const {
+    q,
+    page = 1,
+    limit = 10,
+    role,
+    isActive,
+    sortBy = "createdAt",
+    sortOrder = "desc",
+  } = req.query;
+
+  if (!q) {
+    return res.badRequest("Search query is required");
+  }
+
+  // Build filter object
+  const filter = {
+    $or: [
+      { firstName: { $regex: q, $options: "i" } },
+      { lastName: { $regex: q, $options: "i" } },
+      { email: { $regex: q, $options: "i" } },
+      { phone: { $regex: q, $options: "i" } },
+    ],
+  };
+
+  if (role) filter.role = role;
+  if (isActive !== undefined) filter.isActive = isActive === "true";
+
+  // Build sort object
+  const sort = {};
+  sort[sortBy] = sortOrder === "asc" ? 1 : -1;
+
+  const options = {
+    page: parseInt(page),
+    limit: parseInt(limit),
+    sort,
+  };
+
+  const users = await User.paginate(filter, options);
+
+  return res.paginated(users, "Search results retrieved successfully");
+});
+
 // Admin only: Get user by ID
 const getUserById = asyncHandler(async (req, res) => {
   const { userId } = req.params;
@@ -213,6 +257,7 @@ module.exports = {
   removeFromWishlist,
   clearWishlist,
   getAllUsers,
+  searchUsers,
   getUserById,
   updateUserById,
   deleteUserById,

@@ -22,7 +22,9 @@ const generateKey = (req) => {
   if (req.user) {
     return `${req.user._id}:${req.route?.path || req.path}`;
   }
-  return `${req.ip}:${req.route?.path || req.path}`;
+  // Use a more robust IP handling for IPv6
+  const ip = req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
+  return `${ip}:${req.route?.path || req.path}`;
 };
 
 // Custom handler for rate limit exceeded
@@ -126,7 +128,10 @@ const searchLimiter = rateLimit({
 const speedLimiter = slowDown({
   windowMs: 15 * 60 * 1000,
   delayAfter: 50,
-  delayMs: 100,
+  delayMs: (used, req) => {
+    const delayAfter = req.slowDown.limit;
+    return (used - delayAfter) * 100;
+  },
   maxDelayMs: 20000,
   keyGenerator: generateKey,
   store: getRedisStore(),

@@ -32,8 +32,8 @@ const login = asyncHandler(async (req, res) => {
 
 // Logout
 const logout = asyncHandler(async (req, res) => {
-  const refreshToken = getRefreshTokenFromCookies(req);
-  await authService.logout(req.user._id, refreshToken);
+  const token = getRefreshTokenFromCookies(req);
+  await authService.logout(req.user._id, token);
 
   // Clear refresh token cookie using utility
   clearRefreshTokenCookie(res);
@@ -43,10 +43,10 @@ const logout = asyncHandler(async (req, res) => {
 
 // Refresh token
 const refreshToken = asyncHandler(async (req, res) => {
-  const refreshToken = getRefreshTokenFromCookies(req);
+  const token = getRefreshTokenFromCookies(req);
 
   const { accessToken, refreshToken: newRefreshToken } =
-    await authService.refreshAccessToken(refreshToken);
+    await authService.refreshAccessToken(token);
 
   // Set new refresh token cookie using utility
   setRefreshTokenCookie(res, newRefreshToken);
@@ -94,6 +94,20 @@ const getMe = asyncHandler(async (req, res) => {
   return res.success({ user: req.user }, "User profile retrieved successfully");
 });
 
+// Enable two-factor authentication
+const enableTwoFactor = asyncHandler(async (req, res) => {
+  const { secret, token } = req.body;
+  const result = await authService.enableTwoFactor(req.user._id, secret, token);
+  return res.success(result, "Two-factor authentication enabled successfully");
+});
+
+// Verify two-factor authentication
+const verifyTwoFactor = asyncHandler(async (req, res) => {
+  const { token } = req.body;
+  const result = await authService.verifyTwoFactor(req.user._id, token);
+  return res.success(result, "Two-factor authentication verified successfully");
+});
+
 module.exports = {
   register,
   login,
@@ -105,4 +119,6 @@ module.exports = {
   verifyEmail,
   resendVerificationEmail,
   getMe,
+  enableTwoFactor,
+  verifyTwoFactor,
 };

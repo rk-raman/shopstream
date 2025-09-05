@@ -116,17 +116,10 @@ class EventEmitterBus extends EventBusInterface {
    */
   _loadEventListeners() {
     try {
-      // Import all event listeners
-      require("../../modules/user/events/user.listeners");
-      require("../../modules/product/events/product.listeners");
-      require("../../modules/order/events/order.listeners");
-      require("../../modules/payment/events/payment.listeners");
-      require("../../modules/inventory/events/inventory.listeners");
-      require("../../modules/notification/events/notification.listeners");
-      require("../../modules/review/events/review.listeners");
-      require("../../modules/analytics/events/analytics.listeners");
-
-      console.log("All event listeners loaded successfully");
+      // Note: Event listeners are now loaded by the eventSystemManager
+      // to avoid circular dependencies. The eventSystemManager handles
+      // initialization of all event-driven modules.
+      console.log("Event listeners will be loaded by eventSystemManager");
     } catch (error) {
       console.error("Error loading event listeners:", error);
       throw error;

@@ -5,7 +5,7 @@
  * This keeps the main application files clean and provides a single point of control
  */
 
-const { EventBusFactory } = require("./eventBusFactory");
+const EventBusFactory = require("./eventBusFactory");
 
 class EventSystemManager {
   constructor() {
@@ -48,7 +48,7 @@ class EventSystemManager {
    */
   async initializeAllModules() {
     const modules = [
-      { name: "user", path: "./modules/user/events/user.listeners.modular" },
+      { name: "user", path: "../modules/user/events/user.listeners.modular" },
       // Add more modules here as they are implemented
       // { name: 'product', path: './modules/product/events/product.listeners.modular' },
       // { name: 'order', path: './modules/order/events/order.listeners.modular' },
