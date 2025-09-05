@@ -24,6 +24,7 @@ const routes = require("./routes");
 
 // Import event system
 const eventSystem = require("./shared/events/eventEmitter");
+const eventSystemManager = require("./shared/events/eventSystemManager");
 const responseHandlerMiddleware = require("./shared/middleware/response.middleware");
 const requestIdMiddleware = require("./shared/middleware/requestId.middleware");
 
@@ -62,16 +63,33 @@ app.use(compression());
 // Logging
 app.use(logger);
 
-// Initialize event system
+// Initialize event system (legacy - for backward compatibility)
 eventSystem.init();
 
 // Health check endpoint
-app.get("/health", (req, res) => {
-  res.json({
-    status: "OK",
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-  });
+app.get("/health", async (req, res) => {
+  try {
+    // Get event system health
+    const eventSystemHealth = await eventSystem.getHealth();
+    const eventSystemManagerHealth = await eventSystemManager.getHealth();
+
+    res.json({
+      status: "OK",
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      services: {
+        eventSystem: eventSystemHealth,
+        eventSystemManager: eventSystemManagerHealth,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "ERROR",
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      error: error.message,
+    });
+  }
 });
 
 // API routes
@@ -96,6 +114,9 @@ const initializeServices = async () => {
     await connectDB();
     await connectRedis();
     // await initElasticsearch();
+
+    // Initialize new event-driven architecture
+    await eventSystemManager.initialize();
 
     console.log("All services initialized successfully");
   } catch (error) {

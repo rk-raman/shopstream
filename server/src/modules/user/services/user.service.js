@@ -1,7 +1,9 @@
 const User = require("../models/User.model");
 const ApiError = require("../../../shared/utils/apiError");
-const eventEmitter = require("../../../shared/events/eventEmitter");
-const { USER_EVENTS } = require("../../../shared/events/eventTypes");
+const UserEventPublisher = require("../events/publishers/UserEventPublisher");
+
+// Initialize event publisher
+const userEventPublisher = new UserEventPublisher();
 
 // Create new user
 const createUser = async (userData) => {
@@ -22,13 +24,16 @@ const createUser = async (userData) => {
     const user = await User.create(userData);
 
     // Publish event for other services
-    eventEmitter.publish(USER_EVENTS.USER_REGISTERED, {
+    await userEventPublisher.publishUserRegistered({
       userId: user._id,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
       role: user.role,
-      timestamp: new Date().toISOString(),
+      registrationMethod: userData.registrationMethod || "email",
+      userAgent: userData.userAgent,
+      ipAddress: userData.ipAddress,
+      referrer: userData.referrer,
     });
 
     return user;
@@ -67,10 +72,10 @@ const updateUser = async (userId, updateData) => {
   }
 
   // Publish event
-  eventEmitter.publish(USER_EVENTS.USER_UPDATED, {
+  await userEventPublisher.publishUserUpdated({
     userId: user._id,
     changes: updateData,
-    timestamp: new Date().toISOString(),
+    updatedBy: updateData.updatedBy || user._id,
   });
 
   return user;
@@ -89,9 +94,10 @@ const deleteUser = async (userId) => {
   }
 
   // Publish event
-  eventEmitter.publish(USER_EVENTS.USER_DEACTIVATED, {
+  await userEventPublisher.publishUserDeactivated({
     userId: user._id,
-    timestamp: new Date().toISOString(),
+    deactivatedBy: updateData.deactivatedBy || "system",
+    reason: updateData.reason || "user_request",
   });
 
   return { message: "User deactivated successfully" };
@@ -158,11 +164,13 @@ const addAddress = async (userId, addressData) => {
   const newAddress = user.addresses[user.addresses.length - 1];
 
   // Publish event
-  eventEmitter.publish(USER_EVENTS.ADDRESS_ADDED, {
+  await userEventPublisher.publishAddressAdded({
     userId: user._id,
     addressId: newAddress._id,
-    addressType: newAddress.type,
-    timestamp: new Date().toISOString(),
+    addressType: newAddress.type || "home",
+    city: newAddress.city,
+    state: newAddress.state,
+    pincode: newAddress.pincode,
   });
 
   return newAddress;
@@ -194,11 +202,10 @@ const updateAddress = async (userId, addressId, updateData) => {
   await user.save();
 
   // Publish event
-  eventEmitter.publish(USER_EVENTS.ADDRESS_UPDATED, {
+  await userEventPublisher.publishAddressUpdated({
     userId: user._id,
     addressId: address._id,
     changes: updateData,
-    timestamp: new Date().toISOString(),
   });
 
   return address;
@@ -227,10 +234,9 @@ const deleteAddress = async (userId, addressId) => {
   await user.save();
 
   // Publish event
-  eventEmitter.publish(USER_EVENTS.ADDRESS_DELETED, {
+  await userEventPublisher.publishAddressDeleted({
     userId: user._id,
     addressId,
-    timestamp: new Date().toISOString(),
   });
 
   return { message: "Address deleted successfully" };
@@ -271,11 +277,11 @@ const addToWishlist = async (userId, productId) => {
   await user.save();
 
   // Publish event
-  eventEmitter.publish(USER_EVENTS.WISHLIST_UPDATED, {
+  await userEventPublisher.publishWishlistItemAdded({
     userId: user._id,
-    action: "added",
     productId,
-    timestamp: new Date().toISOString(),
+    productCategory: "unknown", // This would need to be fetched from product data
+    productPrice: 0, // This would need to be fetched from product data
   });
 
   return { message: "Product added to wishlist" };
@@ -294,11 +300,9 @@ const removeFromWishlist = async (userId, productId) => {
   }
 
   // Publish event
-  eventEmitter.publish(USER_EVENTS.WISHLIST_UPDATED, {
+  await userEventPublisher.publishWishlistItemRemoved({
     userId: user._id,
-    action: "removed",
     productId,
-    timestamp: new Date().toISOString(),
   });
 
   return { message: "Product removed from wishlist" };
@@ -335,12 +339,15 @@ const clearWishlist = async (userId) => {
     throw new ApiError(404, "User not found");
   }
 
-  // Publish event
-  eventEmitter.publish(USER_EVENTS.WISHLIST_UPDATED, {
-    userId: user._id,
-    action: "cleared",
-    timestamp: new Date().toISOString(),
-  });
+  // Publish event for each item removed (simplified for now)
+  // In a real implementation, you might want to publish individual events
+  // or a single "wishlist_cleared" event
+  for (const productId of user.wishlist) {
+    await userEventPublisher.publishWishlistItemRemoved({
+      userId: user._id,
+      productId,
+    });
+  }
 
   return { message: "Wishlist cleared successfully" };
 };
@@ -429,10 +436,10 @@ const verifyUserEmail = async (userId) => {
   }
 
   // Publish event
-  eventEmitter.publish(USER_EVENTS.EMAIL_VERIFIED, {
+  await userEventPublisher.publishEmailVerified({
     userId: user._id,
     email: user.email,
-    timestamp: new Date().toISOString(),
+    verificationMethod: "email_link",
   });
 
   return user;
@@ -466,10 +473,12 @@ const updateUserRole = async (userId, newRole) => {
   }
 
   // Publish event
-  eventEmitter.publish(USER_EVENTS.USER_UPDATED, {
+  await userEventPublisher.publishUserRoleChanged({
     userId: user._id,
-    changes: { role: newRole },
-    timestamp: new Date().toISOString(),
+    oldRole: user.role,
+    newRole: newRole,
+    changedBy: updateData.changedBy || "admin",
+    reason: updateData.reason || "admin_action",
   });
 
   return user;
@@ -487,14 +496,19 @@ const toggleUserStatus = async (userId, isActive) => {
     throw new ApiError(404, "User not found");
   }
 
-  const eventType = isActive
-    ? USER_EVENTS.USER_UPDATED
-    : USER_EVENTS.USER_DEACTIVATED;
-  eventEmitter.publish(eventType, {
-    userId: user._id,
-    changes: { isActive },
-    timestamp: new Date().toISOString(),
-  });
+  if (isActive) {
+    await userEventPublisher.publishUserActivated({
+      userId: user._id,
+      activatedBy: updateData.activatedBy || "admin",
+      reason: updateData.reason || "manual_activation",
+    });
+  } else {
+    await userEventPublisher.publishUserDeactivated({
+      userId: user._id,
+      deactivatedBy: updateData.deactivatedBy || "admin",
+      reason: updateData.reason || "manual_deactivation",
+    });
+  }
 
   return user;
 };

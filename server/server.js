@@ -1,5 +1,6 @@
 require("dotenv").config();
 const { app, initializeServices } = require("./src/app");
+const eventSystemManager = require("./src/shared/events/eventSystemManager");
 
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || "development";
@@ -31,11 +32,20 @@ async function startServer() {
   }
 }
 
-function gracefulShutdown(signal) {
+async function gracefulShutdown(signal) {
   console.log(`\n📴 Received ${signal}. Shutting down gracefully...`);
 
-  // Close database connections, stop background jobs, etc.
-  process.exit(0);
+  try {
+    // Cleanup event-driven architecture
+    await eventSystemManager.cleanup();
+
+    // Close database connections, stop background jobs, etc.
+    console.log("Graceful shutdown completed");
+  } catch (error) {
+    console.error("Error during graceful shutdown:", error);
+  } finally {
+    process.exit(0);
+  }
 }
 
 // Start the server
