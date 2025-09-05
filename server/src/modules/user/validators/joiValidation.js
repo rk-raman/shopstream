@@ -1,6 +1,7 @@
 const Joi = require("joi");
 const ApiError = require("../../../shared/utils/apiError");
-const { HTTP_STATUS } = require("../../../shared/constants/httpStatus");
+const HTTP_STATUS = require("../../../shared/constants/httpStatus");
+const ERROR_CODES = require("../../../shared/constants/errorCodes");
 
 /**
  * Generic Joi validation middleware factory
@@ -46,7 +47,7 @@ const validate = (schema, source = "body", options = {}) => {
         throw new ApiError(
           HTTP_STATUS.BAD_REQUEST,
           errorMessage,
-          "VALIDATION_ERROR",
+          ERROR_CODES.VALIDATION_ERROR,
           formattedErrors
         );
       }
@@ -141,7 +142,7 @@ const validateMultiple = (schemas, options = {}) => {
         throw new ApiError(
           HTTP_STATUS.BAD_REQUEST,
           errorMessage,
-          "VALIDATION_ERROR",
+          ERROR_CODES.VALIDATION_ERROR,
           errors
         );
       }
@@ -214,7 +215,7 @@ const validateFile = (options = {}) => {
         throw new ApiError(
           HTTP_STATUS.BAD_REQUEST,
           "File upload is required",
-          "FILE_REQUIRED"
+          ERROR_CODES.FILE_REQUIRED
         );
       }
 
@@ -226,7 +227,7 @@ const validateFile = (options = {}) => {
             `File type ${
               file.mimetype
             } is not allowed. Allowed types: ${allowedTypes.join(", ")}`,
-            "INVALID_FILE_TYPE"
+            ERROR_CODES.INVALID_FILE_TYPE
           );
         }
 
@@ -241,7 +242,7 @@ const validateFile = (options = {}) => {
               1024 /
               1024
             ).toFixed(2)}MB`,
-            "FILE_TOO_LARGE"
+            ERROR_CODES.FILE_TOO_LARGE
           );
         }
       }
@@ -270,7 +271,7 @@ const validateCustom = (
         throw new ApiError(
           HTTP_STATUS.BAD_REQUEST,
           errorMessage,
-          "CUSTOM_VALIDATION_ERROR"
+          ERROR_CODES.CUSTOM_VALIDATION_ERROR
         );
       }
       next();
@@ -318,7 +319,7 @@ const validateRateLimit = (options = {}) => {
         `Too many requests. Limit: ${maxRequests} per ${
           windowMs / 1000 / 60
         } minutes`,
-        "RATE_LIMIT_EXCEEDED"
+        ERROR_CODES.RATE_LIMIT_EXCEEDED
       );
     }
 
