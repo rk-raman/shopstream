@@ -10,7 +10,7 @@ const {
   validateEmailVerification,
   validateResendVerification,
   validateTwoFactor,
-} = require("../validators/joiValidators");
+} = require("../validators/user.validators");
 const {
   authLimiter,
   loginLimiter,

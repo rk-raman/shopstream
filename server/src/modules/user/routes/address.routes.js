@@ -3,7 +3,7 @@ const addressController = require("../controllers/address.controller");
 const {
   validateAddress,
   validateAddressId,
-} = require("../validators/joiValidators");
+} = require("../validators/user.validators");
 const { authenticate } = require("../../../shared/middleware/auth.middleware");
 
 const router = express.Router();

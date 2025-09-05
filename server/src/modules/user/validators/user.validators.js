@@ -26,7 +26,7 @@ const {
   resendVerificationSchema,
   socialLoginSchema,
   commonPatterns,
-} = require("./joiSchemas");
+} = require("./user.schemas");
 
 // ==================== AUTHENTICATION VALIDATORS ====================
 

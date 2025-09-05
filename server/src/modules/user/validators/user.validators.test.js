@@ -9,7 +9,7 @@ const {
   changePasswordSchema,
   addressSchema,
   wishlistSchema,
-} = require("./joiSchemas");
+} = require("./user.schemas");
 
 // Test data samples
 const testData = {
@@ -191,7 +191,7 @@ function customValidationTest() {
   console.log("=".repeat(35));
 
   // Test custom phone validation
-  const phoneSchema = require("./joiSchemas").commonPatterns.phone;
+  const phoneSchema = require("./user.schemas").commonPatterns.phone;
 
   const phoneTests = [
     { phone: "9876543210", expected: true },

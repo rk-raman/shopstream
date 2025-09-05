@@ -2,6 +2,8 @@
 
 This directory contains reusable validation middleware that can be used across all modules in the application.
 
+> 📋 **Naming Conventions**: See [NAMING_CONVENTIONS.md](./NAMING_CONVENTIONS.md) for standard file naming patterns across all modules.
+
 ## Overview
 
 The validation middleware provides both **Joi-based validation** (recommended) and **Express-validator** (legacy) for request validation. It includes common patterns, sanitization, file validation, and custom validation capabilities.
@@ -267,7 +269,7 @@ const paginationSchema = commonJoiPatterns.pagination;
 ### User Module
 
 ```javascript
-// src/modules/user/validators/userValidators.js
+// src/modules/user/validators/user.validators.js
 const {
   validateJoiBody,
   validateJoiParams,
@@ -297,7 +299,7 @@ module.exports = { validateRegister };
 ### Product Module
 
 ```javascript
-// src/modules/product/validators/productValidators.js
+// src/modules/product/validators/product.validators.js
 const {
   validateJoiBody,
   validateJoiQuery,
@@ -331,7 +333,7 @@ module.exports = { validateProductCreate, validateProductImage };
 ### Order Module
 
 ```javascript
-// src/modules/order/validators/orderValidators.js
+// src/modules/order/validators/order.validators.js
 const {
   validateJoiBody,
   validateJoiParams,

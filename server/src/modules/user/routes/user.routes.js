@@ -9,7 +9,7 @@ const {
   validatePagination,
   validateSearch,
   validateAdminUpdate,
-} = require("../validators/joiValidators");
+} = require("../validators/user.validators");
 const {
   authenticate,
   adminOnly,
