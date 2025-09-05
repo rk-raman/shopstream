@@ -2,6 +2,8 @@ const ResponseFormatter = require("../utils/responseFormatter");
 const ApiError = require("../utils/apiError");
 
 const errorHandler = (error, req, res, next) => {
+  console.log("Error middleware triggered", error);
+
   let { statusCode, message, errorCode, errors } = error;
 
   // Log error details

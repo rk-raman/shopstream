@@ -4,10 +4,14 @@ const ApiError = require("../../../shared/utils/apiError");
 // Validation error handler middleware
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
+
   if (!errors.isEmpty()) {
-    const errorMessages = errors.array().map((error) => error.msg);
-    throw new ApiError(400, errorMessages.join(", "));
+    const message = errors.array()[0].msg;
+
+    // Pass errors array directly, not nested
+    throw new ApiError(400, message, "VALIDATION_ERROR", errors.array());
   }
+
   next();
 };
 
