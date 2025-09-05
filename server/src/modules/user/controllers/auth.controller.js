@@ -1,5 +1,10 @@
 const asyncHandler = require("../../../shared/utils/asyncHandler");
 const authService = require("../services/auth.service");
+const {
+  clearRefreshTokenCookie,
+  getRefreshTokenFromCookies,
+  setRefreshTokenCookie,
+} = require("../../../shared/utils/cookieUtils");
 
 // Register
 const register = asyncHandler(async (req, res) => {
@@ -7,13 +12,8 @@ const register = asyncHandler(async (req, res) => {
     req.body
   );
 
-  // Set refresh token as httpOnly cookie
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  });
+  // Set refresh token as httpOnly cookie using utility
+  setRefreshTokenCookie(res, refreshToken);
 
   res.status(201).json({
     success: true,
@@ -29,12 +29,8 @@ const login = asyncHandler(async (req, res) => {
     req.body.password
   );
 
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+  // Set refresh token cookie using utility
+  setRefreshTokenCookie(res, refreshToken);
 
   res.json({
     success: true,
@@ -45,26 +41,24 @@ const login = asyncHandler(async (req, res) => {
 
 // Logout
 const logout = asyncHandler(async (req, res) => {
-  const { refreshToken } = req.cookies;
+  const refreshToken = getRefreshTokenFromCookies(req);
   await authService.logout(req.user._id, refreshToken);
 
-  res.clearCookie("refreshToken");
+  // Clear refresh token cookie using utility
+  clearRefreshTokenCookie(res);
+
   res.json({ success: true, message: "Logged out successfully" });
 });
 
 // Refresh token
 const refreshToken = asyncHandler(async (req, res) => {
-  const { refreshToken } = req.cookies;
+  const refreshToken = getRefreshTokenFromCookies(req);
 
   const { accessToken, refreshToken: newRefreshToken } =
     await authService.refreshAccessToken(refreshToken);
 
-  res.cookie("refreshToken", newRefreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+  // Set new refresh token cookie using utility
+  setRefreshTokenCookie(res, newRefreshToken);
 
   res.json({ success: true, data: { accessToken } });
 });
