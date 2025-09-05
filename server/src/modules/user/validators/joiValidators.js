@@ -1,12 +1,12 @@
 const {
-  validateBody,
-  validateQuery,
-  validateParams,
-  validateMultiple,
+  validateJoiBody,
+  validateJoiQuery,
+  validateJoiParams,
+  validateJoiMultiple,
   validateFile,
   validateCustom,
   sanitizeMiddleware,
-} = require("./joiValidation");
+} = require("../../../shared/middleware/validation.middleware");
 
 const {
   userRegistrationSchema,
@@ -36,14 +36,14 @@ const {
  */
 const validateRegister = [
   sanitizeMiddleware,
-  validateBody(userRegistrationSchema),
+  validateJoiBody(userRegistrationSchema),
 ];
 
 /**
  * User Login Validation
  * Validates email format and password presence
  */
-const validateLogin = [sanitizeMiddleware, validateBody(userLoginSchema)];
+const validateLogin = [sanitizeMiddleware, validateJoiBody(userLoginSchema)];
 
 /**
  * Change Password Validation
@@ -51,7 +51,7 @@ const validateLogin = [sanitizeMiddleware, validateBody(userLoginSchema)];
  */
 const validateChangePassword = [
   sanitizeMiddleware,
-  validateBody(changePasswordSchema),
+  validateJoiBody(changePasswordSchema),
 ];
 
 /**
@@ -60,7 +60,7 @@ const validateChangePassword = [
  */
 const validateForgotPassword = [
   sanitizeMiddleware,
-  validateBody(forgotPasswordSchema),
+  validateJoiBody(forgotPasswordSchema),
 ];
 
 /**
@@ -69,7 +69,7 @@ const validateForgotPassword = [
  */
 const validateResetPassword = [
   sanitizeMiddleware,
-  validateBody(resetPasswordSchema),
+  validateJoiBody(resetPasswordSchema),
 ];
 
 /**
@@ -78,7 +78,7 @@ const validateResetPassword = [
  */
 const validateEmailVerification = [
   sanitizeMiddleware,
-  validateParams(emailVerificationSchema),
+  validateJoiParams(emailVerificationSchema),
 ];
 
 /**
@@ -87,7 +87,7 @@ const validateEmailVerification = [
  */
 const validateResendVerification = [
   sanitizeMiddleware,
-  validateBody(resendVerificationSchema),
+  validateJoiBody(resendVerificationSchema),
 ];
 
 /**
@@ -96,14 +96,17 @@ const validateResendVerification = [
  */
 const validateSocialLogin = [
   sanitizeMiddleware,
-  validateBody(socialLoginSchema),
+  validateJoiBody(socialLoginSchema),
 ];
 
 /**
  * Two-Factor Authentication Validation
  * Validates 6-digit numeric code
  */
-const validateTwoFactor = [sanitizeMiddleware, validateBody(twoFactorSchema)];
+const validateTwoFactor = [
+  sanitizeMiddleware,
+  validateJoiBody(twoFactorSchema),
+];
 
 // ==================== PROFILE VALIDATORS ====================
 
@@ -113,7 +116,7 @@ const validateTwoFactor = [sanitizeMiddleware, validateBody(twoFactorSchema)];
  */
 const validateUpdateProfile = [
   sanitizeMiddleware,
-  validateBody(profileUpdateSchema),
+  validateJoiBody(profileUpdateSchema),
 ];
 
 /**
@@ -135,14 +138,14 @@ const validateAvatarUpload = [
  * Address Creation/Update Validation
  * Validates all address fields with proper constraints
  */
-const validateAddress = [sanitizeMiddleware, validateBody(addressSchema)];
+const validateAddress = [sanitizeMiddleware, validateJoiBody(addressSchema)];
 
 /**
  * Address ID Validation
  * Validates MongoDB ObjectId for address operations
  */
 const validateAddressId = [
-  validateParams({
+  validateJoiParams({
     addressId: commonPatterns.objectId.required(),
   }),
 ];
@@ -153,14 +156,17 @@ const validateAddressId = [
  * Wishlist Add Validation
  * Validates product ID for wishlist operations
  */
-const validateWishlistAdd = [sanitizeMiddleware, validateBody(wishlistSchema)];
+const validateWishlistAdd = [
+  sanitizeMiddleware,
+  validateJoiBody(wishlistSchema),
+];
 
 /**
  * Wishlist Remove Validation
  * Validates product ID from URL parameters
  */
 const validateWishlistRemove = [
-  validateParams({
+  validateJoiParams({
     productId: commonPatterns.objectId.required(),
   }),
 ];
@@ -171,20 +177,20 @@ const validateWishlistRemove = [
  * Pagination Validation
  * Validates pagination parameters (page, limit, sort)
  */
-const validatePagination = [validateQuery(paginationSchema)];
+const validatePagination = [validateJoiQuery(paginationSchema)];
 
 /**
  * Search Validation
  * Validates search query parameters with pagination
  */
-const validateSearch = [validateQuery(searchSchema)];
+const validateSearch = [validateJoiQuery(searchSchema)];
 
 /**
  * User ID Validation
  * Validates MongoDB ObjectId for user operations
  */
 const validateUserId = [
-  validateParams({
+  validateJoiParams({
     userId: commonPatterns.objectId.required(),
   }),
 ];
@@ -197,7 +203,7 @@ const validateUserId = [
  */
 const validateAdminUpdate = [
   sanitizeMiddleware,
-  validateBody(adminUserUpdateSchema),
+  validateJoiBody(adminUserUpdateSchema),
 ];
 
 /**
@@ -206,7 +212,7 @@ const validateAdminUpdate = [
  */
 const validateBulkOperation = [
   sanitizeMiddleware,
-  validateBody(bulkOperationSchema),
+  validateJoiBody(bulkOperationSchema),
 ];
 
 // ==================== CUSTOM VALIDATORS ====================
@@ -312,7 +318,7 @@ const validateConditional = (condition, schema) => {
  */
 const validateCompleteRegistration = [
   sanitizeMiddleware,
-  validateBody(userRegistrationSchema),
+  validateJoiBody(userRegistrationSchema),
   validateCustom(
     (req) => req.body.acceptTerms === true,
     "You must accept the terms and conditions"
@@ -325,7 +331,7 @@ const validateCompleteRegistration = [
  */
 const validateProfileUpdateWithAvatar = [
   sanitizeMiddleware,
-  validateBody(profileUpdateSchema),
+  validateJoiBody(profileUpdateSchema),
   validateFile({
     required: false,
     allowedTypes: ["image/jpeg", "image/jpg", "image/png", "image/webp"],
@@ -340,7 +346,7 @@ const validateProfileUpdateWithAvatar = [
  */
 const validateAddressWithCoordinates = [
   sanitizeMiddleware,
-  validateBody(addressSchema),
+  validateJoiBody(addressSchema),
   validateCustom((req) => {
     const { coordinates } = req.body;
     if (!coordinates) return true;
