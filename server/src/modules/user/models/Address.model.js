@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { getMongooseValidation } = require("../validators/sharedValidation");
 
 const addressSchema = new mongoose.Schema(
   {
@@ -37,22 +38,16 @@ const addressSchema = new mongoose.Schema(
       trim: true,
       maxlength: [50, "State name cannot exceed 50 characters"],
     },
-    pincode: {
-      type: String,
-      required: [true, "Pincode is required"],
-      match: [/^[1-9][0-9]{5}$/, "Please enter a valid 6-digit pincode"],
-    },
+    pincode: getMongooseValidation("pincode"),
     country: {
       type: String,
       default: "India",
       trim: true,
       maxlength: [50, "Country name cannot exceed 50 characters"],
     },
-    phone: {
-      type: String,
+    phone: getMongooseValidation("phone", {
       required: [true, "Phone number is required"],
-      match: [/^[6-9]\d{9}$/, "Please enter a valid 10-digit mobile number"],
-    },
+    }),
     landmark: {
       type: String,
       trim: true,

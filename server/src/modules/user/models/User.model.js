@@ -5,45 +5,23 @@ const {
   hashPassword,
   comparePassword,
 } = require("../../../shared/utils/bcrypt");
+const {
+  getMongooseValidation,
+  createMongooseFields,
+} = require("../validators/sharedValidation");
 
 const userSchema = new mongoose.Schema(
   {
-    // Basic Information
-    email: {
-      type: String,
-      required: [true, "Email is required"],
-      unique: true,
-      lowercase: true,
-      trim: true,
-      index: true,
-    },
-    password: {
-      type: String,
-      required: function () {
-        return !this.googleId && !this.facebookId;
-      },
-      minlength: [8, "Password must be at least 8 characters long"],
-      select: false, // Hide password by default
-    },
-    firstName: {
-      type: String,
+    // Basic Information using shared validation
+    email: getMongooseValidation("email"),
+    password: getMongooseValidation("password"),
+    firstName: getMongooseValidation("name", {
       required: [true, "First name is required"],
-      trim: true,
-      maxlength: [50, "First name cannot exceed 50 characters"],
-    },
-    lastName: {
-      type: String,
+    }),
+    lastName: getMongooseValidation("name", {
       required: [true, "Last name is required"],
-      trim: true,
-      maxlength: [50, "Last name cannot exceed 50 characters"],
-    },
-    phone: {
-      type: String,
-      unique: true,
-      sparse: true,
-      match: [/^[6-9]\d{9}$/, "Please enter a valid 10-digit mobile number"],
-      index: true,
-    },
+    }),
+    phone: getMongooseValidation("phone"),
 
     // Profile Information
     avatar: {
@@ -62,33 +40,11 @@ const userSchema = new mongoose.Schema(
         },
       },
     },
-    dateOfBirth: {
-      type: Date,
-      validate: {
-        validator: function (v) {
-          return !v || v < new Date();
-        },
-        message: "Date of birth cannot be in the future",
-      },
-    },
-    gender: {
-      type: String,
-      enum: {
-        values: ["male", "female", "other"],
-        message: "Gender must be male, female, or other",
-      },
-    },
+    dateOfBirth: getMongooseValidation("dateOfBirth"),
+    gender: getMongooseValidation("gender"),
 
     // Role and Status
-    role: {
-      type: String,
-      enum: {
-        values: ["customer", "seller", "admin"],
-        message: "Role must be customer, seller, or admin",
-      },
-      default: "customer",
-      index: true,
-    },
+    role: getMongooseValidation("role", { index: true }),
     isActive: {
       type: Boolean,
       default: true,

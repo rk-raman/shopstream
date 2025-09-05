@@ -1,5 +1,10 @@
 const Joi = require("joi");
 const mongoose = require("mongoose");
+const {
+  getJoiValidation,
+  createJoiSchema,
+  sharedValidation,
+} = require("./sharedValidation");
 
 // Custom Joi extensions for common validations
 const customJoi = Joi.extend({
@@ -46,78 +51,27 @@ const customJoiWithPincode = customJoiExtended.extend({
   },
 });
 
-// Common validation patterns
+// Common validation patterns using shared validation
 const commonPatterns = {
-  email: Joi.string()
-    .email({ tlds: { allow: false } })
-    .lowercase()
-    .trim()
-    .messages({
-      "string.email": "Please provide a valid email address",
-      "string.empty": "Email is required",
-    }),
-
-  strongPassword: Joi.string()
-    .min(8)
-    .max(128)
-    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
-    .messages({
-      "string.min": "Password must be at least 8 characters long",
-      "string.max": "Password cannot exceed 128 characters",
-      "string.pattern.base":
-        "Password must contain at least one uppercase letter, one lowercase letter, one number and one special character (@$!%*?&)",
-      "string.empty": "Password is required",
-    }),
-
-  name: Joi.string()
-    .min(2)
-    .max(50)
-    .pattern(/^[a-zA-Z\s]+$/)
-    .trim()
-    .messages({
-      "string.min": "Name must be at least 2 characters long",
-      "string.max": "Name cannot exceed 50 characters",
-      "string.pattern.base": "Name can only contain letters and spaces",
-      "string.empty": "Name is required",
-    }),
-
+  email: getJoiValidation("email", true),
+  strongPassword: getJoiValidation("password", true),
+  name: getJoiValidation("name", true),
   phone: customJoiExtended.phone(),
-
   objectId: customJoi.objectId(),
-
   pincode: customJoiWithPincode.pincode(),
-
-  dateOfBirth: Joi.date()
-    .max("now")
-    .custom((value, helpers) => {
-      const age = new Date().getFullYear() - new Date(value).getFullYear();
-      if (age < 13) {
-        return helpers.error("date.min", { limit: 13 });
-      }
-      if (age > 120) {
-        return helpers.error("date.max", { limit: 120 });
-      }
-      return value;
-    })
-    .messages({
-      "date.max": "Date of birth cannot be in the future",
-      "date.min": "Age must be at least 13 years",
-      "date.max": "Age cannot exceed 120 years",
-    }),
+  dateOfBirth: getJoiValidation("dateOfBirth", false),
 };
 
-// User Registration Schema
-const userRegistrationSchema = Joi.object({
-  email: commonPatterns.email.required(),
-  password: commonPatterns.strongPassword.required(),
-  firstName: commonPatterns.name.required(),
-  lastName: commonPatterns.name.required(),
-  phone: commonPatterns.phone.optional(),
-  dateOfBirth: commonPatterns.dateOfBirth.optional(),
-  gender: Joi.string().valid("male", "female", "other").optional().messages({
-    "any.only": "Gender must be male, female, or other",
-  }),
-  marketingConsent: Joi.boolean().optional(),
+// User Registration Schema using shared validation
+const userRegistrationSchema = createJoiSchema({
+  email: true,
+  password: true,
+  firstName: { required: true, field: "name" },
+  lastName: { required: true, field: "name" },
+  phone: false,
+  dateOfBirth: false,
+  gender: false,
+  marketingConsent: false,
 });
 
 // User Login Schema
