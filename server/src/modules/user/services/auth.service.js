@@ -1,37 +1,13 @@
-const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const User = require("../models/User.model");
 const ApiError = require("../../../shared/utils/apiError");
 const eventEmitter = require("../../../shared/events/eventEmitter");
 const { USER_EVENTS } = require("../../../shared/events/eventTypes");
-
-// Generate JWT tokens
-const generateTokens = (userId) => {
-  const accessToken = jwt.sign({ userId }, process.env.JWT_ACCESS_SECRET, {
-    expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || "15m",
-  });
-
-  const refreshToken = jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET, {
-    expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "7d",
-  });
-
-  return { accessToken, refreshToken };
-};
-
-// Verify JWT token
-const verifyToken = (token, secret) => {
-  try {
-    return jwt.verify(token, secret);
-  } catch (error) {
-    if (error.name === "JsonWebTokenError") {
-      throw new ApiError(401, "Invalid token");
-    } else if (error.name === "TokenExpiredError") {
-      throw new ApiError(401, "Token expired");
-    } else {
-      throw new ApiError(401, "Token verification failed");
-    }
-  }
-};
+const {
+  generateTokenPair,
+  verifyRefreshToken,
+  verifyAccessToken,
+} = require("../../../shared/utils/jwt");
 
 // Register new user
 const register = async (userData) => {
@@ -59,7 +35,7 @@ const register = async (userData) => {
     });
 
     // Generate tokens
-    const { accessToken, refreshToken } = generateTokens(user._id);
+    const { accessToken, refreshToken } = generateTokenPair(user._id);
 
     // Store refresh token
     user.refreshTokens.push(refreshToken);
@@ -111,7 +87,7 @@ const login = async (email, password) => {
     user.loginCount += 1;
 
     // Generate tokens
-    const { accessToken, refreshToken } = generateTokens(user._id);
+    const { accessToken, refreshToken } = generateTokenPair(user._id);
 
     // Store refresh token
     user.refreshTokens.push(refreshToken);
@@ -156,7 +132,7 @@ const refreshAccessToken = async (refreshToken) => {
     }
 
     // Verify refresh token
-    const decoded = verifyToken(refreshToken, process.env.JWT_REFRESH_SECRET);
+    const decoded = verifyRefreshToken(refreshToken);
     const user = await User.findById(decoded.userId);
 
     if (!user || !user.refreshTokens.includes(refreshToken)) {
@@ -168,7 +144,7 @@ const refreshAccessToken = async (refreshToken) => {
     }
 
     // Generate new tokens
-    const { accessToken, refreshToken: newRefreshToken } = generateTokens(
+    const { accessToken, refreshToken: newRefreshToken } = generateTokenPair(
       user._id
     );
 
@@ -335,12 +311,10 @@ const resendVerificationEmail = async (userId) => {
 // Validate user by token
 const validateUserByToken = async (token, tokenType = "access") => {
   try {
-    const secret =
+    const decoded =
       tokenType === "access"
-        ? process.env.JWT_ACCESS_SECRET
-        : process.env.JWT_REFRESH_SECRET;
-
-    const decoded = verifyToken(token, secret);
+        ? verifyAccessToken(token)
+        : verifyRefreshToken(token);
     const user = await User.findById(decoded.userId);
 
     if (!user) {
@@ -358,8 +332,6 @@ const validateUserByToken = async (token, tokenType = "access") => {
 };
 
 module.exports = {
-  generateTokens,
-  verifyToken,
   register,
   login,
   logout,

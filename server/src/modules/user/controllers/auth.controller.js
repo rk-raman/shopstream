@@ -1,23 +1,10 @@
-const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const User = require("../models/User.model");
 const ApiError = require("../../../shared/utils/apiError");
 const asyncHandler = require("../../../shared/utils/asyncHandler");
 const eventEmitter = require("../../../shared/events/eventEmitter");
 const { USER_EVENTS } = require("../../../shared/events/eventTypes");
-
-// Helper function to generate JWT tokens
-const generateTokens = (userId) => {
-  const accessToken = jwt.sign({ userId }, process.env.JWT_ACCESS_SECRET, {
-    expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || "15m",
-  });
-
-  const refreshToken = jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET, {
-    expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "7d",
-  });
-
-  return { accessToken, refreshToken };
-};
+const { generateTokenPair } = require("../../../shared/utils/jwt");
 
 // Register new user
 const register = asyncHandler(async (req, res) => {
@@ -42,7 +29,7 @@ const register = asyncHandler(async (req, res) => {
   });
 
   // Generate tokens
-  const { accessToken, refreshToken } = generateTokens(user._id);
+  const { accessToken, refreshToken } = generateTokenPair(user._id);
 
   // Store refresh token
   user.refreshTokens.push(refreshToken);
@@ -95,7 +82,7 @@ const login = asyncHandler(async (req, res) => {
   user.loginCount += 1;
 
   // Generate tokens
-  const { accessToken, refreshToken } = generateTokens(user._id);
+  const { accessToken, refreshToken } = generateTokenPair(user._id);
 
   // Store refresh token
   user.refreshTokens.push(refreshToken);
@@ -167,7 +154,7 @@ const refreshToken = asyncHandler(async (req, res) => {
   }
 
   // Generate new tokens
-  const { accessToken, refreshToken: newRefreshToken } = generateTokens(
+  const { accessToken, refreshToken: newRefreshToken } = generateTokenPair(
     user._id
   );
 
