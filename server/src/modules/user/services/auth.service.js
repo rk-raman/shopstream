@@ -71,8 +71,10 @@ const register = async (userData) => {
 // Login user
 const login = async (email, password) => {
   try {
-    // Find user with password
-    const user = await User.findOne({ email }).select("+password");
+    // Find user with password and refreshTokens
+    const user = await User.findOne({ email }).select(
+      "+password +refreshTokens"
+    );
 
     if (!user || !(await user.comparePassword(password))) {
       throw new ApiError(401, "Invalid email or password");
@@ -133,7 +135,7 @@ const refreshAccessToken = async (refreshToken) => {
 
     // Verify refresh token
     const decoded = verifyRefreshToken(refreshToken);
-    const user = await User.findById(decoded.userId);
+    const user = await User.findById(decoded.userId).select("+refreshTokens");
 
     if (!user || !user.refreshTokens.includes(refreshToken)) {
       throw new ApiError(401, "Invalid refresh token");
@@ -164,7 +166,7 @@ const refreshAccessToken = async (refreshToken) => {
 // Change password
 const changePassword = async (userId, currentPassword, newPassword) => {
   try {
-    const user = await User.findById(userId).select("+password");
+    const user = await User.findById(userId).select("+password +refreshTokens");
 
     if (!(await user.comparePassword(currentPassword))) {
       throw new ApiError(400, "Current password is incorrect");
@@ -229,7 +231,7 @@ const resetPassword = async (token, newPassword) => {
     const user = await User.findOne({
       passwordResetToken: hashedToken,
       passwordResetExpires: { $gt: Date.now() },
-    });
+    }).select("+refreshTokens");
 
     if (!user) {
       throw new ApiError(400, "Token is invalid or has expired");
