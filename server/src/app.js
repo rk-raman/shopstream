@@ -17,13 +17,18 @@ const {
   errorHandler,
   notFound,
 } = require("./shared/middleware/error.middleware");
+
 // Import routes
 const routes = require("./routes");
 
 // Import event system
 const eventSystem = require("./shared/events/eventEmitter");
+const responseHandlerMiddleware = require("./shared/middleware/response.middleware");
+const requestIdMiddleware = require("./shared/middleware/requestId.middleware");
 
 const app = express();
+app.use(responseHandlerMiddleware);
+app.use(requestIdMiddleware);
 
 // Trust proxy for rate limiting
 app.set("trust proxy", 1);

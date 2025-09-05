@@ -1,42 +1,72 @@
+const ResponseFormatter = require("../utils/responseFormatter");
 const ApiError = require("../utils/apiError");
 
-const errorHandler = (err, req, res, next) => {
-  let error = err;
+const errorHandler = (error, req, res, next) => {
+  let { statusCode, message, errorCode, errors } = error;
 
-  // If error is not an instance of ApiError, create one
-  if (!(error instanceof ApiError)) {
-    const statusCode = error.statusCode || 500;
-    const message = error.message || "Something went wrong";
-    error = new ApiError(statusCode, message, [], err.stack);
-  }
-
-  // Mongoose validation error
-  if (err.name === "ValidationError") {
-    const errors = Object.values(err.errors).map((val) => val.message);
-    error = new ApiError(400, "Validation Error", errors);
-  }
-
-  // Mongoose duplicate key error
-  if (err.code === 11000) {
-    const field = Object.keys(err.keyPattern)[0];
-    const message = `${field} already exists`;
-    error = new ApiError(409, message);
-  }
-
-  // MongoDB CastError
-  if (err.name === "CastError") {
-    const message = "Invalid ID format";
-    error = new ApiError(400, message);
-  }
-
-  const response = {
-    success: false,
+  // Log error details
+  console.error("Error:", {
     message: error.message,
-    ...(process.env.NODE_ENV === "development" && { stack: error.stack }),
-    ...(error.errors.length > 0 && { errors: error.errors }),
-  };
+    stack: error.stack,
+    url: req.url,
+    method: req.method,
+    requestId: res.locals.requestId,
+    timestamp: new Date().toISOString(),
+  });
 
-  res.status(error.statusCode).json(response);
+  // Handle specific error types
+  if (error.name === "ValidationError") {
+    // Mongoose validation error
+    statusCode = 400;
+    errorCode = "VALIDATION_ERROR";
+    message = "Validation failed";
+    errors = {};
+
+    Object.keys(error.errors).forEach((key) => {
+      errors[key] = error.errors[key].message;
+    });
+  } else if (error.code === 11000) {
+    // MongoDB duplicate key error
+    statusCode = 409;
+    errorCode = "DUPLICATE_ENTRY";
+    message = "Resource already exists";
+
+    const field = Object.keys(error.keyValue)[0];
+    errors = { [field]: `${field} already exists` };
+  } else if (error.name === "CastError") {
+    // MongoDB invalid ObjectId
+    statusCode = 400;
+    errorCode = "INVALID_ID";
+    message = "Invalid resource ID";
+  } else if (error.name === "JsonWebTokenError") {
+    // JWT error
+    statusCode = 401;
+    errorCode = "INVALID_TOKEN";
+    message = "Invalid authentication token";
+  } else if (error.name === "TokenExpiredError") {
+    // JWT expired
+    statusCode = 401;
+    errorCode = "TOKEN_EXPIRED";
+    message = "Authentication token has expired";
+  } else if (error.name === "MulterError") {
+    // File upload error
+    statusCode = 400;
+    errorCode = "FILE_UPLOAD_ERROR";
+    message = error.message;
+  }
+
+  // Default to 500 if not an operational error
+  if (!(error instanceof ApiError) && !statusCode) {
+    statusCode = 500;
+    errorCode = "INTERNAL_ERROR";
+    message =
+      process.env.NODE_ENV === "development"
+        ? error.message
+        : "Internal server error";
+  }
+
+  // Send error response
+  return ResponseFormatter.error(res, message, statusCode, errorCode, errors);
 };
 
 const notFound = (req, res, next) => {
