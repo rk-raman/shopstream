@@ -1,7 +1,7 @@
 const admin = require("firebase-admin");
 const webpush = require("web-push");
 const ApiError = require("../../../shared/utils/apiError");
-const config = require("../../../config");
+const { push: pushConfig } = require("../../../config");
 const User = require("../../user/models/User.model");
 
 class PushService {
@@ -14,13 +14,13 @@ class PushService {
   async initializeServices() {
     try {
       // Initialize Firebase Admin SDK
-      if (config.push.firebase.enabled) {
+      if (pushConfig.firebase.enabled) {
         if (!admin.apps.length) {
           this.firebaseApp = admin.initializeApp({
             credential: admin.credential.cert(
-              config.push.firebase.serviceAccount
+              pushConfig.firebase.serviceAccount
             ),
-            databaseURL: config.push.firebase.databaseURL,
+            databaseURL: pushConfig.firebase.databaseURL,
           });
         } else {
           this.firebaseApp = admin.app();
@@ -29,11 +29,11 @@ class PushService {
       }
 
       // Initialize Web Push
-      if (config.push.webpush.enabled) {
+      if (pushConfig.webpush.enabled) {
         webpush.setVapidDetails(
-          config.push.webpush.subject,
-          config.push.webpush.publicKey,
-          config.push.webpush.privateKey
+          pushConfig.webpush.subject,
+          pushConfig.webpush.publicKey,
+          pushConfig.webpush.privateKey
         );
         this.webpushConfigured = true;
         console.log("Web push service initialized successfully");

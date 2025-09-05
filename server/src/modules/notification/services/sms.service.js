@@ -1,6 +1,6 @@
 const twilio = require("twilio");
 const ApiError = require("../../../shared/utils/apiError");
-const config = require("../../../config");
+const { sms: smsConfig } = require("../../../config");
 
 class SMSService {
   constructor() {
@@ -10,17 +10,17 @@ class SMSService {
 
   async initializeClient() {
     try {
-      if (config.sms.provider === "twilio") {
-        this.client = twilio(config.sms.accountSid, config.sms.authToken);
+      if (smsConfig.provider === "twilio") {
+        this.client = twilio(smsConfig.accountSid, smsConfig.authToken);
         console.log("SMS service (Twilio) initialized successfully");
-      } else if (config.sms.provider === "aws-sns") {
+      } else if (smsConfig.provider === "aws-sns") {
         // AWS SNS implementation would go here
         console.log("SMS service (AWS SNS) initialized successfully");
-      } else if (config.sms.provider === "textlocal") {
+      } else if (smsConfig.provider === "textlocal") {
         // TextLocal implementation would go here
         console.log("SMS service (TextLocal) initialized successfully");
       } else {
-        console.log("SMS service initialized in mock mode");
+        console.log("SMS service initialized in mock mode (disabled)");
       }
     } catch (error) {
       console.error("Failed to initialize SMS service:", error);
@@ -224,7 +224,7 @@ class SMSService {
         return { isValid: true, formatted: `+${cleaned}` };
       } else if (cleaned.length === 10) {
         // Assume it's a local number, add default country code
-        const defaultCountryCode = config.sms.defaultCountryCode || "91";
+        const defaultCountryCode = smsConfig.defaultCountryCode || "91";
         return { isValid: true, formatted: `+${defaultCountryCode}${cleaned}` };
       } else {
         return {
@@ -247,7 +247,7 @@ class SMSService {
 
   async getDeliveryStatus(messageId) {
     try {
-      if (config.sms.provider === "twilio" && this.client) {
+      if (smsConfig.provider === "twilio" && this.client) {
         const message = await this.client.messages(messageId).fetch();
         return {
           messageId,
@@ -321,9 +321,9 @@ class SMSService {
 
   async checkBalance() {
     try {
-      if (config.sms.provider === "twilio" && this.client) {
+      if (smsConfig.provider === "twilio" && this.client) {
         const account = await this.client.api
-          .accounts(config.sms.accountSid)
+          .accounts(smsConfig.accountSid)
           .fetch();
         return {
           balance: account.balance,

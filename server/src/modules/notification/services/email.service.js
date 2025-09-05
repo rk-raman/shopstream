@@ -1,6 +1,6 @@
 const nodemailer = require("nodemailer");
 const ApiError = require("../../../shared/utils/apiError");
-const config = require("../../../config");
+const { email: emailConfig } = require("../../../config");
 
 class EmailService {
   constructor() {
@@ -11,38 +11,38 @@ class EmailService {
   async initializeTransporter() {
     try {
       // Create transporter based on configuration
-      if (config.email.service === "gmail") {
+      if (emailConfig.service === "gmail") {
         this.transporter = nodemailer.createTransporter({
           service: "gmail",
           auth: {
-            user: config.email.user,
-            pass: config.email.password,
+            user: emailConfig.user,
+            pass: emailConfig.password,
           },
         });
-      } else if (config.email.service === "smtp") {
+      } else if (emailConfig.service === "smtp") {
         this.transporter = nodemailer.createTransporter({
-          host: config.email.host,
-          port: config.email.port,
-          secure: config.email.secure,
+          host: emailConfig.host,
+          port: emailConfig.port,
+          secure: emailConfig.secure,
           auth: {
-            user: config.email.user,
-            pass: config.email.password,
+            user: emailConfig.user,
+            pass: emailConfig.password,
           },
         });
-      } else if (config.email.service === "sendgrid") {
+      } else if (emailConfig.service === "sendgrid") {
         this.transporter = nodemailer.createTransporter({
           service: "SendGrid",
           auth: {
             user: "apikey",
-            pass: config.email.apiKey,
+            pass: emailConfig.apiKey,
           },
         });
-      } else if (config.email.service === "mailgun") {
+      } else if (emailConfig.service === "mailgun") {
         this.transporter = nodemailer.createTransporter({
           service: "Mailgun",
           auth: {
-            user: config.email.user,
-            pass: config.email.password,
+            user: emailConfig.user,
+            pass: emailConfig.password,
           },
         });
       }
@@ -85,7 +85,7 @@ class EmailService {
 
       // Prepare email options
       const mailOptions = {
-        from: from || config.email.from || config.email.user,
+        from: from || emailConfig.from || emailConfig.user,
         to: Array.isArray(to) ? to.join(", ") : to,
         subject,
         html,
