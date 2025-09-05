@@ -1,7 +1,16 @@
 // auth.routes.js
 const express = require("express");
 const authController = require("../controllers/auth.controller");
-const userValidators = require("../validators/user.validators");
+const {
+  validateRegister,
+  validateLogin,
+  validateChangePassword,
+  validateForgotPassword,
+  validateResetPassword,
+  validateEmailVerification,
+  validateResendVerification,
+  validateTwoFactor,
+} = require("../validators/joiValidators");
 const {
   authLimiter,
   loginLimiter,
@@ -18,7 +27,7 @@ const router = express.Router();
 router.post(
   "/register",
   authLimiter, // strict limiter for registration
-  userValidators.validateRegister,
+  validateRegister,
   authController.register
 );
 
@@ -26,7 +35,7 @@ router.post(
   "/login",
   loginLimiter, // special limiter for login attempts
   trackFailedAttempts, // track failures
-  userValidators.validateLogin,
+  validateLogin,
   authController.login,
   resetRateLimitOnLogin // reset limiter if login succeeds
 );
@@ -34,22 +43,27 @@ router.post(
 router.post(
   "/forgot-password",
   passwordResetLimiter,
-  userValidators.validateEmail,
+  validateForgotPassword,
   authController.forgotPassword
 );
 
 router.post(
   "/reset-password",
   passwordResetLimiter, // also restrict reset attempts
-  userValidators.validateResetPassword,
+  validateResetPassword,
   authController.resetPassword
 );
 
-router.get("/verify-email/:token", authController.verifyEmail);
+router.get(
+  "/verify-email/:token",
+  validateEmailVerification,
+  authController.verifyEmail
+);
 
 router.post(
   "/resend-verification",
   emailVerificationLimiter, // limit resend attempts
+  validateResendVerification,
   authController.resendVerificationEmail
 );
 
@@ -62,8 +76,13 @@ router.use(authenticate);
 router.get("/me", authController.getMe);
 router.post(
   "/change-password",
-  userValidators.validateChangePassword,
+  validateChangePassword,
   authController.changePassword
 );
+
+// Two-factor authentication routes
+router.post("/enable-2fa", validateTwoFactor, authController.enableTwoFactor);
+
+router.post("/verify-2fa", validateTwoFactor, authController.verifyTwoFactor);
 
 module.exports = router;

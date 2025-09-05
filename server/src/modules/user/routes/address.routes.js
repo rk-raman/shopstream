@@ -1,6 +1,9 @@
 const express = require("express");
 const addressController = require("../controllers/address.controller");
-const userValidators = require("../validators/user.validators");
+const {
+  validateAddress,
+  validateAddressId,
+} = require("../validators/joiValidators");
 const { authenticate } = require("../../../shared/middleware/auth.middleware");
 
 const router = express.Router();
@@ -10,16 +13,25 @@ router.use(authenticate); // apply authentication globally
 
 // Address CRUD routes
 router.get("/", addressController.getAddresses);
-router.post("/", userValidators.validateAddress, addressController.addAddress);
+router.post("/", validateAddress, addressController.addAddress);
 router.get("/default", addressController.getDefaultAddress);
 router.get("/type/:type", addressController.getAddressesByType);
-router.get("/:addressId", addressController.getAddress);
+router.get("/:addressId", validateAddressId, addressController.getAddress);
 router.put(
   "/:addressId",
-  userValidators.validateAddress,
+  validateAddressId,
+  validateAddress,
   addressController.updateAddress
 );
-router.delete("/:addressId", addressController.deleteAddress);
-router.patch("/:addressId/default", addressController.setDefaultAddress);
+router.delete(
+  "/:addressId",
+  validateAddressId,
+  addressController.deleteAddress
+);
+router.patch(
+  "/:addressId/default",
+  validateAddressId,
+  addressController.setDefaultAddress
+);
 
 module.exports = router;

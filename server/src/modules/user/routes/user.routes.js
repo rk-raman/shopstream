@@ -1,6 +1,15 @@
 const express = require("express");
 const userController = require("../controllers/user.controller");
-const userValidators = require("../validators/user.validators");
+const {
+  validateUpdateProfile,
+  validateAvatarUpload,
+  validateWishlistAdd,
+  validateWishlistRemove,
+  validateUserId,
+  validatePagination,
+  validateSearch,
+  validateAdminUpdate,
+} = require("../validators/joiValidators");
 const {
   authenticate,
   adminOnly,
@@ -14,33 +23,36 @@ router.use(authenticate);
 
 // Profile routes
 router.get("/profile", userController.getProfile);
-router.put(
-  "/profile",
-  userValidators.validateUpdateProfile,
-  userController.updateProfile
+router.put("/profile", validateUpdateProfile, userController.updateProfile);
+router.post(
+  "/avatar",
+  upload.single("avatar"),
+  validateAvatarUpload,
+  userController.uploadAvatar
 );
-//router.post("/avatar", upload.single("avatar"), userController.uploadAvatar);
 router.delete("/account", userController.deleteAccount);
 
 // Wishlist routes
 router.get("/wishlist", userController.getWishlist);
-router.post(
-  "/wishlist",
-  userValidators.validateProductId,
-  userController.addToWishlist
+router.post("/wishlist", validateWishlistAdd, userController.addToWishlist);
+router.delete(
+  "/wishlist/:productId",
+  validateWishlistRemove,
+  userController.removeFromWishlist
 );
-router.delete("/wishlist/:productId", userController.removeFromWishlist);
 router.delete("/wishlist", userController.clearWishlist);
 
 // 🔹 Admin-only routes
 router.use(adminOnly);
-router.get("/", userController.getAllUsers);
-router.get("/:userId", userController.getUserById);
+router.get("/", validatePagination, userController.getAllUsers);
+router.get("/search", validateSearch, userController.searchUsers);
+router.get("/:userId", validateUserId, userController.getUserById);
 router.put(
   "/:userId",
-  userValidators.validateUpdateProfile,
+  validateUserId,
+  validateAdminUpdate,
   userController.updateUserById
 );
-router.delete("/:userId", userController.deleteUserById);
+router.delete("/:userId", validateUserId, userController.deleteUserById);
 
 module.exports = router;
