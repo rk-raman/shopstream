@@ -1,3 +1,5 @@
+const ERROR_CODES = require("../constants/errorCodes");
+
 class ResponseFormatter {
   /**
    * Success response format
@@ -123,7 +125,7 @@ class ResponseFormatter {
       res,
       "Validation failed",
       400,
-      "VALIDATION_ERROR",
+      ERROR_CODES.VALIDATION_ERROR,
       errors
     );
   }
@@ -143,7 +145,7 @@ class ResponseFormatter {
    * @param {String} message - Error message
    */
   static unauthorized(res, message = "Unauthorized access") {
-    return this.error(res, message, 401, "UNAUTHORIZED");
+    return this.error(res, message, 401, ERROR_CODES.UNAUTHORIZED);
   }
 
   /**
@@ -152,7 +154,7 @@ class ResponseFormatter {
    * @param {String} message - Error message
    */
   static forbidden(res, message = "Access forbidden") {
-    return this.error(res, message, 403, "FORBIDDEN");
+    return this.error(res, message, 403, ERROR_CODES.FORBIDDEN);
   }
 
   /**
@@ -161,7 +163,7 @@ class ResponseFormatter {
    * @param {String} message - Error message
    */
   static conflict(res, message = "Resource conflict") {
-    return this.error(res, message, 409, "CONFLICT");
+    return this.error(res, message, 409, ERROR_CODES.CONFLICT);
   }
 
   /**
@@ -170,7 +172,7 @@ class ResponseFormatter {
    * @param {String} message - Error message
    */
   static tooManyRequests(res, message = "Too many requests") {
-    return this.error(res, message, 429, "TOO_MANY_REQUESTS");
+    return this.error(res, message, 429, ERROR_CODES.TOO_MANY_REQUESTS);
   }
 
   /**
@@ -179,7 +181,7 @@ class ResponseFormatter {
    * @param {String} message - Error message
    */
   static internalError(res, message = "Internal server error") {
-    return this.error(res, message, 500, "INTERNAL_ERROR");
+    return this.error(res, message, 500, ERROR_CODES.INTERNAL_ERROR);
   }
 }
 

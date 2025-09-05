@@ -1,9 +1,8 @@
 const ResponseFormatter = require("../utils/responseFormatter");
 const ApiError = require("../utils/apiError");
+const ERROR_CODES = require("../constants/errorCodes");
 
 const errorHandler = (error, req, res, next) => {
-  console.log("Error middleware triggered", error);
-
   let { statusCode, message, errorCode, errors } = error;
 
   // Log error details
@@ -20,7 +19,7 @@ const errorHandler = (error, req, res, next) => {
   if (error.name === "ValidationError") {
     // Mongoose validation error
     statusCode = 400;
-    errorCode = "VALIDATION_ERROR";
+    errorCode = ERROR_CODES.VALIDATION_ERROR;
     message = "Validation failed";
     errors = {};
 
@@ -30,7 +29,7 @@ const errorHandler = (error, req, res, next) => {
   } else if (error.code === 11000) {
     // MongoDB duplicate key error
     statusCode = 409;
-    errorCode = "DUPLICATE_ENTRY";
+    errorCode = ERROR_CODES.DUPLICATE_ENTRY;
     message = "Resource already exists";
 
     const field = Object.keys(error.keyValue)[0];
@@ -38,29 +37,29 @@ const errorHandler = (error, req, res, next) => {
   } else if (error.name === "CastError") {
     // MongoDB invalid ObjectId
     statusCode = 400;
-    errorCode = "INVALID_ID";
+    errorCode = ERROR_CODES.INVALID_ID;
     message = "Invalid resource ID";
   } else if (error.name === "JsonWebTokenError") {
     // JWT error
     statusCode = 401;
-    errorCode = "INVALID_TOKEN";
+    errorCode = ERROR_CODES.INVALID_TOKEN;
     message = "Invalid authentication token";
   } else if (error.name === "TokenExpiredError") {
     // JWT expired
     statusCode = 401;
-    errorCode = "TOKEN_EXPIRED";
+    errorCode = ERROR_CODES.TOKEN_EXPIRED;
     message = "Authentication token has expired";
   } else if (error.name === "MulterError") {
     // File upload error
     statusCode = 400;
-    errorCode = "FILE_UPLOAD_ERROR";
+    errorCode = ERROR_CODES.FILE_UPLOAD_ERROR;
     message = error.message;
   }
 
   // Default to 500 if not an operational error
   if (!(error instanceof ApiError) && !statusCode) {
     statusCode = 500;
-    errorCode = "INTERNAL_ERROR";
+    errorCode = ERROR_CODES.INTERNAL_ERROR;
     message =
       process.env.NODE_ENV === "development"
         ? error.message

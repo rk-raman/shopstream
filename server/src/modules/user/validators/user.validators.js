@@ -1,5 +1,6 @@
 const { body, param, query, validationResult } = require("express-validator");
 const ApiError = require("../../../shared/utils/apiError");
+const ERROR_CODES = require("../../../shared/constants/errorCodes");
 
 // Validation error handler middleware
 const handleValidationErrors = (req, res, next) => {
@@ -9,7 +10,12 @@ const handleValidationErrors = (req, res, next) => {
     const message = errors.array()[0].msg;
 
     // Pass errors array directly, not nested
-    throw new ApiError(400, message, "VALIDATION_ERROR", errors.array());
+    throw new ApiError(
+      400,
+      message,
+      ERROR_CODES.VALIDATION_ERROR,
+      errors.array()
+    );
   }
 
   next();
