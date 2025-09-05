@@ -48,15 +48,21 @@ class EventSystemManager {
    */
   async initializeAllModules() {
     const modules = [
-      { name: "user", path: "../modules/user/events/user.listeners.modular" },
+      {
+        name: "user",
+        path: "../../modules/user/events/user.listeners.modular.js",
+      },
+      {
+        name: "notification",
+        path: "../../modules/notification/events/notification.listeners.modular.js",
+      },
       // Add more modules here as they are implemented
-      // { name: 'product', path: './modules/product/events/product.listeners.modular' },
-      // { name: 'order', path: './modules/order/events/order.listeners.modular' },
-      // { name: 'payment', path: './modules/payment/events/payment.listeners.modular' },
-      // { name: 'inventory', path: './modules/inventory/events/inventory.listeners.modular' },
-      // { name: 'notification', path: './modules/notification/events/notification.listeners.modular' },
-      // { name: 'review', path: './modules/review/events/review.listeners.modular' },
-      // { name: 'analytics', path: './modules/analytics/events/analytics.listeners.modular' },
+      // { name: 'product', path: './modules/product/events/product.listeners.modular.js' },
+      // { name: 'order', path: './modules/order/events/order.listeners.modular.js' },
+      // { name: 'payment', path: './modules/payment/events/payment.listeners.modular.js' },
+      // { name: 'inventory', path: './modules/inventory/events/inventory.listeners.modular.js' },
+      // { name: 'review', path: './modules/review/events/review.listeners.modular.js' },
+      // { name: 'analytics', path: './modules/analytics/events/analytics.listeners.modular.js' },
     ];
 
     for (const module of modules) {
@@ -64,17 +70,23 @@ class EventSystemManager {
         console.log(`Initializing ${module.name} event listeners...`);
 
         const modulePath = require.resolve(module.path);
-        const { initializeUserEventListeners } = require(modulePath);
+        const moduleExports = require(modulePath);
 
-        if (typeof initializeUserEventListeners === "function") {
-          await initializeUserEventListeners();
+        // Dynamic function name based on module name
+        const initFunctionName = `initialize${
+          module.name.charAt(0).toUpperCase() + module.name.slice(1)
+        }EventListeners`;
+        const initFunction = moduleExports[initFunctionName];
+
+        if (typeof initFunction === "function") {
+          await initFunction();
           this.initializedModules.add(module.name);
           console.log(
             `${module.name} event listeners initialized successfully`
           );
         } else {
           console.warn(
-            `No initialization function found for ${module.name} module`
+            `No initialization function found for ${module.name} module (looking for ${initFunctionName})`
           );
         }
       } catch (error) {
@@ -122,7 +134,14 @@ class EventSystemManager {
    */
   async cleanupAllModules() {
     const modules = [
-      { name: "user", path: "./modules/user/events/user.listeners.modular" },
+      {
+        name: "user",
+        path: "../../modules/user/events/user.listeners.modular.js",
+      },
+      {
+        name: "notification",
+        path: "../../modules/notification/events/notification.listeners.modular.js",
+      },
       // Add more modules here as they are implemented
     ];
 
@@ -132,15 +151,23 @@ class EventSystemManager {
           console.log(`Cleaning up ${module.name} event listeners...`);
 
           const modulePath = require.resolve(module.path);
-          const { cleanupUserEventListeners } = require(modulePath);
+          const moduleExports = require(modulePath);
 
-          if (typeof cleanupUserEventListeners === "function") {
-            await cleanupUserEventListeners();
+          // Dynamic function name based on module name
+          const cleanupFunctionName = `cleanup${
+            module.name.charAt(0).toUpperCase() + module.name.slice(1)
+          }EventListeners`;
+          const cleanupFunction = moduleExports[cleanupFunctionName];
+
+          if (typeof cleanupFunction === "function") {
+            await cleanupFunction();
             console.log(
               `${module.name} event listeners cleaned up successfully`
             );
           } else {
-            console.warn(`No cleanup function found for ${module.name} module`);
+            console.warn(
+              `No cleanup function found for ${module.name} module (looking for ${cleanupFunctionName})`
+            );
           }
         } catch (error) {
           console.error(

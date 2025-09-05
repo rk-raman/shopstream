@@ -7,7 +7,7 @@
 
 const notificationService = require("../services/notification.service");
 const { Notification, NotificationTemplate } = require("../models");
-const eventEmitter = require("../../../shared/events/eventEmitter");
+const eventSystemManager = require("../../../shared/events/eventSystemManager");
 const {
   USER_EVENTS,
   ORDER_EVENTS,
@@ -17,10 +17,22 @@ const {
 
 class NotificationListeners {
   constructor() {
-    this.initializeListeners();
+    this.isInitialized = false;
+    // Don't initialize immediately - wait for event bus to be ready
   }
 
-  initializeListeners() {
+  async initializeListeners() {
+    // Get the event bus from the event system manager
+    const eventBus = eventSystemManager.getEventBus();
+    if (!eventBus || !eventBus.eventEmitter) {
+      console.warn(
+        "Event bus not available, notification listeners will be initialized later"
+      );
+      return;
+    }
+
+    const eventEmitter = eventBus.eventEmitter;
+
     // User-related notification listeners
     eventEmitter.on(
       USER_EVENTS.USER_REGISTERED.name,
