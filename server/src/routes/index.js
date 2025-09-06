@@ -48,6 +48,7 @@ const express = require("express");
 const router = express.Router();
 const userRoutes = require("../modules/user/routes");
 const { notificationRoutes } = require("../modules/notification/routes");
+const productRoutes = require("../modules/product/routes");
 
 // Health check endpoint
 router.get("/health", (req, res) => {
@@ -65,6 +66,7 @@ router.get("/health", (req, res) => {
 
 router.use(userRoutes);
 router.use("/notifications", notificationRoutes);
+router.use(productRoutes);
 
 // API Info endpoint
 router.get("/", (req, res) => {
