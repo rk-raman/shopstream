@@ -57,7 +57,7 @@ class EventSystemManager {
         path: "../../modules/notification/events/notification.listeners.modular.js",
       },
       // Add more modules here as they are implemented
-      // { name: 'product', path: './modules/product/events/product.listeners.modular.js' },
+      { name: "product", path: "../../modules/product/events/product.listeners.js" },
       // { name: 'order', path: './modules/order/events/order.listeners.modular.js' },
       // { name: 'payment', path: './modules/payment/events/payment.listeners.modular.js' },
       // { name: 'inventory', path: './modules/inventory/events/inventory.listeners.modular.js' },

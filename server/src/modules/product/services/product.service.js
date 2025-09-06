@@ -1,5 +1,8 @@
 const { Product, Category, Brand } = require("../models");
 const ApiError = require("../../../shared/utils/apiError");
+const ProductEventPublisher = require("../events/publishers/ProductEventPublisher");
+
+const productEventPublisher = new ProductEventPublisher();
 
 // Build MongoDB query for product search/listing based on filters
 const buildProductQuery = (filters = {}) => {
@@ -77,6 +80,9 @@ const createProduct = async (productData, sellerId) => {
     status: "draft",
   });
 
+  // Publish event
+  await productEventPublisher.publishProductCreated(product, sellerId);
+
   return product;
 };
 
@@ -115,6 +121,7 @@ const updateProduct = async (productId, updateData) => {
     runValidators: true,
   });
   if (!product) throw new ApiError(404, "Product not found");
+  await productEventPublisher.publishProductUpdated(productId, updateData, updateData.updatedBy);
   return product;
 };
 
@@ -126,6 +133,7 @@ const deleteProduct = async (productId) => {
     { new: true }
   );
   if (!product) throw new ApiError(404, "Product not found");
+  await productEventPublisher.publishProductDeleted(productId, "system", "soft_delete");
   return { message: "Product deactivated successfully" };
 };
 
