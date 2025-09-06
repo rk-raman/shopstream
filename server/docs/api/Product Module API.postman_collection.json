@@ -1,0 +1,869 @@
+{
+	"info": {
+		"_postman_id": "a381eb71-5c69-4956-971f-21ffa7d8caf7",
+		"name": "Product Module API",
+		"description": "Complete API collection for Product Management System including products, categories, brands, and related operations",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "5168742"
+	},
+	"item": [
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "Public Endpoints",
+					"item": [
+						{
+							"name": "Get All Products",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/products?page=1&limit=12&search=&category=&brand=&minPrice=&maxPrice=&inStock=true&sortBy=createdAt&sortOrder=desc&featured=",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"products"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1",
+											"description": "Page number"
+										},
+										{
+											"key": "limit",
+											"value": "12",
+											"description": "Items per page"
+										},
+										{
+											"key": "search",
+											"value": "",
+											"description": "Search query"
+										},
+										{
+											"key": "category",
+											"value": "",
+											"description": "Category ID"
+										},
+										{
+											"key": "brand",
+											"value": "",
+											"description": "Brand ID"
+										},
+										{
+											"key": "minPrice",
+											"value": "",
+											"description": "Minimum price"
+										},
+										{
+											"key": "maxPrice",
+											"value": "",
+											"description": "Maximum price"
+										},
+										{
+											"key": "inStock",
+											"value": "true",
+											"description": "In stock filter"
+										},
+										{
+											"key": "sortBy",
+											"value": "createdAt",
+											"description": "Sort field"
+										},
+										{
+											"key": "sortOrder",
+											"value": "desc",
+											"description": "Sort order"
+										},
+										{
+											"key": "featured",
+											"value": "",
+											"description": "Featured products only"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Search Products",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/products/search?q=laptop&page=1&limit=12&category=&brand=&minPrice=&maxPrice=",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"products",
+										"search"
+									],
+									"query": [
+										{
+											"key": "q",
+											"value": "laptop",
+											"description": "Search query (required)"
+										},
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "12"
+										},
+										{
+											"key": "category",
+											"value": ""
+										},
+										{
+											"key": "brand",
+											"value": ""
+										},
+										{
+											"key": "minPrice",
+											"value": ""
+										},
+										{
+											"key": "maxPrice",
+											"value": ""
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Product by ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/products/{{product_id}}"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Product by Slug",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/products/slug/sample-product-slug"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Featured Products",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/products/featured?limit=8",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"products",
+										"featured"
+									],
+									"query": [
+										{
+											"key": "limit",
+											"value": "8",
+											"description": "Number of products to return"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Products by Category",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/products/category/{{category_id}}?page=1&limit=12&sortBy=createdAt&sortOrder=desc",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"products",
+										"category",
+										"{{category_id}}"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "12"
+										},
+										{
+											"key": "sortBy",
+											"value": "createdAt"
+										},
+										{
+											"key": "sortOrder",
+											"value": "desc"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Products by Seller",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/products/seller/{{seller_id}}?page=1&limit=12&status=&sortBy=createdAt&sortOrder=desc",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"products",
+										"seller",
+										"{{seller_id}}"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "12"
+										},
+										{
+											"key": "status",
+											"value": ""
+										},
+										{
+											"key": "sortBy",
+											"value": "createdAt"
+										},
+										{
+											"key": "sortOrder",
+											"value": "desc"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Related Products",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/products/{{product_id}}/related?limit=6",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"products",
+										"{{product_id}}",
+										"related"
+									],
+									"query": [
+										{
+											"key": "limit",
+											"value": "6"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Product Variants",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/products/{{product_id}}/variants"
+							},
+							"response": []
+						}
+					],
+					"description": "Endpoints that don't require authentication"
+				},
+				{
+					"name": "Authenticated Endpoints",
+					"item": [
+						{
+							"name": "Create Product",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": {
+										"token": "{{auth_token}}"
+									}
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Sample Product\",\n  \"slug\": \"sample-product\",\n  \"description\": \"This is a sample product description with detailed information about the product features and benefits.\",\n  \"shortDescription\": \"Sample product for demonstration\",\n  \"category\": \"{{category_id}}\",\n  \"brand\": \"{{brand_id}}\",\n  \"basePrice\": 99.99,\n  \"discountPrice\": 79.99,\n  \"stock\": 50,\n  \"sku\": \"SAMPLE-001\",\n  \"tags\": [\"electronics\", \"gadget\", \"new\"],\n  \"specifications\": [\n    {\n      \"name\": \"Color\",\n      \"value\": \"Black\"\n    },\n    {\n      \"name\": \"Weight\",\n      \"value\": \"500g\"\n    }\n  ],\n  \"images\": [\n    {\n      \"url\": \"/uploads/products/sample-image.jpg\",\n      \"isMain\": true\n    }\n  ],\n  \"weight\": 500,\n  \"dimensions\": {\n    \"length\": 15,\n    \"width\": 10,\n    \"height\": 5\n  },\n  \"shippingClass\": \"standard\",\n  \"metaTitle\": \"Sample Product - Best Quality\",\n  \"metaDescription\": \"Buy sample product with best quality and affordable price\",\n  \"metaKeywords\": [\"sample\", \"product\", \"quality\"]\n}"
+								},
+								"url": "{{base_url}}/products"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Product",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": {
+										"token": "{{auth_token}}"
+									}
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Updated Product Name\",\n  \"description\": \"Updated product description\",\n  \"basePrice\": 129.99,\n  \"discountPrice\": 99.99,\n  \"stock\": 75,\n  \"status\": \"active\"\n}"
+								},
+								"url": "{{base_url}}/products/{{product_id}}"
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Product",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": {
+										"token": "{{auth_token}}"
+									}
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": "{{base_url}}/products/{{product_id}}"
+							},
+							"response": []
+						},
+						{
+							"name": "Get My Products",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": {
+										"token": "{{auth_token}}"
+									}
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/products/my/products?page=1&limit=12&status=&sortBy=createdAt&sortOrder=desc",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"products",
+										"my",
+										"products"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "12"
+										},
+										{
+											"key": "status",
+											"value": ""
+										},
+										{
+											"key": "sortBy",
+											"value": "createdAt"
+										},
+										{
+											"key": "sortOrder",
+											"value": "desc"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "Endpoints requiring authentication"
+				},
+				{
+					"name": "Product Images",
+					"item": [
+						{
+							"name": "Upload Product Images",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": {
+										"token": "{{auth_token}}"
+									}
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "images",
+											"type": "file",
+											"src": []
+										},
+										{
+											"key": "images",
+											"type": "file",
+											"src": []
+										}
+									]
+								},
+								"url": "{{base_url}}/products/{{product_id}}/images"
+							},
+							"response": []
+						}
+					],
+					"description": "Product image management"
+				},
+				{
+					"name": "Stock Management",
+					"item": [
+						{
+							"name": "Update Product Stock",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": {
+										"token": "{{auth_token}}"
+									}
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"stockChange\": 10,\n  \"variantId\": \"{{variant_id}}\"\n}"
+								},
+								"url": "{{base_url}}/products/{{product_id}}/stock"
+							},
+							"response": []
+						}
+					],
+					"description": "Product stock management"
+				},
+				{
+					"name": "Product Variants",
+					"item": [
+						{
+							"name": "Add Product Variant",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": {
+										"token": "{{auth_token}}"
+									}
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Size\",\n  \"value\": \"Large\",\n  \"price\": 109.99,\n  \"discountPrice\": 89.99,\n  \"stock\": 25,\n  \"sku\": \"SAMPLE-001-L\",\n  \"images\": [\"/uploads/products/variant-large.jpg\"],\n  \"isActive\": true\n}"
+								},
+								"url": "{{base_url}}/products/{{product_id}}/variants"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Product Variant",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": {
+										"token": "{{auth_token}}"
+									}
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"price\": 119.99,\n  \"stock\": 30,\n  \"isActive\": true\n}"
+								},
+								"url": "{{base_url}}/products/{{product_id}}/variants/{{variant_id}}"
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Product Variant",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": {
+										"token": "{{auth_token}}"
+									}
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": "{{base_url}}/products/{{product_id}}/variants/{{variant_id}}"
+							},
+							"response": []
+						}
+					],
+					"description": "Product variant management"
+				},
+				{
+					"name": "Product Statistics",
+					"item": [
+						{
+							"name": "Get Product Statistics",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": {
+										"token": "{{auth_token}}"
+									}
+								},
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/products/{{product_id}}/stats"
+							},
+							"response": []
+						}
+					],
+					"description": "Product analytics and statistics"
+				},
+				{
+					"name": "Admin Only",
+					"item": [
+						{
+							"name": "Approve Product",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": {
+										"token": "{{auth_token}}"
+									}
+								},
+								"method": "PATCH",
+								"header": [],
+								"url": "{{base_url}}/products/{{product_id}}/approve"
+							},
+							"response": []
+						},
+						{
+							"name": "Reject Product",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": {
+										"token": "{{auth_token}}"
+									}
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"reason\": \"Product does not meet quality standards\"\n}"
+								},
+								"url": "{{base_url}}/products/{{product_id}}/reject"
+							},
+							"response": []
+						},
+						{
+							"name": "Toggle Featured Status",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": {
+										"token": "{{auth_token}}"
+									}
+								},
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"isFeatured\": true\n}"
+								},
+								"url": "{{base_url}}/products/{{product_id}}/featured"
+							},
+							"response": []
+						},
+						{
+							"name": "Bulk Update Products",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": {
+										"token": "{{auth_token}}"
+									}
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"productIds\": [\"{{product_id}}\", \"another_product_id\"],\n  \"updateData\": {\n    \"status\": \"active\",\n    \"isApproved\": true\n  }\n}"
+								},
+								"url": "{{base_url}}/products/bulk/update"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Pending Products",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": {
+										"token": "{{auth_token}}"
+									}
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/products/admin/pending?page=1&limit=12&sortBy=createdAt&sortOrder=desc",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"products",
+										"admin",
+										"pending"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "12"
+										},
+										{
+											"key": "sortBy",
+											"value": "createdAt"
+										},
+										{
+											"key": "sortOrder",
+											"value": "desc"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "Admin-only product management endpoints"
+				}
+			],
+			"description": "Product management endpoints"
+		},
+		{
+			"name": "Categories",
+			"item": [
+				{
+					"name": "Get All Categories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/categories"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Category",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{auth_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Electronics\",\n  \"slug\": \"electronics\",\n  \"description\": \"Electronic devices and gadgets\",\n  \"shortDescription\": \"Electronics category\",\n  \"parent\": null,\n  \"icon\": \"📱\",\n  \"metaTitle\": \"Electronics - Best Deals\",\n  \"metaDescription\": \"Find best electronic devices at affordable prices\",\n  \"isActive\": true,\n  \"isFeatured\": true\n}"
+						},
+						"url": "{{base_url}}/categories"
+					},
+					"response": []
+				}
+			],
+			"description": "Category management endpoints (placeholder for future implementation)"
+		},
+		{
+			"name": "Brands",
+			"item": [
+				{
+					"name": "Get All Brands",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/brands"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Brand",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{auth_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Apple\",\n  \"slug\": \"apple\",\n  \"description\": \"Apple Inc. is an American multinational technology company\",\n  \"shortDescription\": \"Technology company\",\n  \"logo\": {\n    \"url\": \"/uploads/brands/apple-logo.png\"\n  },\n  \"companyInfo\": {\n    \"foundedYear\": 1976,\n    \"headquarters\": \"Cupertino, California\",\n    \"website\": \"https://www.apple.com\",\n    \"email\": \"info@apple.com\"\n  },\n  \"isActive\": true,\n  \"isFeatured\": true,\n  \"isVerified\": true\n}"
+						},
+						"url": "{{base_url}}/brands"
+					},
+					"response": []
+				}
+			],
+			"description": "Brand management endpoints (placeholder for future implementation)"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": {
+			"token": "{{auth_token}}"
+		}
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"exec": [
+					"// Set timestamp for requests",
+					"pm.globals.set('timestamp', Date.now());"
+				],
+				"type": "text/javascript"
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"exec": [
+					"// Global test scripts",
+					"pm.test('Status code should be successful', function () {",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+					"});",
+					"",
+					"// Set product_id from response if it exists",
+					"if (pm.response.json() && pm.response.json().data && pm.response.json().data.product && pm.response.json().data.product._id) {",
+					"    pm.collectionVariables.set('product_id', pm.response.json().data.product._id);",
+					"}",
+					"",
+					"// Set category_id from response if it exists",
+					"if (pm.response.json() && pm.response.json().data && pm.response.json().data.category && pm.response.json().data.category._id) {",
+					"    pm.collectionVariables.set('category_id', pm.response.json().data.category._id);",
+					"}",
+					"",
+					"// Set brand_id from response if it exists",
+					"if (pm.response.json() && pm.response.json().data && pm.response.json().data.brand && pm.response.json().data.brand._id) {",
+					"    pm.collectionVariables.set('brand_id', pm.response.json().data.brand._id);",
+					"}"
+				],
+				"type": "text/javascript"
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5000/api",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "product_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "category_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "brand_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "seller_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "variant_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

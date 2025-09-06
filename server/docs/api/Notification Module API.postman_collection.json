@@ -1,0 +1,1087 @@
+{
+	"info": {
+		"_postman_id": "0273a513-e9bd-4582-89b4-e9054bab83ce",
+		"name": "Notification Module API",
+		"description": "Complete API collection for the notification module including user notifications, admin operations, and template management",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "5168742"
+	},
+	"item": [
+		{
+			"name": "User Notifications",
+			"item": [
+				{
+					"name": "Get User Notifications",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/notifications?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"notifications"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number for pagination"
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Number of notifications per page"
+								},
+								{
+									"key": "type",
+									"value": "order",
+									"description": "Filter by notification type",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "pending",
+									"description": "Filter by notification status",
+									"disabled": true
+								},
+								{
+									"key": "unreadOnly",
+									"value": "true",
+									"description": "Show only unread notifications",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt",
+									"description": "Sort field"
+								},
+								{
+									"key": "sortOrder",
+									"value": "desc",
+									"description": "Sort order (asc/desc)"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Notification by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": "{{baseUrl}}/notifications/{{notificationId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Notification as Read",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": "{{baseUrl}}/notifications/{{notificationId}}/read"
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Notification as Clicked",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": "{{baseUrl}}/notifications/{{notificationId}}/click"
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Notification as Dismissed",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": "{{baseUrl}}/notifications/{{notificationId}}/dismiss"
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk Mark as Read",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"notificationIds\": [\n    \"64f1234567890abcdef12345\",\n    \"64f1234567890abcdef12346\",\n    \"64f1234567890abcdef12347\"\n  ]\n}"
+						},
+						"url": "{{baseUrl}}/notifications/bulk/read"
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk Delete Notifications",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"notificationIds\": [\n    \"64f1234567890abcdef12345\",\n    \"64f1234567890abcdef12346\",\n    \"64f1234567890abcdef12347\"\n  ]\n}"
+						},
+						"url": "{{baseUrl}}/notifications/bulk"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Notification Statistics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": "{{baseUrl}}/notifications/stats/overview"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin Notifications",
+			"item": [
+				{
+					"name": "Create Notification",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Order Confirmation\",\n  \"message\": \"Your order has been confirmed and is being processed.\",\n  \"description\": \"Thank you for your order. We will notify you once it's shipped.\",\n  \"recipient\": \"64f1234567890abcdef12345\",\n  \"recipientType\": \"user\",\n  \"type\": \"order\",\n  \"category\": \"success\",\n  \"channels\": {\n    \"email\": {\n      \"enabled\": true\n    },\n    \"sms\": {\n      \"enabled\": false\n    },\n    \"push\": {\n      \"enabled\": true\n    },\n    \"inApp\": {\n      \"enabled\": true\n    }\n  },\n  \"priority\": \"normal\",\n  \"actionUrl\": \"/orders/64f1234567890abcdef12345\",\n  \"actionText\": \"View Order\",\n  \"actionData\": {\n    \"orderId\": \"64f1234567890abcdef12345\",\n    \"orderNumber\": \"ORD-001\"\n  },\n  \"relatedEntity\": {\n    \"type\": \"order\",\n    \"id\": \"64f1234567890abcdef12345\"\n  },\n  \"templateId\": \"64f1234567890abcdef12348\",\n  \"templateData\": {\n    \"firstName\": \"John\",\n    \"orderNumber\": \"ORD-001\",\n    \"totalAmount\": \"$99.99\"\n  },\n  \"metadata\": {\n    \"source\": \"admin\",\n    \"triggerEvent\": \"order_confirmed\",\n    \"tags\": [\"order\", \"confirmation\"],\n    \"customData\": {\n      \"department\": \"sales\"\n    }\n  }\n}"
+						},
+						"url": "{{baseUrl}}/notifications"
+					},
+					"response": []
+				},
+				{
+					"name": "Send Notification",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": "{{baseUrl}}/notifications/{{notificationId}}/send"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Notifications (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/notifications/admin/all?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"notifications",
+								"admin",
+								"all"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "type",
+									"value": "order",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "pending",
+									"disabled": true
+								},
+								{
+									"key": "recipient",
+									"value": "64f1234567890abcdef12345",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "order",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt"
+								},
+								{
+									"key": "sortOrder",
+									"value": "desc"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Notification",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Order Confirmation\",\n  \"message\": \"Your order has been confirmed and updated.\",\n  \"status\": \"sent\",\n  \"priority\": \"high\"\n}"
+						},
+						"url": "{{baseUrl}}/notifications/{{notificationId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Notification",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": "{{baseUrl}}/notifications/{{notificationId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Process Scheduled Notifications",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": "{{baseUrl}}/notifications/admin/process-scheduled"
+					},
+					"response": []
+				},
+				{
+					"name": "Retry Failed Notifications",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"maxAttempts\": 3\n}"
+						},
+						"url": "{{baseUrl}}/notifications/admin/retry-failed"
+					},
+					"response": []
+				},
+				{
+					"name": "Cleanup Expired Notifications",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": "{{baseUrl}}/notifications/admin/cleanup-expired"
+					},
+					"response": []
+				},
+				{
+					"name": "Send Bulk Notifications",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"notifications\": [\n    {\n      \"title\": \"Welcome Notification\",\n      \"message\": \"Welcome to our platform!\",\n      \"recipient\": \"64f1234567890abcdef12345\",\n      \"type\": \"account\",\n      \"category\": \"info\",\n      \"channels\": {\n        \"email\": { \"enabled\": true },\n        \"push\": { \"enabled\": true },\n        \"inApp\": { \"enabled\": true }\n      }\n    },\n    {\n      \"title\": \"Order Update\",\n      \"message\": \"Your order has been shipped!\",\n      \"recipient\": \"64f1234567890abcdef12346\",\n      \"type\": \"order\",\n      \"category\": \"success\",\n      \"channels\": {\n        \"email\": { \"enabled\": true },\n        \"sms\": { \"enabled\": true },\n        \"inApp\": { \"enabled\": true }\n      }\n    }\n  ],\n  \"options\": {\n    \"batchSize\": 100,\n    \"delayBetweenBatches\": 1000\n  }\n}"
+						},
+						"url": "{{baseUrl}}/notifications/admin/bulk-send"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Notification Templates",
+			"item": [
+				{
+					"name": "Get Notification Templates",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/notifications/templates?page=1&limit=20&activeOnly=true&sortBy=createdAt&sortOrder=desc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"notifications",
+								"templates"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "type",
+									"value": "order",
+									"disabled": true
+								},
+								{
+									"key": "category",
+									"value": "success",
+									"disabled": true
+								},
+								{
+									"key": "activeOnly",
+									"value": "true"
+								},
+								{
+									"key": "search",
+									"value": "order",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt"
+								},
+								{
+									"key": "sortOrder",
+									"value": "desc"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Template by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": "{{baseUrl}}/notifications/templates/{{templateId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Template by Type",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/notifications/templates/type/order?isDefault=true",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"notifications",
+								"templates",
+								"type",
+								"order"
+							],
+							"query": [
+								{
+									"key": "isDefault",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Notification Template",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Order Confirmation Template\",\n  \"description\": \"Template for order confirmation notifications\",\n  \"type\": \"order\",\n  \"category\": \"success\",\n  \"subject\": \"Order Confirmed - {{orderNumber}}\",\n  \"title\": \"Your Order is Confirmed!\",\n  \"message\": \"Hi {{firstName}}, your order #{{orderNumber}} has been confirmed. Total amount: {{totalAmount}}. Thank you for shopping with us!\",\n  \"emailContent\": {\n    \"html\": \"<h1>Order Confirmed!</h1><p>Hi {{firstName}},</p><p>Your order #{{orderNumber}} has been confirmed.</p><p><strong>Total: {{totalAmount}}</strong></p><a href='{{orderLink}}' style='background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>View Order</a>\",\n    \"text\": \"Order Confirmed! Hi {{firstName}}, your order #{{orderNumber}} has been confirmed. Total: {{totalAmount}}. View your order: {{orderLink}}\"\n  },\n  \"smsContent\": {\n    \"message\": \"Hi {{firstName}}, your order #{{orderNumber}} is confirmed. Total: {{totalAmount}}. Track: {{trackingLink}}\"\n  },\n  \"pushContent\": {\n    \"title\": \"Order Confirmed\",\n    \"body\": \"Order #{{orderNumber}} confirmed. Total: {{totalAmount}}\",\n    \"actionUrl\": \"/orders/{{orderId}}\",\n    \"actionText\": \"View Order\"\n  },\n  \"variables\": [\n    {\n      \"name\": \"firstName\",\n      \"type\": \"string\",\n      \"required\": true,\n      \"description\": \"Customer's first name\"\n    },\n    {\n      \"name\": \"orderNumber\",\n      \"type\": \"string\",\n      \"required\": true,\n      \"description\": \"Order number\"\n    },\n    {\n      \"name\": \"totalAmount\",\n      \"type\": \"string\",\n      \"required\": true,\n      \"description\": \"Total order amount\"\n    },\n    {\n      \"name\": \"orderLink\",\n      \"type\": \"string\",\n      \"required\": false,\n      \"description\": \"Link to view order details\"\n    }\n  ],\n  \"channels\": {\n    \"email\": {\n      \"enabled\": true,\n      \"required\": false\n    },\n    \"sms\": {\n      \"enabled\": true,\n      \"required\": false\n    },\n    \"push\": {\n      \"enabled\": true,\n      \"required\": false\n    },\n    \"inApp\": {\n      \"enabled\": true,\n      \"required\": true\n    }\n  },\n  \"priority\": \"normal\",\n  \"defaultExpiry\": 30,\n  \"autoSend\": true,\n  \"isActive\": true,\n  \"isDefault\": false,\n  \"metadata\": {\n    \"tags\": [\"order\", \"confirmation\", \"ecommerce\"],\n    \"language\": \"en\",\n    \"customData\": {\n      \"department\": \"sales\",\n      \"version\": \"1.0\"\n    }\n  }\n}"
+						},
+						"url": "{{baseUrl}}/notifications/templates"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Notification Template",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Order Confirmation Template\",\n  \"description\": \"Updated template for order confirmation notifications\",\n  \"subject\": \"Order Confirmed - {{orderNumber}} (Updated)\",\n  \"title\": \"Your Order is Confirmed! (Updated)\",\n  \"message\": \"Hi {{firstName}}, your order #{{orderNumber}} has been confirmed and is being processed. Total amount: {{totalAmount}}. We'll notify you once it's shipped!\",\n  \"priority\": \"high\",\n  \"isActive\": true\n}"
+						},
+						"url": "{{baseUrl}}/notifications/templates/{{templateId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Notification Template",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": "{{baseUrl}}/notifications/templates/{{templateId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Duplicate Notification Template",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Duplicated Order Confirmation Template\",\n  \"description\": \"Duplicated version of order confirmation template\"\n}"
+						},
+						"url": "{{baseUrl}}/notifications/templates/{{templateId}}/duplicate"
+					},
+					"response": []
+				},
+				{
+					"name": "Test Notification Template",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"testData\": {\n    \"firstName\": \"John\",\n    \"orderNumber\": \"ORD-TEST-001\",\n    \"totalAmount\": \"$149.99\",\n    \"orderLink\": \"https://example.com/orders/test-001\",\n    \"trackingLink\": \"https://example.com/track/test-001\"\n  },\n  \"recipient\": \"test@example.com\"\n}"
+						},
+						"url": "{{baseUrl}}/notifications/templates/{{templateId}}/test"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Template Statistics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": "{{baseUrl}}/notifications/templates/stats/overview"
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk Update Template Status",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"templateIds\": [\n    \"64f1234567890abcdef12345\",\n    \"64f1234567890abcdef12346\",\n    \"64f1234567890abcdef12347\"\n  ],\n  \"isActive\": false\n}"
+						},
+						"url": "{{baseUrl}}/notifications/templates/bulk/status"
+					},
+					"response": []
+				},
+				{
+					"name": "Export Template",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/notifications/templates/{{templateId}}/export?format=json",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"notifications",
+								"templates",
+								"{{templateId}}",
+								"export"
+							],
+							"query": [
+								{
+									"key": "format",
+									"value": "json",
+									"description": "Export format (json, xml, yaml)"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Import Template",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Imported Welcome Template\",\n  \"description\": \"Welcome template imported from external source\",\n  \"type\": \"account\",\n  \"category\": \"info\",\n  \"subject\": \"Welcome to {{appName}}!\",\n  \"title\": \"Welcome {{firstName}}!\",\n  \"message\": \"Thank you for joining {{appName}}. We're excited to have you on board!\",\n  \"channels\": {\n    \"email\": { \"enabled\": true },\n    \"push\": { \"enabled\": true },\n    \"inApp\": { \"enabled\": true }\n  },\n  \"variables\": [\n    {\n      \"name\": \"firstName\",\n      \"type\": \"string\",\n      \"required\": true\n    },\n    {\n      \"name\": \"appName\",\n      \"type\": \"string\",\n      \"required\": true,\n      \"defaultValue\": \"Our App\"\n    }\n  ],\n  \"isActive\": true\n}"
+						},
+						"url": "{{baseUrl}}/notifications/templates/import"
+					},
+					"response": []
+				},
+				{
+					"name": "Validate Template",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Test Validation Template\",\n  \"type\": \"order\",\n  \"subject\": \"Test Subject\",\n  \"title\": \"Test Title\",\n  \"message\": \"Test message with {{variable1}} and {{variable2}}\",\n  \"variables\": [\n    {\n      \"name\": \"variable1\",\n      \"type\": \"string\",\n      \"required\": true\n    },\n    {\n      \"name\": \"variable2\",\n      \"type\": \"number\",\n      \"required\": false\n    }\n  ],\n  \"channels\": {\n    \"email\": {\n      \"enabled\": true\n    },\n    \"sms\": {\n      \"enabled\": true\n    },\n    \"push\": {\n      \"enabled\": false\n    },\n    \"inApp\": {\n      \"enabled\": true\n    }\n  },\n  \"emailContent\": {\n    \"html\": \"<h1>{{title}}</h1><p>{{message}}</p>\",\n    \"text\": \"{{title}} - {{message}}\"\n  },\n  \"smsContent\": {\n    \"message\": \"{{message}}\"\n  }\n}"
+						},
+						"url": "{{baseUrl}}/notifications/templates/validate"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login (Get Auth Token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('authToken', responseJson.data.token);",
+									"    console.log('Auth token set successfully');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": "{{baseUrl}}/auth/login"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Sample Workflows",
+			"item": [
+				{
+					"name": "Complete Order Notification Flow",
+					"item": [
+						{
+							"name": "1. Create Order Confirmation Template",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 201) {",
+											"    const responseJson = pm.response.json();",
+											"    pm.collectionVariables.set('templateId', responseJson.data.template._id);",
+											"    console.log('Template ID set: ' + responseJson.data.template._id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Order Confirmation Workflow Template\",\n  \"description\": \"Template for order confirmation workflow\",\n  \"type\": \"order\",\n  \"category\": \"success\",\n  \"subject\": \"Order Confirmed - {{orderNumber}}\",\n  \"title\": \"Your Order is Confirmed!\",\n  \"message\": \"Hi {{firstName}}, your order #{{orderNumber}} for {{totalAmount}} has been confirmed!\",\n  \"variables\": [\n    {\n      \"name\": \"firstName\",\n      \"type\": \"string\",\n      \"required\": true\n    },\n    {\n      \"name\": \"orderNumber\",\n      \"type\": \"string\",\n      \"required\": true\n    },\n    {\n      \"name\": \"totalAmount\",\n      \"type\": \"string\",\n      \"required\": true\n    }\n  ],\n  \"channels\": {\n    \"email\": { \"enabled\": true },\n    \"sms\": { \"enabled\": true },\n    \"push\": { \"enabled\": true },\n    \"inApp\": { \"enabled\": true }\n  },\n  \"isActive\": true,\n  \"isDefault\": true\n}"
+								},
+								"url": "{{baseUrl}}/notifications/templates"
+							},
+							"response": []
+						},
+						{
+							"name": "2. Create Notification Using Template",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 201) {",
+											"    const responseJson = pm.response.json();",
+											"    pm.collectionVariables.set('notificationId', responseJson.data.notification._id);",
+											"    console.log('Notification ID set: ' + responseJson.data.notification._id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"recipient\": \"64f1234567890abcdef12345\",\n  \"templateId\": \"{{templateId}}\",\n  \"templateData\": {\n    \"firstName\": \"John Doe\",\n    \"orderNumber\": \"ORD-WF-001\",\n    \"totalAmount\": \"$199.99\"\n  },\n  \"actionUrl\": \"/orders/64f1234567890abcdef12345\",\n  \"actionText\": \"View Order Details\",\n  \"relatedEntity\": {\n    \"type\": \"order\",\n    \"id\": \"64f1234567890abcdef12345\"\n  },\n  \"autoSend\": false\n}"
+								},
+								"url": "{{baseUrl}}/notifications"
+							},
+							"response": []
+						},
+						{
+							"name": "3. Send the Notification",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}",
+										"type": "text"
+									}
+								],
+								"url": "{{baseUrl}}/notifications/{{notificationId}}/send"
+							},
+							"response": []
+						},
+						{
+							"name": "4. Check Notification Status",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}",
+										"type": "text"
+									}
+								],
+								"url": "{{baseUrl}}/notifications/{{notificationId}}"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Bulk Notification Management",
+					"item": [
+						{
+							"name": "1. Send Bulk Welcome Notifications",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"notifications\": [\n    {\n      \"title\": \"Welcome to Our Platform!\",\n      \"message\": \"Thank you for joining us, John! We're excited to have you on board.\",\n      \"recipient\": \"64f1234567890abcdef12345\",\n      \"type\": \"account\",\n      \"category\": \"info\",\n      \"channels\": {\n        \"email\": { \"enabled\": true },\n        \"push\": { \"enabled\": true },\n        \"inApp\": { \"enabled\": true }\n      }\n    },\n    {\n      \"title\": \"Welcome to Our Platform!\",\n      \"message\": \"Thank you for joining us, Jane! We're excited to have you on board.\",\n      \"recipient\": \"64f1234567890abcdef12346\",\n      \"type\": \"account\",\n      \"category\": \"info\",\n      \"channels\": {\n        \"email\": { \"enabled\": true },\n        \"push\": { \"enabled\": true },\n        \"inApp\": { \"enabled\": true }\n      }\n    },\n    {\n      \"title\": \"Welcome to Our Platform!\",\n      \"message\": \"Thank you for joining us, Bob! We're excited to have you on board.\",\n      \"recipient\": \"64f1234567890abcdef12347\",\n      \"type\": \"account\",\n      \"category\": \"info\",\n      \"channels\": {\n        \"email\": { \"enabled\": true },\n        \"push\": { \"enabled\": true },\n        \"inApp\": { \"enabled\": true }\n      }\n    }\n  ],\n  \"options\": {\n    \"batchSize\": 50,\n    \"delayBetweenBatches\": 500\n  }\n}"
+								},
+								"url": "{{baseUrl}}/notifications/admin/bulk-send"
+							},
+							"response": []
+						},
+						{
+							"name": "2. Get All Notifications for Review",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/notifications/admin/all?page=1&limit=50&type=account&sortBy=createdAt&sortOrder=desc",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"notifications",
+										"admin",
+										"all"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "50"
+										},
+										{
+											"key": "type",
+											"value": "account"
+										},
+										{
+											"key": "sortBy",
+											"value": "createdAt"
+										},
+										{
+											"key": "sortOrder",
+											"value": "desc"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": {
+			"token": "{{authToken}}"
+		}
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Pre-request script to set common headers or variables",
+					"pm.request.headers.add({",
+					"    key: 'Accept',",
+					"    value: 'application/json'",
+					"});"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test script",
+					"pm.test('Response time is less than 5000ms', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+					"});",
+					"",
+					"pm.test('Response has correct Content-Type', function () {",
+					"    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+					"});",
+					"",
+					"// Log response for debugging",
+					"if (pm.response.code >= 400) {",
+					"    console.log('Error Response:', pm.response.text());",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "notificationId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "templateId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
