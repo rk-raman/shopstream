@@ -328,6 +328,39 @@ const PRODUCT_EVENTS = {
       timestamp: "string",
     },
   },
+
+  PRODUCT_LOW_STOCK: {
+    name: "product.low_stock",
+    category: EVENT_CATEGORIES.PRODUCT,
+    schema: {
+      productId: "string",
+      productName: "string",
+      currentStock: "number",
+      threshold: "number",
+      timestamp: "string",
+    },
+  },
+
+  PRODUCT_OUT_OF_STOCK: {
+    name: "product.out_of_stock",
+    category: EVENT_CATEGORIES.PRODUCT,
+    schema: {
+      productId: "string",
+      productName: "string",
+      timestamp: "string",
+    },
+  },
+
+  PRODUCT_BACK_IN_STOCK: {
+    name: "product.back_in_stock",
+    category: EVENT_CATEGORIES.PRODUCT,
+    schema: {
+      productId: "string",
+      productName: "string",
+      newStock: "number",
+      timestamp: "string",
+    },
+  },
 };
 
 /**
@@ -342,6 +375,40 @@ const ORDER_EVENTS = {
       userId: "string",
       totalAmount: "number",
       items: "array",
+      timestamp: "string",
+    },
+  },
+
+  ORDER_CONFIRMED: {
+    name: "order.confirmed",
+    category: EVENT_CATEGORIES.ORDER,
+    schema: {
+      orderId: "string",
+      userId: "string",
+      estimatedDelivery: "string",
+      timestamp: "string",
+    },
+  },
+
+  ORDER_SHIPPED: {
+    name: "order.shipped",
+    category: EVENT_CATEGORIES.ORDER,
+    schema: {
+      orderId: "string",
+      userId: "string",
+      trackingNumber: "string",
+      carrier: "string",
+      timestamp: "string",
+    },
+  },
+
+  ORDER_DELIVERED: {
+    name: "order.delivered",
+    category: EVENT_CATEGORIES.ORDER,
+    schema: {
+      orderId: "string",
+      userId: "string",
+      deliveredAt: "string",
       timestamp: "string",
     },
   },
@@ -371,12 +438,73 @@ const ORDER_EVENTS = {
 };
 
 /**
+ * Payment Events
+ */
+const PAYMENT_EVENTS = {
+  PAYMENT_INITIATED: {
+    name: "payment.initiated",
+    category: EVENT_CATEGORIES.PAYMENT,
+    schema: {
+      paymentId: "string",
+      userId: "string",
+      orderId: "string",
+      amount: "number",
+      paymentMethod: "string",
+      timestamp: "string",
+    },
+  },
+
+  PAYMENT_SUCCESSFUL: {
+    name: "payment.successful",
+    category: EVENT_CATEGORIES.PAYMENT,
+    schema: {
+      paymentId: "string",
+      userId: "string",
+      orderId: "string",
+      amount: "number",
+      paymentMethod: "string",
+      transactionId: "string",
+      timestamp: "string",
+    },
+  },
+
+  PAYMENT_FAILED: {
+    name: "payment.failed",
+    category: EVENT_CATEGORIES.PAYMENT,
+    schema: {
+      paymentId: "string",
+      userId: "string",
+      orderId: "string",
+      amount: "number",
+      paymentMethod: "string",
+      reason: "string",
+      timestamp: "string",
+    },
+  },
+
+  PAYMENT_REFUNDED: {
+    name: "payment.refunded",
+    category: EVENT_CATEGORIES.PAYMENT,
+    schema: {
+      paymentId: "string",
+      userId: "string",
+      orderId: "string",
+      refundAmount: "number",
+      reason: "string",
+      refundedBy: "string",
+      timestamp: "string",
+    },
+  },
+};
+
+/**
  * Event Registry - All events in one place
  */
 const EVENT_REGISTRY = {
   ...USER_EVENTS,
   ...PRODUCT_EVENTS,
   ...ORDER_EVENTS,
+  ...PAYMENT_EVENTS,
 };
 
 /**
@@ -436,6 +564,7 @@ module.exports = {
   USER_EVENTS,
   PRODUCT_EVENTS,
   ORDER_EVENTS,
+  PAYMENT_EVENTS,
   EVENT_REGISTRY,
   getEventDefinition,
   getEventsByCategory,
