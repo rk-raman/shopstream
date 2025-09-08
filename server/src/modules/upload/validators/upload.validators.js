@@ -1,5 +1,7 @@
 const Joi = require("joi");
-const { validateRequest } = require("../../../shared/utils/validators");
+const {
+  validateJoiMultiple,
+} = require("../../../shared/middleware/validation.middleware");
 
 // Upload validation schemas
 const uploadSchemas = {
@@ -170,24 +172,30 @@ const uploadSchemas = {
 };
 
 // Validation middleware functions
-const validateUploadAvatar = validateRequest(uploadSchemas.uploadAvatar);
-const validateUploadProductImages = validateRequest(
+const validateUploadAvatar = validateJoiMultiple(uploadSchemas.uploadAvatar);
+const validateUploadProductImages = validateJoiMultiple(
   uploadSchemas.uploadProductImages
 );
-const validateUploadBanner = validateRequest(uploadSchemas.uploadBanner);
-const validateUploadCategoryImage = validateRequest(
+const validateUploadBanner = validateJoiMultiple(uploadSchemas.uploadBanner);
+const validateUploadCategoryImage = validateJoiMultiple(
   uploadSchemas.uploadCategoryImage
 );
-const validateDeleteFile = validateRequest(uploadSchemas.deleteFile);
-const validateDeleteMultiple = validateRequest(uploadSchemas.deleteMultiple);
-const validateGetFileInfo = validateRequest(uploadSchemas.getFileInfo);
-const validateGenerateSignedUrl = validateRequest(
+const validateDeleteFile = validateJoiMultiple(uploadSchemas.deleteFile);
+const validateDeleteMultiple = validateJoiMultiple(
+  uploadSchemas.deleteMultiple
+);
+const validateGetFileInfo = validateJoiMultiple(uploadSchemas.getFileInfo);
+const validateGenerateSignedUrl = validateJoiMultiple(
   uploadSchemas.generateSignedUrl
 );
-const validateTransformImage = validateRequest(uploadSchemas.transformImage);
-const validateSwitchProvider = validateRequest(uploadSchemas.switchProvider);
-const validateCustomUpload = validateRequest(uploadSchemas.customUpload);
-const validateBulkUpload = validateRequest(uploadSchemas.bulkUpload);
+const validateTransformImage = validateJoiMultiple(
+  uploadSchemas.transformImage
+);
+const validateSwitchProvider = validateJoiMultiple(
+  uploadSchemas.switchProvider
+);
+const validateCustomUpload = validateJoiMultiple(uploadSchemas.customUpload);
+const validateBulkUpload = validateJoiMultiple(uploadSchemas.bulkUpload);
 
 module.exports = {
   // Schemas

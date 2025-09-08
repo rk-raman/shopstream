@@ -1,16 +1,16 @@
 const express = require("express");
-const { auth } = require("../../../shared/middleware/auth.middleware");
+const { authenticate } = require("../../../shared/middleware/auth.middleware");
 const {
   validate,
 } = require("../../../shared/middleware/validation.middleware");
 const { uploadController } = require("../controllers/upload.controller");
-const { uploadValidators } = require("../validators/upload.validators");
-const { uploadMiddleware } = require("../middleware/upload.middleware");
+const uploadValidators = require("../validators/upload.validators");
+const uploadMiddleware = require("../middleware/upload.middleware");
 
 const router = express.Router();
 
 // Apply authentication to all upload routes
-router.use(auth);
+router.use(authenticate);
 
 // Avatar upload routes
 router.post(
