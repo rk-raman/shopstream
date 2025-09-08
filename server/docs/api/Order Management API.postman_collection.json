@@ -1,0 +1,774 @@
+{
+	"info": {
+		"_postman_id": "2fef4193-0923-4ad8-b54d-79f7f2305d25",
+		"name": "Order Management API",
+		"description": "Complete API collection for Order Management System with authentication, order operations, tracking, and admin functions",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "5168742"
+	},
+	"item": [
+		{
+			"name": "📦 Order Operations",
+			"item": [
+				{
+					"name": "Create Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.order) {",
+									"        pm.environment.set('orderId', response.data.order._id);",
+									"        pm.environment.set('orderNumber', response.data.order.orderNumber);",
+									"    }",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{authToken}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"variantId\": \"{{variantId}}\",\n      \"quantity\": 2\n    }\n  ],\n  \"shippingAddress\": {\n    \"fullName\": \"John Doe\",\n    \"addressLine1\": \"123 Main Street\",\n    \"addressLine2\": \"Apt 4B\",\n    \"city\": \"Chennai\",\n    \"state\": \"Tamil Nadu\",\n    \"pincode\": \"600001\",\n    \"country\": \"India\",\n    \"phone\": \"+91-9876543210\"\n  },\n  \"billingAddress\": {\n    \"fullName\": \"John Doe\",\n    \"addressLine1\": \"123 Main Street\",\n    \"addressLine2\": \"Apt 4B\",\n    \"city\": \"Chennai\",\n    \"state\": \"Tamil Nadu\",\n    \"pincode\": \"600001\",\n    \"country\": \"India\",\n    \"phone\": \"+91-9876543210\"\n  },\n  \"paymentMethod\": \"cod\",\n  \"coupon\": {\n    \"code\": \"SAVE50\"\n  },\n  \"notes\": \"Please handle with care\",\n  \"specialInstructions\": \"Deliver between 9 AM - 6 PM\"\n}"
+						},
+						"url": "{{baseUrl}}/orders",
+						"description": "Create a new order for authenticated customer"
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Orders",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{authToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/orders/my-orders?page=1&limit=10&status=pending&sortBy=createdAt&sortOrder=desc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"orders",
+								"my-orders"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "status",
+									"value": "pending"
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt"
+								},
+								{
+									"key": "sortOrder",
+									"value": "desc"
+								}
+							]
+						},
+						"description": "Get orders for authenticated customer with pagination and filtering"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Order by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{authToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/orders/{{orderId}}",
+						"description": "Get specific order details by order ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Order",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{authToken}}"
+							}
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Changed my mind about the purchase\"\n}"
+						},
+						"url": "{{baseUrl}}/orders/{{orderId}}/cancel",
+						"description": "Cancel an order (only for pending/confirmed orders)"
+					},
+					"response": []
+				},
+				{
+					"name": "Request Return",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{authToken}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Product was damaged during shipping\",\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"quantity\": 1,\n      \"reason\": \"Damaged packaging\"\n    }\n  ]\n}"
+						},
+						"url": "{{baseUrl}}/orders/{{orderId}}/return",
+						"description": "Request return for delivered order"
+					},
+					"response": []
+				}
+			],
+			"description": "Basic order operations for customers"
+		},
+		{
+			"name": "🏪 Seller Operations",
+			"item": [
+				{
+					"name": "Get My Seller Orders",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{sellerToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/orders/seller/my-orders?page=1&limit=10&status=confirmed&sortBy=createdAt&sortOrder=desc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"orders",
+								"seller",
+								"my-orders"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "status",
+									"value": "confirmed"
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt"
+								},
+								{
+									"key": "sortOrder",
+									"value": "desc"
+								}
+							]
+						},
+						"description": "Get orders for authenticated seller"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Order Status",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{sellerToken}}"
+							}
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"processing\",\n  \"note\": \"Order is being prepared for shipment\"\n}"
+						},
+						"url": "{{baseUrl}}/orders/{{orderId}}/status",
+						"description": "Update order status (seller/admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Process Return Request",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{sellerToken}}"
+							}
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"action\": \"approve\",\n  \"note\": \"Return approved due to damage during shipping\"\n}"
+						},
+						"url": "{{baseUrl}}/orders/{{orderId}}/return/process",
+						"description": "Approve or reject return request (action: 'approve' or 'reject')"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Order Statistics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{sellerToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/orders/analytics/stats?startDate=2024-01-01&endDate=2024-12-31&groupBy=month",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"orders",
+								"analytics",
+								"stats"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2024-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2024-12-31"
+								},
+								{
+									"key": "groupBy",
+									"value": "month"
+								}
+							]
+						},
+						"description": "Get order statistics for seller (groupBy: day, week, month)"
+					},
+					"response": []
+				},
+				{
+					"name": "Export Orders",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{sellerToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/orders/export/data?format=csv&startDate=2024-01-01&endDate=2024-12-31&status=delivered",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"orders",
+								"export",
+								"data"
+							],
+							"query": [
+								{
+									"key": "format",
+									"value": "csv"
+								},
+								{
+									"key": "startDate",
+									"value": "2024-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2024-12-31"
+								},
+								{
+									"key": "status",
+									"value": "delivered"
+								}
+							]
+						},
+						"description": "Export order data (format: csv, excel, pdf)"
+					},
+					"response": []
+				}
+			],
+			"description": "Operations available to sellers for managing their orders"
+		},
+		{
+			"name": "🚚 Tracking Operations",
+			"item": [
+				{
+					"name": "Get Order Tracking",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{authToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/orders/{{orderId}}/tracking",
+						"description": "Get tracking information for an order"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Tracking by Number (Public)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/orders/tracking/{{trackingNumber}}",
+						"description": "Get tracking information by tracking number (no authentication required)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Tracking Information",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{sellerToken}}"
+							}
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"trackingNumber\": \"TRK123456789\",\n  \"carrier\": \"Blue Dart\",\n  \"estimatedDelivery\": \"2024-12-25T18:00:00.000Z\",\n  \"method\": \"express\",\n  \"status\": \"shipped\",\n  \"note\": \"Package has been shipped and is on its way\"\n}"
+						},
+						"url": "{{baseUrl}}/orders/{{orderId}}/tracking",
+						"description": "Update tracking information (seller/admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Tracking Event",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{sellerToken}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"out_for_delivery\",\n  \"location\": \"Chennai Local Hub\",\n  \"description\": \"Package is out for delivery and will arrive today\",\n  \"timestamp\": \"2024-12-24T10:30:00.000Z\"\n}"
+						},
+						"url": "{{baseUrl}}/orders/{{orderId}}/tracking/events",
+						"description": "Add a tracking event to order history (seller/admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Tracking History",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{authToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/orders/{{orderId}}/tracking/history",
+						"description": "Get complete tracking history for an order"
+					},
+					"response": []
+				}
+			],
+			"description": "Tracking-related operations for orders"
+		},
+		{
+			"name": "👑 Admin Operations",
+			"item": [
+				{
+					"name": "Get All Orders",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{adminToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/orders/admin/all?page=1&limit=20&search=ORD&status=delivered&paymentStatus=paid&customerId={{customerId}}&sellerId={{sellerId}}&startDate=2024-01-01&endDate=2024-12-31&sortBy=createdAt&sortOrder=desc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"orders",
+								"admin",
+								"all"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "search",
+									"value": "ORD"
+								},
+								{
+									"key": "status",
+									"value": "delivered"
+								},
+								{
+									"key": "paymentStatus",
+									"value": "paid"
+								},
+								{
+									"key": "customerId",
+									"value": "{{customerId}}"
+								},
+								{
+									"key": "sellerId",
+									"value": "{{sellerId}}"
+								},
+								{
+									"key": "startDate",
+									"value": "2024-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2024-12-31"
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt"
+								},
+								{
+									"key": "sortOrder",
+									"value": "desc"
+								}
+							]
+						},
+						"description": "Get all orders with advanced filtering (admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Orders by Seller",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{adminToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/orders/admin/seller/{{sellerId}}?page=1&limit=10&status=processing",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"orders",
+								"admin",
+								"seller",
+								"{{sellerId}}"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "status",
+									"value": "processing"
+								}
+							]
+						},
+						"description": "Get orders for a specific seller (admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Process Payment",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{adminToken}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"paymentData\": {\n    \"transactionId\": \"TXN123456789\",\n    \"gateway\": \"razorpay\",\n    \"amount\": 1299.99,\n    \"currency\": \"INR\",\n    \"method\": \"card\",\n    \"status\": \"success\"\n  }\n}"
+						},
+						"url": "{{baseUrl}}/orders/{{orderId}}/payment/process",
+						"description": "Process payment for an order (admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Initiate Refund",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{adminToken}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 649.99,\n  \"reason\": \"Product was defective and customer requested refund\"\n}"
+						},
+						"url": "{{baseUrl}}/orders/{{orderId}}/refund",
+						"description": "Initiate refund for an order (admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk Update Orders",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{adminToken}}"
+							}
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orderIds\": [\"{{orderId}}\", \"{{orderId2}}\"],\n  \"updateData\": {\n    \"status\": \"shipped\",\n    \"shipping.carrier\": \"FedEx\",\n    \"shipping.method\": \"express\"\n  }\n}"
+						},
+						"url": "{{baseUrl}}/orders/admin/bulk-update",
+						"description": "Update multiple orders at once (admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk Update Tracking",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{adminToken}}"
+							}
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"updates\": [\n    {\n      \"orderId\": \"{{orderId}}\",\n      \"trackingData\": {\n        \"trackingNumber\": \"TRK001\",\n        \"carrier\": \"Blue Dart\",\n        \"status\": \"shipped\"\n      }\n    },\n    {\n      \"orderId\": \"{{orderId2}}\",\n      \"trackingData\": {\n        \"trackingNumber\": \"TRK002\",\n        \"carrier\": \"DTDC\",\n        \"status\": \"processing\"\n      }\n    }\n  ]\n}"
+						},
+						"url": "{{baseUrl}}/orders/admin/bulk-update-tracking",
+						"description": "Update tracking information for multiple orders (admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Generate Tracking Report",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{adminToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/orders/admin/tracking/report?format=csv&startDate=2024-01-01&endDate=2024-12-31&status=delivered&carrier=Blue Dart&sellerId={{sellerId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"orders",
+								"admin",
+								"tracking",
+								"report"
+							],
+							"query": [
+								{
+									"key": "format",
+									"value": "csv"
+								},
+								{
+									"key": "startDate",
+									"value": "2024-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2024-12-31"
+								},
+								{
+									"key": "status",
+									"value": "delivered"
+								},
+								{
+									"key": "carrier",
+									"value": "Blue Dart"
+								},
+								{
+									"key": "sellerId",
+									"value": "{{sellerId}}"
+								}
+							]
+						},
+						"description": "Generate comprehensive tracking report (admin only)"
+					},
+					"response": []
+				}
+			],
+			"description": "Administrative operations for managing all orders and tracking"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": {
+			"token": "{{authToken}}"
+		}
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global pre-request script",
+					"console.log('Making request to:', pm.request.url.toString());"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test script",
+					"pm.test('Response time is less than 5000ms', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+					"});",
+					"",
+					"pm.test('Response has success property', function () {",
+					"    if (pm.response.code === 200 || pm.response.code === 201) {",
+					"        const jsonData = pm.response.json();",
+					"        pm.expect(jsonData).to.have.property('success');",
+					"    }",
+					"});"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000/api",
+			"type": "string"
+		}
+	]
+}
