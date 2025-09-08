@@ -1,12 +1,12 @@
 const express = require("express");
 const {
-  auth,
+  authenticate,
   authorize,
 } = require("../../../shared/middleware/auth.middleware");
 const {
   validate,
 } = require("../../../shared/middleware/validation.middleware");
-const { paymentController } = require("../controllers/payment.controller");
+const paymentController = require("../controllers/payment.controller");
 const { paymentValidators } = require("../validators/payment.validators");
 
 const router = express.Router();
@@ -19,7 +19,7 @@ router.post("/webhook/:gateway", paymentController.processWebhook);
 router.get("/options", paymentController.getSupportedOptions);
 
 // Protected routes (authentication required)
-router.use(auth);
+router.use(authenticate);
 
 // User payment operations
 router.post(

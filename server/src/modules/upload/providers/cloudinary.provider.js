@@ -1,5 +1,6 @@
 const BaseUploadProvider = require("./base.provider");
-const cloudinary = require("../../../config/cloudinary");
+const cloudinary = require("cloudinary").v2;
+const config = require("../../../config");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
 
@@ -10,6 +11,14 @@ const path = require("path");
 class CloudinaryProvider extends BaseUploadProvider {
   constructor(config) {
     super(config);
+
+    // Configure cloudinary
+    cloudinary.config({
+      cloud_name: config.cloudName,
+      api_key: config.apiKey,
+      api_secret: config.apiSecret,
+    });
+
     this.cloudinary = cloudinary;
   }
 
