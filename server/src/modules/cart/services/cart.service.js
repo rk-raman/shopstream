@@ -1,8 +1,7 @@
 const Cart = require("../models/Cart.model");
 const Product = require("../../product/models/Product.model");
 const ApiError = require("../../../shared/utils/apiError");
-const eventEmitter = require("../../../shared/events/eventEmitter");
-const { CART_EVENTS } = require("../../../shared/events/eventTypes");
+const { cartEventPublisher } = require("../events/cart.events");
 
 class CartService {
   async getCart(userId) {
@@ -14,6 +13,12 @@ class CartService {
 
     if (!cart) {
       cart = await Cart.create({ user: userId });
+
+      // Publish cart created event
+      cartEventPublisher.publishCartCreated({
+        userId,
+        cartId: cart._id,
+      });
     }
 
     // Validate cart items and remove inactive products
@@ -64,6 +69,9 @@ class CartService {
       cart = new Cart({ user: userId });
     }
 
+    const previousTotal = cart.totalDiscountedPrice;
+    const previousItemCount = cart.totalItems;
+
     // Add item to cart
     await cart.addItem({
       product: productId,
@@ -80,14 +88,45 @@ class CartService {
       discountPrice,
     });
 
-    // Publish event
-    eventEmitter.publish(CART_EVENTS.ITEM_ADDED_TO_CART, {
+    // Publish events
+    cartEventPublisher.publishItemAdded({
       userId,
+      cartId: cart._id,
       productId,
       variantId,
       quantity,
-      timestamp: new Date().toISOString(),
+      price,
+      discountPrice,
     });
+
+    cartEventPublisher.publishCartUpdated({
+      userId,
+      cartId: cart._id,
+      totalItems: cart.totalItems,
+      totalPrice: cart.totalPrice,
+      totalDiscountedPrice: cart.totalDiscountedPrice,
+    });
+
+    // Publish value and count change events if changed
+    if (cart.totalDiscountedPrice !== previousTotal) {
+      cartEventPublisher.publishCartValueChanged({
+        userId,
+        cartId: cart._id,
+        previousValue: previousTotal,
+        newValue: cart.totalDiscountedPrice,
+        change: cart.totalDiscountedPrice - previousTotal,
+      });
+    }
+
+    if (cart.totalItems !== previousItemCount) {
+      cartEventPublisher.publishCartItemsCountChanged({
+        userId,
+        cartId: cart._id,
+        previousCount: previousItemCount,
+        newCount: cart.totalItems,
+        change: cart.totalItems - previousItemCount,
+      });
+    }
 
     return await this.getCart(userId);
   }
@@ -103,6 +142,10 @@ class CartService {
       throw new ApiError(404, "Item not found in cart");
     }
 
+    const previousQuantity = item.quantity;
+    const previousTotal = cart.totalDiscountedPrice;
+    const previousItemCount = cart.totalItems;
+
     // Check stock availability
     const product = await Product.findById(item.product);
     if (product.hasVariants && item.variant) {
@@ -116,11 +159,54 @@ class CartService {
 
     await cart.updateItemQuantity(itemId, quantity);
 
+    // Publish events
     if (quantity <= 0) {
-      eventEmitter.publish(CART_EVENTS.ITEM_REMOVED_FROM_CART, {
+      cartEventPublisher.publishItemRemoved({
         userId,
+        cartId: cart._id,
         productId: item.product,
-        timestamp: new Date().toISOString(),
+        variantId: item.variant?.variantId,
+        previousQuantity,
+      });
+    } else {
+      cartEventPublisher.publishItemQuantityUpdated({
+        userId,
+        cartId: cart._id,
+        itemId,
+        productId: item.product,
+        variantId: item.variant?.variantId,
+        previousQuantity,
+        newQuantity: quantity,
+        quantityChange: quantity - previousQuantity,
+      });
+    }
+
+    cartEventPublisher.publishCartUpdated({
+      userId,
+      cartId: cart._id,
+      totalItems: cart.totalItems,
+      totalPrice: cart.totalPrice,
+      totalDiscountedPrice: cart.totalDiscountedPrice,
+    });
+
+    // Publish value and count change events if changed
+    if (cart.totalDiscountedPrice !== previousTotal) {
+      cartEventPublisher.publishCartValueChanged({
+        userId,
+        cartId: cart._id,
+        previousValue: previousTotal,
+        newValue: cart.totalDiscountedPrice,
+        change: cart.totalDiscountedPrice - previousTotal,
+      });
+    }
+
+    if (cart.totalItems !== previousItemCount) {
+      cartEventPublisher.publishCartItemsCountChanged({
+        userId,
+        cartId: cart._id,
+        previousCount: previousItemCount,
+        newCount: cart.totalItems,
+        change: cart.totalItems - previousItemCount,
       });
     }
 
@@ -138,13 +224,43 @@ class CartService {
       throw new ApiError(404, "Item not found in cart");
     }
 
+    const previousTotal = cart.totalDiscountedPrice;
+    const previousItemCount = cart.totalItems;
+
     await cart.removeItem(itemId);
 
-    // Publish event
-    eventEmitter.publish(CART_EVENTS.ITEM_REMOVED_FROM_CART, {
+    // Publish events
+    cartEventPublisher.publishItemRemoved({
       userId,
+      cartId: cart._id,
       productId: item.product,
-      timestamp: new Date().toISOString(),
+      variantId: item.variant?.variantId,
+      previousQuantity: item.quantity,
+    });
+
+    cartEventPublisher.publishCartUpdated({
+      userId,
+      cartId: cart._id,
+      totalItems: cart.totalItems,
+      totalPrice: cart.totalPrice,
+      totalDiscountedPrice: cart.totalDiscountedPrice,
+    });
+
+    // Publish value and count change events
+    cartEventPublisher.publishCartValueChanged({
+      userId,
+      cartId: cart._id,
+      previousValue: previousTotal,
+      newValue: cart.totalDiscountedPrice,
+      change: cart.totalDiscountedPrice - previousTotal,
+    });
+
+    cartEventPublisher.publishCartItemsCountChanged({
+      userId,
+      cartId: cart._id,
+      previousCount: previousItemCount,
+      newCount: cart.totalItems,
+      change: cart.totalItems - previousItemCount,
     });
 
     return await this.getCart(userId);
@@ -153,11 +269,41 @@ class CartService {
   async clearCart(userId) {
     const cart = await Cart.findOne({ user: userId });
     if (cart) {
+      const previousTotal = cart.totalDiscountedPrice;
+      const previousItemCount = cart.totalItems;
+
       await cart.clear();
 
-      eventEmitter.publish(CART_EVENTS.CART_CLEARED, {
+      // Publish events
+      cartEventPublisher.publishCartCleared({
         userId,
-        timestamp: new Date().toISOString(),
+        cartId: cart._id,
+        clearedItems: previousItemCount,
+        clearedValue: previousTotal,
+      });
+
+      cartEventPublisher.publishCartUpdated({
+        userId,
+        cartId: cart._id,
+        totalItems: 0,
+        totalPrice: 0,
+        totalDiscountedPrice: 0,
+      });
+
+      cartEventPublisher.publishCartValueChanged({
+        userId,
+        cartId: cart._id,
+        previousValue: previousTotal,
+        newValue: 0,
+        change: -previousTotal,
+      });
+
+      cartEventPublisher.publishCartItemsCountChanged({
+        userId,
+        cartId: cart._id,
+        previousCount: previousItemCount,
+        newCount: 0,
+        change: -previousItemCount,
       });
     }
 
@@ -213,6 +359,16 @@ class CartService {
     // Save changes if any
     if (hasChanges) {
       await cart.save();
+
+      // Publish cart synchronized event
+      cartEventPublisher.publishCartSynchronized({
+        userId: cart.user,
+        cartId: cart._id,
+        removedItems: itemsToRemove.length,
+        updatedItems: cart.items.length,
+        totalItems: cart.totalItems,
+        totalDiscountedPrice: cart.totalDiscountedPrice,
+      });
     }
   }
 
@@ -242,6 +398,20 @@ class CartService {
       lastModified: { $lt: cutoffDate },
       totalItems: { $gt: 0 },
     }).populate("user", "firstName lastName email");
+
+    // Publish abandoned cart events for each cart
+    abandonedCarts.forEach((cart) => {
+      cartEventPublisher.publishCartAbandoned({
+        userId: cart.user._id,
+        cartId: cart._id,
+        abandonedDays: daysAgo,
+        totalItems: cart.totalItems,
+        totalValue: cart.totalDiscountedPrice,
+        lastModified: cart.lastModified,
+        userEmail: cart.user.email,
+        userName: `${cart.user.firstName} ${cart.user.lastName}`,
+      });
+    });
 
     return abandonedCarts;
   }

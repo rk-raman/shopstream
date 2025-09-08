@@ -84,10 +84,30 @@ const INVENTORY_EVENTS = {
 };
 
 const CART_EVENTS = {
+  // Item management events
   ITEM_ADDED_TO_CART: "cart.item_added",
   ITEM_REMOVED_FROM_CART: "cart.item_removed",
+  ITEM_QUANTITY_UPDATED: "cart.item_quantity_updated",
   CART_CLEARED: "cart.cleared",
+
+  // Cart lifecycle events
+  CART_CREATED: "cart.created",
+  CART_UPDATED: "cart.updated",
+  CART_SYNCHRONIZED: "cart.synchronized",
+
+  // Cart behavior events
   CART_ABANDONED: "cart.abandoned",
+  CART_RECOVERED: "cart.recovered",
+  CART_CHECKOUT_INITIATED: "cart.checkout_initiated",
+
+  // Coupon events
+  COUPON_APPLIED: "cart.coupon_applied",
+  COUPON_REMOVED: "cart.coupon_removed",
+  COUPON_EXPIRED: "cart.coupon_expired",
+
+  // Analytics events
+  CART_VALUE_CHANGED: "cart.value_changed",
+  CART_ITEMS_COUNT_CHANGED: "cart.items_count_changed",
 };
 
 const REVIEW_EVENTS = {
