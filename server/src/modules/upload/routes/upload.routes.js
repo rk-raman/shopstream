@@ -3,7 +3,7 @@ const { authenticate } = require("../../../shared/middleware/auth.middleware");
 const {
   validate,
 } = require("../../../shared/middleware/validation.middleware");
-const { uploadController } = require("../controllers/upload.controller");
+const uploadController = require("../controllers/upload.controller");
 const uploadValidators = require("../validators/upload.validators");
 const uploadMiddleware = require("../middleware/upload.middleware");
 
@@ -16,29 +16,29 @@ router.use(authenticate);
 router.post(
   "/avatar",
   uploadMiddleware.single("avatar"),
-  validate(uploadValidators.uploadAvatar),
+  validate(uploadValidators.validateUploadAvatar),
   uploadController.uploadAvatar
 );
 
 router.post(
   "/avatar/:userId",
   uploadMiddleware.single("avatar"),
-  validate(uploadValidators.uploadAvatar),
+  validate(uploadValidators.validateUploadAvatar),
   uploadController.uploadAvatar
 );
 
 // Product image upload routes
 router.post(
   "/products/images",
-  uploadMiddleware.array("productImages", 10),
-  validate(uploadValidators.uploadProductImages),
+  uploadMiddleware.multiple("productImages", 10),
+  validate(uploadValidators.validateUploadProductImages),
   uploadController.uploadProductImages
 );
 
 router.post(
   "/products/:productId/images",
-  uploadMiddleware.array("productImages", 10),
-  validate(uploadValidators.uploadProductImages),
+  uploadMiddleware.multiple("productImages", 10),
+  validate(uploadValidators.validateUploadProductImages),
   uploadController.uploadProductImages
 );
 
@@ -46,7 +46,7 @@ router.post(
 router.post(
   "/banners",
   uploadMiddleware.single("banner"),
-  validate(uploadValidators.uploadBanner),
+  validate(uploadValidators.validateUploadBanner),
   uploadController.uploadBanner
 );
 
@@ -54,7 +54,7 @@ router.post(
 router.post(
   "/categories/:categoryId/image",
   uploadMiddleware.single("categoryImage"),
-  validate(uploadValidators.uploadCategoryImage),
+  validate(uploadValidators.validateUploadCategoryImage),
   uploadController.uploadCategoryImage
 );
 
@@ -62,28 +62,28 @@ router.post(
 router.post(
   "/custom",
   uploadMiddleware.single("file"),
-  validate(uploadValidators.uploadFile),
+  validate(uploadValidators.validateUploadFile),
   uploadController.customUpload
 );
 
 // Bulk file upload route
 router.post(
   "/bulk",
-  uploadMiddleware.array("files", 20),
-  validate(uploadValidators.bulkUpload),
+  uploadMiddleware.multiple("files", 20),
+  validate(uploadValidators.validateBulkUpload),
   uploadController.bulkUpload
 );
 
 // File management routes
 router.delete(
   "/files/:publicId",
-  validate(uploadValidators.deleteFile),
+  validate(uploadValidators.validateDeleteFile),
   uploadController.deleteFile
 );
 
 router.delete(
   "/files",
-  validate(uploadValidators.deleteMultiple),
+  validate(uploadValidators.validateDeleteMultiple),
   uploadController.deleteMultiple
 );
 
@@ -92,21 +92,21 @@ router.get("/files/:publicId/info", uploadController.getFileInfo);
 // Signed URL generation
 router.post(
   "/signed-url",
-  validate(uploadValidators.generateSignedUrl),
+  validate(uploadValidators.validateGenerateSignedUrl),
   uploadController.generateSignedUrl
 );
 
 // Image transformation routes
 router.post(
   "/transform/:publicId",
-  validate(uploadValidators.transformImage),
+  validate(uploadValidators.validateTransformImage),
   uploadController.transformImage
 );
 
 // Provider management routes (admin only)
 router.post(
   "/provider/switch",
-  validate(uploadValidators.switchProvider),
+  validate(uploadValidators.validateSwitchProvider),
   uploadController.switchProvider
 );
 

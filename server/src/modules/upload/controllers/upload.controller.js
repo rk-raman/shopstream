@@ -190,7 +190,38 @@ class UploadController {
   });
 
   /**
-   * Switch upload provider (admin only)
+   * Get upload statistics (Admin only)
+   */
+  getUploadStats = asyncHandler(async (req, res) => {
+    // Check if user is admin
+    if (!req.user || req.user.role !== "admin") {
+      throw new ApiError(403, "Admin access required");
+    }
+
+    const stats = await this.uploadService.getUploadStats();
+
+    return res.success({ stats }, "Upload statistics retrieved successfully");
+  });
+
+  /**
+   * Get provider health status (Admin only)
+   */
+  getProviderHealth = asyncHandler(async (req, res) => {
+    // Check if user is admin
+    if (!req.user || req.user.role !== "admin") {
+      throw new ApiError(403, "Admin access required");
+    }
+
+    const health = await this.uploadService.getProviderHealth();
+
+    return res.success(
+      { health },
+      "Provider health status retrieved successfully"
+    );
+  });
+
+  /**
+   * Switch upload provider (Admin only)
    */
   switchProvider = asyncHandler(async (req, res) => {
     const { providerName, providerConfig } = req.body;
