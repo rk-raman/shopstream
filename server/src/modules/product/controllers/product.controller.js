@@ -487,6 +487,25 @@ const deleteProductVariant = asyncHandler(async (req, res) => {
   return res.success({ product }, "Product variant deleted successfully");
 });
 
+// Add product review
+const addProductReview = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  const { rating, comment } = req.body;
+  const userId = req.user._id;
+
+  if (!rating || rating < 1 || rating > 5) {
+    throw new ApiError(400, "Rating must be between 1 and 5");
+  }
+
+  const review = await productService.addProductReview(productId, {
+    user: userId,
+    rating,
+    comment,
+  });
+
+  return res.success({ review }, "Product review added successfully");
+});
+
 module.exports = {
   // Basic product operations
   createProduct,
@@ -514,6 +533,9 @@ module.exports = {
   addProductVariant,
   updateProductVariant,
   deleteProductVariant,
+
+  // Review management
+  addProductReview,
 
   // Admin operations
   approveProduct,

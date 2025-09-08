@@ -5,7 +5,10 @@ const router = express.Router();
 const paymentController = require("../controllers/payment.controller");
 
 // Import middleware
-const { authenticate, authorize } = require("../../../shared/middleware/auth");
+const {
+  authenticate,
+  authorize,
+} = require("../../../shared/middleware/auth.middleware");
 const {
   validateCreatePaymentIntent,
   validateConfirmPayment,

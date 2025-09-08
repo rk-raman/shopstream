@@ -536,6 +536,46 @@ const bulkUpdateProducts = async (productIds, updateData) => {
   return result;
 };
 
+// Add product review
+const addProductReview = async (productId, reviewData) => {
+  const product = await Product.findById(productId);
+  if (!product) {
+    throw new ApiError(404, "Product not found");
+  }
+
+  // Check if user already reviewed this product
+  const existingReview = product.reviews.find(
+    (review) => review.user.toString() === reviewData.user.toString()
+  );
+
+  if (existingReview) {
+    throw new ApiError(400, "You have already reviewed this product");
+  }
+
+  // Add review to product
+  product.reviews.push(reviewData);
+  await product.save();
+
+  // Populate the new review
+  await product.populate({
+    path: "reviews.user",
+    select: "firstName lastName avatar",
+  });
+
+  const newReview = product.reviews[product.reviews.length - 1];
+
+  // Publish review event
+  eventBus.emit("product.review.added", {
+    productId: product._id,
+    reviewId: newReview._id,
+    userId: reviewData.user,
+    rating: reviewData.rating,
+    sellerId: product.seller,
+  });
+
+  return newReview;
+};
+
 module.exports = {
   // Basic product operations
   createProduct,
@@ -554,6 +594,9 @@ module.exports = {
 
   // Stock management
   updateProductStock,
+
+  // Review management
+  addProductReview,
 
   // Admin operations
   approveProduct,

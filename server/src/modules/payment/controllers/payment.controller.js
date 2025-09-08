@@ -1,23 +1,19 @@
 const paymentService = require("../services/payment.service");
 const ApiError = require("../../../shared/utils/apiError");
-const catchAsync = require("../../../shared/utils/catchAsync");
-const { successResponse } = require("../../../shared/utils/responseHelper");
+const asyncHandler = require("../../../shared/utils/asyncHandler");
 
 // Create payment intent
-const createPaymentIntent = catchAsync(async (req, res) => {
+const createPaymentIntent = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const paymentData = req.body;
 
   const result = await paymentService.createPaymentIntent(paymentData, userId);
 
-  successResponse(res, {
-    message: "Payment intent created successfully",
-    data: result,
-  });
+  return res.success(result, "Payment intent created successfully");
 });
 
 // Confirm payment
-const confirmPayment = catchAsync(async (req, res) => {
+const confirmPayment = asyncHandler(async (req, res) => {
   const { paymentId } = req.params;
   const confirmationData = req.body;
 
@@ -26,27 +22,21 @@ const confirmPayment = catchAsync(async (req, res) => {
     confirmationData
   );
 
-  successResponse(res, {
-    message: "Payment confirmed successfully",
-    data: payment.getSummary(),
-  });
+  return res.success(payment.getSummary(), "Payment confirmed successfully");
 });
 
 // Get payment by ID
-const getPaymentById = catchAsync(async (req, res) => {
+const getPaymentById = asyncHandler(async (req, res) => {
   const { paymentId } = req.params;
   const userId = req.user.role === "admin" ? null : req.user.id;
 
   const payment = await paymentService.getPaymentById(paymentId, userId);
 
-  successResponse(res, {
-    message: "Payment retrieved successfully",
-    data: payment,
-  });
+  return res.success(payment, "Payment retrieved successfully");
 });
 
 // Get user payments
-const getUserPayments = catchAsync(async (req, res) => {
+const getUserPayments = asyncHandler(async (req, res) => {
   const userId = req.params.userId || req.user.id;
 
   // Only allow users to access their own payments unless admin
@@ -65,26 +55,20 @@ const getUserPayments = catchAsync(async (req, res) => {
 
   const payments = await paymentService.getPaymentsByUser(userId, options);
 
-  successResponse(res, {
-    message: "User payments retrieved successfully",
-    data: payments,
-  });
+  return res.success(payments, "User payments retrieved successfully");
 });
 
 // Get order payments
-const getOrderPayments = catchAsync(async (req, res) => {
+const getOrderPayments = asyncHandler(async (req, res) => {
   const { orderId } = req.params;
 
   const payments = await paymentService.getPaymentsByOrder(orderId);
 
-  successResponse(res, {
-    message: "Order payments retrieved successfully",
-    data: payments,
-  });
+  return res.success(payments, "Order payments retrieved successfully");
 });
 
 // Refund payment
-const refundPayment = catchAsync(async (req, res) => {
+const refundPayment = asyncHandler(async (req, res) => {
   const { paymentId } = req.params;
   const refundData = req.body;
   const refundedBy = req.user.id;
@@ -95,40 +79,31 @@ const refundPayment = catchAsync(async (req, res) => {
     refundedBy
   );
 
-  successResponse(res, {
-    message: "Payment refunded successfully",
-    data: payment.getSummary(),
-  });
+  return res.success(payment.getSummary(), "Payment refunded successfully");
 });
 
 // Cancel payment
-const cancelPayment = catchAsync(async (req, res) => {
+const cancelPayment = asyncHandler(async (req, res) => {
   const { paymentId } = req.params;
   const userId = req.user.role === "admin" ? null : req.user.id;
 
   const payment = await paymentService.cancelPayment(paymentId, userId);
 
-  successResponse(res, {
-    message: "Payment canceled successfully",
-    data: payment.getSummary(),
-  });
+  return res.success(payment.getSummary(), "Payment canceled successfully");
 });
 
 // Retry failed payment
-const retryPayment = catchAsync(async (req, res) => {
+const retryPayment = asyncHandler(async (req, res) => {
   const { paymentId } = req.params;
   const userId = req.user.role === "admin" ? null : req.user.id;
 
   const result = await paymentService.retryPayment(paymentId, userId);
 
-  successResponse(res, {
-    message: "Payment retry initiated successfully",
-    data: result,
-  });
+  return res.success(result, "Payment retry initiated successfully");
 });
 
 // Process webhook
-const processWebhook = catchAsync(async (req, res) => {
+const processWebhook = asyncHandler(async (req, res) => {
   const { gateway } = req.params;
   const signature =
     req.headers["stripe-signature"] || req.headers["paypal-auth-algo"];
@@ -140,15 +115,11 @@ const processWebhook = catchAsync(async (req, res) => {
     signature
   );
 
-  res.status(200).json({
-    success: true,
-    message: "Webhook processed successfully",
-    data: result,
-  });
+  return res.success(result, "Webhook processed successfully");
 });
 
 // Get payment statistics (Admin only)
-const getPaymentStats = catchAsync(async (req, res) => {
+const getPaymentStats = asyncHandler(async (req, res) => {
   const filters = {
     startDate: req.query.startDate,
     endDate: req.query.endDate,
@@ -158,14 +129,11 @@ const getPaymentStats = catchAsync(async (req, res) => {
 
   const stats = await paymentService.getPaymentStats(filters);
 
-  successResponse(res, {
-    message: "Payment statistics retrieved successfully",
-    data: stats,
-  });
+  return res.success(stats, "Payment statistics retrieved successfully");
 });
 
 // Get all payments (Admin only)
-const getAllPayments = catchAsync(async (req, res) => {
+const getAllPayments = asyncHandler(async (req, res) => {
   const options = {
     page: req.query.page || 1,
     limit: req.query.limit || 20,
@@ -200,14 +168,11 @@ const getAllPayments = catchAsync(async (req, res) => {
 
   const payments = await Payment.paginate(filter, paginationOptions);
 
-  successResponse(res, {
-    message: "All payments retrieved successfully",
-    data: payments,
-  });
+  return res.success(payments, "All payments retrieved successfully");
 });
 
 // Update payment status (Admin only)
-const updatePaymentStatus = catchAsync(async (req, res) => {
+const updatePaymentStatus = asyncHandler(async (req, res) => {
   const { paymentId } = req.params;
   const { status, reason } = req.body;
 
@@ -227,68 +192,68 @@ const updatePaymentStatus = catchAsync(async (req, res) => {
 
   await payment.save();
 
-  successResponse(res, {
-    message: "Payment status updated successfully",
-    data: {
+  return res.success(
+    {
       paymentId: payment.paymentId,
       previousStatus,
       newStatus: status,
       updatedAt: payment.updatedAt,
     },
-  });
+    "Payment status updated successfully"
+  );
 });
 
 // Get payment methods for user
-const getPaymentMethods = catchAsync(async (req, res) => {
+const getPaymentMethods = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const { gateway = "stripe" } = req.query;
 
   // This would typically fetch saved payment methods from the gateway
   // For now, return empty array as placeholder
-  successResponse(res, {
-    message: "Payment methods retrieved successfully",
-    data: {
+  return res.success(
+    {
       paymentMethods: [],
       gateway,
     },
-  });
+    "Payment methods retrieved successfully"
+  );
 });
 
 // Save payment method for user
-const savePaymentMethod = catchAsync(async (req, res) => {
+const savePaymentMethod = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const { paymentMethodId, gateway = "stripe" } = req.body;
 
   // This would typically save the payment method with the gateway
   // Implementation depends on gateway-specific logic
-  successResponse(res, {
-    message: "Payment method saved successfully",
-    data: {
+  return res.success(
+    {
       paymentMethodId,
       gateway,
       userId,
     },
-  });
+    "Payment method saved successfully"
+  );
 });
 
 // Delete payment method
-const deletePaymentMethod = catchAsync(async (req, res) => {
+const deletePaymentMethod = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const { paymentMethodId } = req.params;
 
   // This would typically delete the payment method from the gateway
   // Implementation depends on gateway-specific logic
-  successResponse(res, {
-    message: "Payment method deleted successfully",
-    data: {
+  return res.success(
+    {
       paymentMethodId,
       userId,
     },
-  });
+    "Payment method deleted successfully"
+  );
 });
 
 // Get supported gateways and currencies
-const getSupportedOptions = catchAsync(async (req, res) => {
+const getSupportedOptions = asyncHandler(async (req, res) => {
   const supportedGateways = [
     {
       name: "stripe",
@@ -306,14 +271,14 @@ const getSupportedOptions = catchAsync(async (req, res) => {
     },
   ];
 
-  successResponse(res, {
-    message: "Supported payment options retrieved successfully",
-    data: {
+  return res.success(
+    {
       gateways: supportedGateways,
       defaultGateway: "stripe",
       defaultCurrency: "USD",
     },
-  });
+    "Supported payment options retrieved successfully"
+  );
 });
 
 module.exports = {
