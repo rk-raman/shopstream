@@ -14,7 +14,7 @@ const {
   authenticate,
   adminOnly,
 } = require("../../../shared/middleware/auth.middleware");
-const upload = require("../../../shared/middleware/upload.middleware");
+const uploadMiddleware = require("../../upload/middleware/upload.middleware");
 
 const router = express.Router();
 
@@ -26,7 +26,7 @@ router.get("/profile", userController.getProfile);
 router.put("/profile", validateUpdateProfile, userController.updateProfile);
 router.post(
   "/avatar",
-  upload.single("avatar"),
+  uploadMiddleware.avatar(),
   validateAvatarUpload,
   userController.uploadAvatar
 );

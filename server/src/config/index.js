@@ -40,9 +40,44 @@ const push = {
   },
 };
 
+// Cloudinary Configuration
+const cloudinary = {
+  cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+  apiKey: process.env.CLOUDINARY_API_KEY,
+  apiSecret: process.env.CLOUDINARY_API_SECRET,
+};
+
+// AWS S3 Configuration
+const aws = {
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION || "us-east-1",
+  bucketName: process.env.AWS_S3_BUCKET_NAME,
+};
+
+// Upload Service Configuration
+const upload = {
+  provider: process.env.UPLOAD_PROVIDER || "cloudinary", // 'cloudinary', 'aws', 'local'
+  maxFileSize: parseInt(process.env.UPLOAD_MAX_FILE_SIZE) || 5 * 1024 * 1024, // 5MB
+  allowedMimeTypes: (
+    process.env.UPLOAD_ALLOWED_MIME_TYPES ||
+    "image/jpeg,image/png,image/gif,image/webp"
+  ).split(","),
+  folders: {
+    users: process.env.UPLOAD_FOLDER_USERS || "users",
+    products: process.env.UPLOAD_FOLDER_PRODUCTS || "products",
+    categories: process.env.UPLOAD_FOLDER_CATEGORIES || "categories",
+    banners: process.env.UPLOAD_FOLDER_BANNERS || "banners",
+    documents: process.env.UPLOAD_FOLDER_DOCUMENTS || "documents",
+  },
+};
+
 module.exports = {
   connectDB,
   email,
   sms,
   push,
+  cloudinary,
+  aws,
+  upload,
 };

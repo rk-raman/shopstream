@@ -16,6 +16,7 @@ A comprehensive e-commerce backend API built with Node.js, Express, and MongoDB.
 - [Database Setup](#database-setup)
 - [Testing](#testing)
 - [Contribution Guidelines](#contribution-guidelines)
+- [Upload Service](#upload-service)
 
 ## 🚀 Project Overview
 
@@ -429,6 +430,166 @@ This project is licensed under the ISC License - see the [LICENSE](LICENSE) file
 - MongoDB documentation
 - Joi validation library
 - All contributors and maintainers
+
+---
+
+## 📸 Upload Service
+
+The ShopStream platform includes a comprehensive, modular upload service that supports multiple cloud providers and different user types.
+
+### Features
+
+- **Multi-Provider Support**: Easily switch between Cloudinary, AWS S3, and other providers
+- **Role-Based Uploads**: Different upload permissions and configurations for users, sellers, and admins
+- **Organized File Structure**: Automatic folder organization by user type and category
+- **Image Transformations**: Built-in image resizing and optimization (provider-dependent)
+- **Security**: File type validation, size limits, and secure upload URLs
+- **Event-Driven**: Integrates with the platform's event system for analytics and notifications
+
+### Supported Providers
+
+1. **Cloudinary** (Default)
+
+   - Image transformations and optimizations
+   - CDN delivery
+   - Advanced image management features
+
+2. **AWS S3**
+   - Scalable object storage
+   - Cost-effective for large files
+   - Integration with other AWS services
+
+### Configuration
+
+Set up your preferred upload provider in your `.env` file:
+
+```bash
+# Upload Service Configuration
+UPLOAD_PROVIDER=cloudinary  # or 'aws'
+UPLOAD_MAX_FILE_SIZE=5242880  # 5MB in bytes
+UPLOAD_ALLOWED_MIME_TYPES=image/jpeg,image/png,image/gif,image/webp
+
+# Cloudinary Configuration
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+# AWS S3 Configuration (if using AWS)
+AWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
+AWS_REGION=us-east-1
+AWS_S3_BUCKET_NAME=your_bucket_name
+```
+
+### API Endpoints
+
+#### User Uploads
+
+- `POST /api/v1/uploads/avatar` - Upload user avatar
+- `POST /api/v1/uploads/custom` - Custom upload with parameters
+
+#### Seller Uploads
+
+- `POST /api/v1/uploads/products/images` - Upload product images
+- `POST /api/v1/uploads/products/:productId/images` - Upload images for specific product
+
+#### Admin Uploads
+
+- `POST /api/v1/uploads/banners` - Upload banner images
+- `POST /api/v1/uploads/categories/:categoryId/image` - Upload category images
+
+#### File Management
+
+- `DELETE /api/v1/uploads/files/:publicId` - Delete a file
+- `GET /api/v1/uploads/files/:publicId/info` - Get file information
+- `POST /api/v1/uploads/signed-url` - Generate signed upload URL
+
+#### Utility Endpoints
+
+- `GET /api/v1/uploads/provider/info` - Get current provider information
+- `POST /api/v1/uploads/provider/switch` - Switch provider (admin only)
+
+### Usage Examples
+
+#### Upload Avatar
+
+```javascript
+const formData = new FormData();
+formData.append("avatar", file);
+
+const response = await fetch("/api/v1/uploads/avatar", {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+  body: formData,
+});
+```
+
+#### Upload Product Images
+
+```javascript
+const formData = new FormData();
+files.forEach((file) => formData.append("productImages", file));
+
+const response = await fetch("/api/v1/uploads/products/images", {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+  body: formData,
+});
+```
+
+#### Switch Provider (Admin)
+
+```javascript
+const response = await fetch("/api/v1/uploads/provider/switch", {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${adminToken}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    providerName: "aws",
+    providerConfig: {
+      accessKeyId: "your_key",
+      secretAccessKey: "your_secret",
+      region: "us-east-1",
+      bucketName: "your_bucket",
+    },
+  }),
+});
+```
+
+### File Organization
+
+Files are automatically organized in the following structure:
+
+```
+/{category}/{userType}/{userId}/filename
+```
+
+Examples:
+
+- `users/user/12345/avatar_1234567890_abc123.jpg`
+- `products/seller/67890/product_1234567890_def456.jpg`
+- `banners/admin/admin123/banner_1234567890_ghi789.jpg`
+
+### Adding New Providers
+
+To add a new upload provider:
+
+1. Create a new provider class extending `BaseUploadProvider`
+2. Implement all required methods
+3. Register the provider in `providers/index.js`
+4. Update configuration as needed
+
+```javascript
+const MyProvider = require("./my.provider");
+
+ProviderFactory.registerProvider("myprovider", MyProvider);
+```
 
 ---
 

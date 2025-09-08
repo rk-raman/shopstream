@@ -20,7 +20,11 @@ const {
 } = require("./shared/middleware/error.middleware");
 
 // Import routes
-const routes = require("./routes");
+const userRoutes = require("./modules/user/routes/user.routes");
+const productRoutes = require("./modules/product/routes/product.routes");
+const cartRoutes = require("./modules/cart/routes/cart.routes");
+const paymentRoutes = require("./modules/payment/routes/payment.routes");
+const uploadRoutes = require("./modules/upload/routes/upload.routes");
 
 // Import event system
 const eventSystem = require("./shared/events/eventEmitter");
@@ -93,7 +97,11 @@ app.get("/health", async (req, res) => {
 });
 
 // API routes
-app.use("/api", routes);
+app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/products", productRoutes);
+app.use("/api/v1/cart", cartRoutes);
+app.use("/api/v1/payments", paymentRoutes);
+app.use("/api/v1/uploads", uploadRoutes);
 
 // Serve static files
 app.use("/uploads", express.static("uploads"));

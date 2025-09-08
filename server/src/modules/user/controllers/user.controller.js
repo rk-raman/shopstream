@@ -1,6 +1,7 @@
 const userService = require("../services/user.service");
-const ApiError = require("../../../shared/utils/apiError");
+//const ApiError = require("../../../shared/utils/apiError");
 const asyncHandler = require("../../../shared/utils/asyncHandler");
+const ApiError = require("../../../shared/utils/ApiError");
 
 // Get user profile
 const getProfile = asyncHandler(async (req, res) => {
@@ -27,16 +28,18 @@ const updateProfile = asyncHandler(async (req, res) => {
 const uploadAvatar = asyncHandler(async (req, res) => {
   const userId = req.user._id;
 
-  if (!req.file) {
-    throw new ApiError(400, "Please upload an image");
+  if (!req.uploadResult) {
+    throw new ApiError(400, "Avatar upload failed - no result available");
   }
 
-  // Here you would typically upload to cloud storage (Cloudinary, AWS S3, etc.)
-  // For now, we'll just store the file path
+  // Use the upload result from the upload middleware
   const avatarData = {
     avatar: {
-      public_id: req.file.filename,
-      url: `/uploads/avatars/${req.file.filename}`,
+      public_id: req.uploadResult.publicId,
+      url: req.uploadResult.url,
+      provider: req.uploadResult.provider,
+      folder: req.uploadResult.folder,
+      uploadedAt: req.uploadResult.uploadedAt,
     },
   };
 
