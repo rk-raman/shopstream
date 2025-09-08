@@ -1,4 +1,5 @@
 const paymentService = require("../services/payment.service");
+const { Payment } = require("../models");
 const ApiError = require("../../../shared/utils/apiError");
 const asyncHandler = require("../../../shared/utils/asyncHandler");
 
@@ -134,41 +135,33 @@ const getPaymentStats = asyncHandler(async (req, res) => {
 
 // Get all payments (Admin only)
 const getAllPayments = asyncHandler(async (req, res) => {
-  const options = {
-    page: req.query.page || 1,
-    limit: req.query.limit || 20,
-    status: req.query.status,
-    gateway: req.query.gateway,
-    startDate: req.query.startDate,
-    endDate: req.query.endDate,
-    userId: req.query.userId,
-  };
+  const options = req.query;
 
-  // Build filter for admin queries
+  // Build filter object
   const filter = {};
   if (options.status) filter.status = options.status;
   if (options.gateway) filter.gateway = options.gateway;
   if (options.userId) filter.userId = options.userId;
+
+  // Date range filter
   if (options.startDate || options.endDate) {
     filter.createdAt = {};
     if (options.startDate) filter.createdAt.$gte = new Date(options.startDate);
     if (options.endDate) filter.createdAt.$lte = new Date(options.endDate);
   }
 
-  const Payment = require("../models/Payment.model");
   const paginationOptions = {
     page: parseInt(options.page),
     limit: parseInt(options.limit),
-    sort: { createdAt: -1 },
     populate: [
-      { path: "orderId", select: "orderNumber items status" },
       { path: "userId", select: "firstName lastName email" },
+      { path: "orderId", select: "orderNumber status" },
     ],
+    sort: { createdAt: -1 },
   };
 
   const payments = await Payment.paginate(filter, paginationOptions);
-
-  return res.success(payments, "All payments retrieved successfully");
+  res.success(payments, "Payments retrieved successfully");
 });
 
 // Update payment status (Admin only)
@@ -176,7 +169,6 @@ const updatePaymentStatus = asyncHandler(async (req, res) => {
   const { paymentId } = req.params;
   const { status, reason } = req.body;
 
-  const Payment = require("../models/Payment.model");
   const payment = await Payment.findOne({ paymentId });
 
   if (!payment) {

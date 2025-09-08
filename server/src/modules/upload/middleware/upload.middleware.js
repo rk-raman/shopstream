@@ -1,6 +1,6 @@
 const multer = require("multer");
-const UploadService = require("../services/upload.service");
-const { ApiError } = require("../../../shared/utils/ApiError");
+const uploadService = require("../services/upload.service");
+const { ApiError } = require("../../../shared/utils/apiError");
 const config = require("../../../config");
 
 /**
@@ -9,7 +9,7 @@ const config = require("../../../config");
  */
 class UploadMiddleware {
   constructor() {
-    this.uploadService = new UploadService();
+    this.uploadService = new uploadService();
     this.config = config.upload;
   }
 

@@ -1,5 +1,5 @@
-const { ProviderFactory } = require("../providers");
-const config = require("../../../config");
+const { CloudinaryProvider, AWSProvider } = require("../../providers");
+const config = require("../../config");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
 

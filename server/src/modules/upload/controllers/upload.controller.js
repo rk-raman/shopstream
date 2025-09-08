@@ -1,6 +1,6 @@
 const UploadService = require("../services/upload.service");
-const { asyncHandler } = require("../../../shared/utils/asyncHandler");
-const { ApiError } = require("../../../shared/utils/ApiError");
+const asyncHandler = require("../../../shared/utils/asyncHandler");
+const ApiError = require("../../../shared/utils/apiError");
 
 /**
  * Upload Controller

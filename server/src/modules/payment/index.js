@@ -2,8 +2,7 @@
 // Following the established module pattern from user and product modules
 
 // Models
-const Payment = require("./models/Payment.model");
-const PaymentMethod = require("./models/paymentMethod.model");
+const { Payment, PaymentMethod } = require("./models");
 
 // Services
 const paymentService = require("./services/payment.service");
@@ -18,17 +17,18 @@ const paymentRoutes = require("./routes/payment.routes");
 const paymentValidators = require("./validators/payment.validators");
 
 // Events
-const { PaymentEventEmitter } = require("./events/payment.emitter");
-const { PaymentEventPublisher } = require("./events/payment.publisher");
-const { PAYMENT_EVENTS } = require("./events/payment.events");
+const {
+  PaymentEventEmitter,
+  paymentEventEmitter,
+  PAYMENT_EVENTS,
+} = require("./events/payment.events");
+const {
+  PaymentEventPublisher,
+} = require("./events/publishers/PaymentEventPublisher");
 const paymentSubscribers = require("./events/subscribers");
 
-// Gateways
-const stripeGateway = require("./gateways/stripe.gateway");
-
 // Create event system instances
-const paymentEventEmitter = new PaymentEventEmitter();
-const paymentEventPublisher = new PaymentEventPublisher(paymentEventEmitter);
+const paymentEventPublisher = new PaymentEventPublisher();
 
 // Module state
 let isInitialized = false;
@@ -54,9 +54,6 @@ async function initialize() {
 
       // Initialize event subscribers
       await paymentSubscribers.initialize(paymentEventEmitter);
-
-      // Initialize payment gateways
-      await stripeGateway.initialize();
 
       // Set up service dependencies
       paymentService.setEventPublisher(paymentEventPublisher);
@@ -89,9 +86,6 @@ async function shutdown() {
 
     // Shutdown event subscribers
     await paymentSubscribers.shutdown();
-
-    // Shutdown payment gateways
-    await stripeGateway.shutdown();
 
     isInitialized = false;
     initializationPromise = null;
@@ -146,11 +140,6 @@ function getHealthStatus() {
         eventPublisher: !!paymentEventPublisher,
         subscribers: paymentSubscribers.getHealthStatus(),
       },
-      gateways: {
-        stripe: stripeGateway.getHealthStatus
-          ? stripeGateway.getHealthStatus()
-          : { available: !!stripeGateway },
-      },
     },
     timestamp: new Date().toISOString(),
   };
@@ -167,11 +156,7 @@ function isHealthy() {
     if (!isInitialized) return false;
 
     const subscribersHealthy = paymentSubscribers.isHealthy();
-    const gatewayHealthy = stripeGateway.isHealthy
-      ? stripeGateway.isHealthy()
-      : true;
-
-    return subscribersHealthy && gatewayHealthy;
+    return subscribersHealthy;
   } catch (error) {
     console.error("Error checking payment module health:", error);
     return false;
@@ -187,7 +172,7 @@ function getModuleInfo() {
     name: "payment",
     version: "1.0.0",
     description:
-      "Payment processing module with Stripe integration and event-driven architecture",
+      "Payment processing module with multiple gateway support and event-driven architecture",
     isInitialized,
     components: {
       models: ["Payment", "PaymentMethod"],
@@ -201,12 +186,11 @@ function getModuleInfo() {
         "PAYMENT_EVENTS",
       ],
       subscribers: paymentSubscribers.getSubscriberInfo(),
-      gateways: ["stripeGateway"],
     },
     features: [
       "Payment processing",
       "Payment method management",
-      "Stripe integration",
+      "Multiple gateway integration",
       "Event-driven architecture",
       "Analytics tracking",
       "Notification system",
@@ -255,9 +239,6 @@ module.exports = {
   paymentEventEmitter,
   paymentEventPublisher,
   paymentSubscribers,
-
-  // Gateways
-  stripeGateway,
 
   // Module management
   initialize,

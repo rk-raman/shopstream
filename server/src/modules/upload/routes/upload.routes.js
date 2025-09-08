@@ -1,105 +1,121 @@
 const express = require("express");
-const uploadController = require("../controllers/upload.controller");
-const uploadMiddleware = require("../middleware/upload.middleware");
-const { authenticate } = require("../../../shared/middleware/auth.middleware");
-const { authorize } = require("../../../shared/middleware/rbac.middleware");
+const { auth } = require("../../../shared/middleware/auth.middleware");
+const {
+  validate,
+} = require("../../../shared/middleware/validation.middleware");
+const { uploadController } = require("../controllers/upload.controller");
+const { uploadValidators } = require("../validators/upload.validators");
+const { uploadMiddleware } = require("../middleware/upload.middleware");
 
 const router = express.Router();
 
 // Apply authentication to all upload routes
-router.use(authenticate);
+router.use(auth);
 
-/**
- * Avatar Upload Routes (Users)
- */
+// Avatar upload routes
 router.post(
   "/avatar",
-  uploadMiddleware.avatar(),
+  uploadMiddleware.single("avatar"),
+  validate(uploadValidators.uploadAvatar),
   uploadController.uploadAvatar
 );
 
 router.post(
   "/avatar/:userId",
-  authorize(["admin"]), // Only admin can upload avatar for other users
-  uploadMiddleware.avatar(),
+  uploadMiddleware.single("avatar"),
+  validate(uploadValidators.uploadAvatar),
   uploadController.uploadAvatar
 );
 
-/**
- * Product Images Upload Routes (Sellers)
- */
+// Product image upload routes
 router.post(
   "/products/images",
-  authorize(["seller", "admin"]),
-  uploadMiddleware.productImages(5), // Max 5 images
+  uploadMiddleware.array("productImages", 10),
+  validate(uploadValidators.uploadProductImages),
   uploadController.uploadProductImages
 );
 
 router.post(
   "/products/:productId/images",
-  authorize(["seller", "admin"]),
-  uploadMiddleware.productImages(5),
+  uploadMiddleware.array("productImages", 10),
+  validate(uploadValidators.uploadProductImages),
   uploadController.uploadProductImages
 );
 
-/**
- * Banner Upload Routes (Admin only)
- */
+// Banner upload routes
 router.post(
   "/banners",
-  authorize(["admin"]),
-  uploadMiddleware.banner(),
+  uploadMiddleware.single("banner"),
+  validate(uploadValidators.uploadBanner),
   uploadController.uploadBanner
 );
 
-/**
- * Category Image Upload Routes (Admin only)
- */
+// Category image upload routes
 router.post(
   "/categories/:categoryId/image",
-  authorize(["admin"]),
-  uploadMiddleware.categoryImage(),
+  uploadMiddleware.single("categoryImage"),
+  validate(uploadValidators.uploadCategoryImage),
   uploadController.uploadCategoryImage
 );
 
-/**
- * Custom Upload Routes
- */
+// Generic file upload route
 router.post(
   "/custom",
   uploadMiddleware.single("file"),
+  validate(uploadValidators.uploadFile),
   uploadController.customUpload
 );
 
+// Bulk file upload route
 router.post(
   "/bulk",
-  uploadMiddleware.multiple("files", 10), // Max 10 files
+  uploadMiddleware.array("files", 20),
+  validate(uploadValidators.bulkUpload),
   uploadController.bulkUpload
 );
 
-/**
- * File Management Routes
- */
-router.delete("/files/:publicId", uploadController.deleteFile);
+// File management routes
+router.delete(
+  "/files/:publicId",
+  validate(uploadValidators.deleteFile),
+  uploadController.deleteFile
+);
 
-router.delete("/files", uploadController.deleteMultiple);
+router.delete(
+  "/files",
+  validate(uploadValidators.deleteMultiple),
+  uploadController.deleteMultiple
+);
 
 router.get("/files/:publicId/info", uploadController.getFileInfo);
 
-/**
- * Utility Routes
- */
-router.post("/signed-url", uploadController.generateSignedUrl);
+// Signed URL generation
+router.post(
+  "/signed-url",
+  validate(uploadValidators.generateSignedUrl),
+  uploadController.generateSignedUrl
+);
 
-router.post("/transform/:publicId", uploadController.transformImage);
+// Image transformation routes
+router.post(
+  "/transform/:publicId",
+  validate(uploadValidators.transformImage),
+  uploadController.transformImage
+);
+
+// Provider management routes (admin only)
+router.post(
+  "/provider/switch",
+  validate(uploadValidators.switchProvider),
+  uploadController.switchProvider
+);
 
 router.get("/provider/info", uploadController.getProviderInfo);
 
-router.post(
-  "/provider/switch",
-  authorize(["admin"]),
-  uploadController.switchProvider
-);
+// Utility Routes
+router.get("/admin/stats", uploadController.getUploadStats);
+
+router.get("/admin/health", uploadController.getProviderHealth);
 
 /**
  * Error handling middleware
