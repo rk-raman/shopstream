@@ -1,9 +1,13 @@
 const Cart = require("../models/Cart.model");
 const Product = require("../../product/models/Product.model");
 const ApiError = require("../../../shared/utils/apiError");
-const { cartEventPublisher } = require("../events/cart.events");
+const CartEventPublisher = require("../events/publishers/CartEventPublisher");
 
 class CartService {
+  constructor() {
+    this.eventPublisher = new CartEventPublisher();
+  }
+
   async getCart(userId) {
     let cart = await Cart.findOne({ user: userId }).populate({
       path: "items.product",
@@ -15,9 +19,13 @@ class CartService {
       cart = await Cart.create({ user: userId });
 
       // Publish cart created event
-      cartEventPublisher.publishCartCreated({
-        userId,
+      await this.eventPublisher.publishCartCreated({
         cartId: cart._id,
+        userId,
+        sessionId: null, // TODO: Get from request context
+        source: "web",
+        userAgent: null, // TODO: Get from request context
+        ipAddress: null, // TODO: Get from request context
       });
     }
 
@@ -67,6 +75,16 @@ class CartService {
     let cart = await Cart.findOne({ user: userId });
     if (!cart) {
       cart = new Cart({ user: userId });
+
+      // Publish cart created event
+      await this.eventPublisher.publishCartCreated({
+        cartId: cart._id,
+        userId,
+        sessionId: null, // TODO: Get from request context
+        source: "web",
+        userAgent: null, // TODO: Get from request context
+        ipAddress: null, // TODO: Get from request context
+      });
     }
 
     const previousTotal = cart.totalDiscountedPrice;
@@ -88,43 +106,71 @@ class CartService {
       discountPrice,
     });
 
-    // Publish events
-    cartEventPublisher.publishItemAdded({
-      userId,
+    const totalPrice = quantity * (discountPrice || price);
+
+    // Publish item added event
+    await this.eventPublisher.publishItemAdded({
       cartId: cart._id,
+      userId,
       productId,
       variantId,
       quantity,
-      price,
-      discountPrice,
+      price: discountPrice || price,
+      totalPrice,
+      productName: product.name,
+      sku: variant?.sku || product.sku,
+      category: product.category,
+      source: "web",
+      userAgent: null, // TODO: Get from request context
+      ipAddress: null, // TODO: Get from request context
     });
 
-    cartEventPublisher.publishCartUpdated({
-      userId,
+    // Publish cart updated event
+    await this.eventPublisher.publishCartUpdated({
       cartId: cart._id,
-      totalItems: cart.totalItems,
-      totalPrice: cart.totalPrice,
-      totalDiscountedPrice: cart.totalDiscountedPrice,
+      userId,
+      changes: {
+        totalItems: cart.totalItems,
+        totalPrice: cart.totalPrice,
+        totalDiscountedPrice: cart.totalDiscountedPrice,
+      },
+      previousValues: {
+        totalItems: previousItemCount,
+        totalDiscountedPrice: previousTotal,
+      },
+      updatedBy: userId,
+      source: "web",
+      reason: "item_added",
     });
 
-    // Publish value and count change events if changed
+    // Publish value change event if changed
     if (cart.totalDiscountedPrice !== previousTotal) {
-      cartEventPublisher.publishCartValueChanged({
-        userId,
+      await this.eventPublisher.publishCartValueChanged({
         cartId: cart._id,
+        userId,
         previousValue: previousTotal,
         newValue: cart.totalDiscountedPrice,
-        change: cart.totalDiscountedPrice - previousTotal,
+        valueChange: cart.totalDiscountedPrice - previousTotal,
+        valueChangePercentage:
+          previousTotal > 0
+            ? ((cart.totalDiscountedPrice - previousTotal) / previousTotal) *
+              100
+            : 100,
+        changeReason: "item_added",
+        itemCount: cart.totalItems,
       });
     }
 
+    // Publish count change event if changed
     if (cart.totalItems !== previousItemCount) {
-      cartEventPublisher.publishCartItemsCountChanged({
-        userId,
+      await this.eventPublisher.publishCartItemsCountChanged({
         cartId: cart._id,
+        userId,
         previousCount: previousItemCount,
         newCount: cart.totalItems,
-        change: cart.totalItems - previousItemCount,
+        countChange: cart.totalItems - previousItemCount,
+        changeReason: "item_added",
+        totalValue: cart.totalDiscountedPrice,
       });
     }
 
@@ -161,52 +207,76 @@ class CartService {
 
     // Publish events
     if (quantity <= 0) {
-      cartEventPublisher.publishItemRemoved({
-        userId,
+      await this.eventPublisher.publishItemRemoved({
         cartId: cart._id,
+        userId,
         productId: item.product,
         variantId: item.variant?.variantId,
         previousQuantity,
+        source: "web",
+        userAgent: null, // TODO: Get from request context
+        ipAddress: null, // TODO: Get from request context
       });
     } else {
-      cartEventPublisher.publishItemQuantityUpdated({
-        userId,
+      await this.eventPublisher.publishItemQuantityUpdated({
         cartId: cart._id,
+        userId,
         itemId,
         productId: item.product,
         variantId: item.variant?.variantId,
         previousQuantity,
         newQuantity: quantity,
         quantityChange: quantity - previousQuantity,
+        source: "web",
+        userAgent: null, // TODO: Get from request context
+        ipAddress: null, // TODO: Get from request context
       });
     }
 
-    cartEventPublisher.publishCartUpdated({
-      userId,
+    await this.eventPublisher.publishCartUpdated({
       cartId: cart._id,
-      totalItems: cart.totalItems,
-      totalPrice: cart.totalPrice,
-      totalDiscountedPrice: cart.totalDiscountedPrice,
+      userId,
+      changes: {
+        totalItems: cart.totalItems,
+        totalPrice: cart.totalPrice,
+        totalDiscountedPrice: cart.totalDiscountedPrice,
+      },
+      previousValues: {
+        totalItems: previousItemCount,
+        totalDiscountedPrice: previousTotal,
+      },
+      updatedBy: userId,
+      source: "web",
+      reason: "item_updated",
     });
 
     // Publish value and count change events if changed
     if (cart.totalDiscountedPrice !== previousTotal) {
-      cartEventPublisher.publishCartValueChanged({
-        userId,
+      await this.eventPublisher.publishCartValueChanged({
         cartId: cart._id,
+        userId,
         previousValue: previousTotal,
         newValue: cart.totalDiscountedPrice,
-        change: cart.totalDiscountedPrice - previousTotal,
+        valueChange: cart.totalDiscountedPrice - previousTotal,
+        valueChangePercentage:
+          previousTotal > 0
+            ? ((cart.totalDiscountedPrice - previousTotal) / previousTotal) *
+              100
+            : 100,
+        changeReason: "item_updated",
+        itemCount: cart.totalItems,
       });
     }
 
     if (cart.totalItems !== previousItemCount) {
-      cartEventPublisher.publishCartItemsCountChanged({
-        userId,
+      await this.eventPublisher.publishCartItemsCountChanged({
         cartId: cart._id,
+        userId,
         previousCount: previousItemCount,
         newCount: cart.totalItems,
-        change: cart.totalItems - previousItemCount,
+        countChange: cart.totalItems - previousItemCount,
+        changeReason: "item_updated",
+        totalValue: cart.totalDiscountedPrice,
       });
     }
 
@@ -230,37 +300,57 @@ class CartService {
     await cart.removeItem(itemId);
 
     // Publish events
-    cartEventPublisher.publishItemRemoved({
-      userId,
+    await this.eventPublisher.publishItemRemoved({
       cartId: cart._id,
+      userId,
       productId: item.product,
       variantId: item.variant?.variantId,
       previousQuantity: item.quantity,
+      source: "web",
+      userAgent: null, // TODO: Get from request context
+      ipAddress: null, // TODO: Get from request context
     });
 
-    cartEventPublisher.publishCartUpdated({
-      userId,
+    await this.eventPublisher.publishCartUpdated({
       cartId: cart._id,
-      totalItems: cart.totalItems,
-      totalPrice: cart.totalPrice,
-      totalDiscountedPrice: cart.totalDiscountedPrice,
+      userId,
+      changes: {
+        totalItems: cart.totalItems,
+        totalPrice: cart.totalPrice,
+        totalDiscountedPrice: cart.totalDiscountedPrice,
+      },
+      previousValues: {
+        totalItems: previousItemCount,
+        totalDiscountedPrice: previousTotal,
+      },
+      updatedBy: userId,
+      source: "web",
+      reason: "item_removed",
     });
 
     // Publish value and count change events
-    cartEventPublisher.publishCartValueChanged({
-      userId,
+    await this.eventPublisher.publishCartValueChanged({
       cartId: cart._id,
+      userId,
       previousValue: previousTotal,
       newValue: cart.totalDiscountedPrice,
-      change: cart.totalDiscountedPrice - previousTotal,
+      valueChange: cart.totalDiscountedPrice - previousTotal,
+      valueChangePercentage:
+        previousTotal > 0
+          ? ((cart.totalDiscountedPrice - previousTotal) / previousTotal) * 100
+          : 100,
+      changeReason: "item_removed",
+      itemCount: cart.totalItems,
     });
 
-    cartEventPublisher.publishCartItemsCountChanged({
-      userId,
+    await this.eventPublisher.publishCartItemsCountChanged({
       cartId: cart._id,
+      userId,
       previousCount: previousItemCount,
       newCount: cart.totalItems,
-      change: cart.totalItems - previousItemCount,
+      countChange: cart.totalItems - previousItemCount,
+      changeReason: "item_removed",
+      totalValue: cart.totalDiscountedPrice,
     });
 
     return await this.getCart(userId);
@@ -275,35 +365,53 @@ class CartService {
       await cart.clear();
 
       // Publish events
-      cartEventPublisher.publishCartCleared({
-        userId,
+      await this.eventPublisher.publishCartCleared({
         cartId: cart._id,
+        userId,
         clearedItems: previousItemCount,
         clearedValue: previousTotal,
+        source: "web",
+        userAgent: null, // TODO: Get from request context
+        ipAddress: null, // TODO: Get from request context
       });
 
-      cartEventPublisher.publishCartUpdated({
-        userId,
+      await this.eventPublisher.publishCartUpdated({
         cartId: cart._id,
-        totalItems: 0,
-        totalPrice: 0,
-        totalDiscountedPrice: 0,
+        userId,
+        changes: {
+          totalItems: 0,
+          totalPrice: 0,
+          totalDiscountedPrice: 0,
+        },
+        previousValues: {
+          totalItems: previousItemCount,
+          totalDiscountedPrice: previousTotal,
+        },
+        updatedBy: userId,
+        source: "web",
+        reason: "cart_cleared",
       });
 
-      cartEventPublisher.publishCartValueChanged({
-        userId,
+      await this.eventPublisher.publishCartValueChanged({
         cartId: cart._id,
+        userId,
         previousValue: previousTotal,
         newValue: 0,
-        change: -previousTotal,
+        valueChange: -previousTotal,
+        valueChangePercentage:
+          previousTotal > 0 ? ((0 - previousTotal) / previousTotal) * 100 : 100,
+        changeReason: "cart_cleared",
+        itemCount: 0,
       });
 
-      cartEventPublisher.publishCartItemsCountChanged({
-        userId,
+      await this.eventPublisher.publishCartItemsCountChanged({
         cartId: cart._id,
+        userId,
         previousCount: previousItemCount,
         newCount: 0,
-        change: -previousItemCount,
+        countChange: -previousItemCount,
+        changeReason: "cart_cleared",
+        totalValue: 0,
       });
     }
 
@@ -361,13 +469,16 @@ class CartService {
       await cart.save();
 
       // Publish cart synchronized event
-      cartEventPublisher.publishCartSynchronized({
-        userId: cart.user,
+      await this.eventPublisher.publishCartSynchronized({
         cartId: cart._id,
+        userId: cart.user,
         removedItems: itemsToRemove.length,
         updatedItems: cart.items.length,
         totalItems: cart.totalItems,
         totalDiscountedPrice: cart.totalDiscountedPrice,
+        source: "web",
+        userAgent: null, // TODO: Get from request context
+        ipAddress: null, // TODO: Get from request context
       });
     }
   }
@@ -401,15 +512,18 @@ class CartService {
 
     // Publish abandoned cart events for each cart
     abandonedCarts.forEach((cart) => {
-      cartEventPublisher.publishCartAbandoned({
-        userId: cart.user._id,
+      this.eventPublisher.publishCartAbandoned({
         cartId: cart._id,
+        userId: cart.user._id,
         abandonedDays: daysAgo,
         totalItems: cart.totalItems,
         totalValue: cart.totalDiscountedPrice,
         lastModified: cart.lastModified,
         userEmail: cart.user.email,
         userName: `${cart.user.firstName} ${cart.user.lastName}`,
+        source: "web",
+        userAgent: null, // TODO: Get from request context
+        ipAddress: null, // TODO: Get from request context
       });
     });
 

@@ -1,136 +1,171 @@
 const { EventEmitter } = require("events");
-const { CART_EVENTS } = require("../../../shared/events/eventTypes");
 
-// Cart Event Publisher
-class CartEventPublisher extends EventEmitter {
+// Cart Event Types
+const CART_EVENTS = {
+  // Item management events
+  ITEM_ADDED_TO_CART: "cart.item.added",
+  ITEM_REMOVED_FROM_CART: "cart.item.removed",
+  ITEM_QUANTITY_UPDATED: "cart.item.quantity.updated",
+
+  // Cart lifecycle events
+  CART_CREATED: "cart.created",
+  CART_UPDATED: "cart.updated",
+  CART_CLEARED: "cart.cleared",
+  CART_SYNCHRONIZED: "cart.synchronized",
+
+  // Cart behavior events
+  CART_ABANDONED: "cart.abandoned",
+  CART_RECOVERED: "cart.recovered",
+  CART_CHECKOUT_INITIATED: "cart.checkout.initiated",
+
+  // Coupon events
+  COUPON_APPLIED: "cart.coupon.applied",
+  COUPON_REMOVED: "cart.coupon.removed",
+  COUPON_EXPIRED: "cart.coupon.expired",
+
+  // Analytics events
+  CART_VALUE_CHANGED: "cart.value.changed",
+  CART_ITEMS_COUNT_CHANGED: "cart.items.count.changed",
+};
+
+// Cart Event Emitter
+class CartEventEmitter extends EventEmitter {
   constructor() {
     super();
     this.setMaxListeners(50); // Increase max listeners for multiple subscribers
   }
 
   // Item management events
-  publishItemAdded(data) {
+  emitItemAdded(data) {
     this.emit(CART_EVENTS.ITEM_ADDED_TO_CART, {
+      ...data,
+      timestamp: new Date(),
       eventType: CART_EVENTS.ITEM_ADDED_TO_CART,
-      timestamp: new Date().toISOString(),
-      ...data,
     });
   }
 
-  publishItemRemoved(data) {
+  emitItemRemoved(data) {
     this.emit(CART_EVENTS.ITEM_REMOVED_FROM_CART, {
+      ...data,
+      timestamp: new Date(),
       eventType: CART_EVENTS.ITEM_REMOVED_FROM_CART,
-      timestamp: new Date().toISOString(),
-      ...data,
     });
   }
 
-  publishItemQuantityUpdated(data) {
+  emitItemQuantityUpdated(data) {
     this.emit(CART_EVENTS.ITEM_QUANTITY_UPDATED, {
+      ...data,
+      timestamp: new Date(),
       eventType: CART_EVENTS.ITEM_QUANTITY_UPDATED,
-      timestamp: new Date().toISOString(),
-      ...data,
-    });
-  }
-
-  publishCartCleared(data) {
-    this.emit(CART_EVENTS.CART_CLEARED, {
-      eventType: CART_EVENTS.CART_CLEARED,
-      timestamp: new Date().toISOString(),
-      ...data,
     });
   }
 
   // Cart lifecycle events
-  publishCartCreated(data) {
+  emitCartCreated(data) {
     this.emit(CART_EVENTS.CART_CREATED, {
+      ...data,
+      timestamp: new Date(),
       eventType: CART_EVENTS.CART_CREATED,
-      timestamp: new Date().toISOString(),
-      ...data,
     });
   }
 
-  publishCartUpdated(data) {
+  emitCartUpdated(data) {
     this.emit(CART_EVENTS.CART_UPDATED, {
-      eventType: CART_EVENTS.CART_UPDATED,
-      timestamp: new Date().toISOString(),
       ...data,
+      timestamp: new Date(),
+      eventType: CART_EVENTS.CART_UPDATED,
     });
   }
 
-  publishCartSynchronized(data) {
-    this.emit(CART_EVENTS.CART_SYNCHRONIZED, {
-      eventType: CART_EVENTS.CART_SYNCHRONIZED,
-      timestamp: new Date().toISOString(),
+  emitCartCleared(data) {
+    this.emit(CART_EVENTS.CART_CLEARED, {
       ...data,
+      timestamp: new Date(),
+      eventType: CART_EVENTS.CART_CLEARED,
+    });
+  }
+
+  emitCartSynchronized(data) {
+    this.emit(CART_EVENTS.CART_SYNCHRONIZED, {
+      ...data,
+      timestamp: new Date(),
+      eventType: CART_EVENTS.CART_SYNCHRONIZED,
     });
   }
 
   // Cart behavior events
-  publishCartAbandoned(data) {
+  emitCartAbandoned(data) {
     this.emit(CART_EVENTS.CART_ABANDONED, {
+      ...data,
+      timestamp: new Date(),
       eventType: CART_EVENTS.CART_ABANDONED,
-      timestamp: new Date().toISOString(),
-      ...data,
     });
   }
 
-  publishCartRecovered(data) {
+  emitCartRecovered(data) {
     this.emit(CART_EVENTS.CART_RECOVERED, {
-      eventType: CART_EVENTS.CART_RECOVERED,
-      timestamp: new Date().toISOString(),
       ...data,
+      timestamp: new Date(),
+      eventType: CART_EVENTS.CART_RECOVERED,
     });
   }
 
-  publishCheckoutInitiated(data) {
+  emitCheckoutInitiated(data) {
     this.emit(CART_EVENTS.CART_CHECKOUT_INITIATED, {
-      eventType: CART_EVENTS.CART_CHECKOUT_INITIATED,
-      timestamp: new Date().toISOString(),
       ...data,
+      timestamp: new Date(),
+      eventType: CART_EVENTS.CART_CHECKOUT_INITIATED,
     });
   }
 
   // Coupon events
-  publishCouponApplied(data) {
+  emitCouponApplied(data) {
     this.emit(CART_EVENTS.COUPON_APPLIED, {
-      eventType: CART_EVENTS.COUPON_APPLIED,
-      timestamp: new Date().toISOString(),
       ...data,
+      timestamp: new Date(),
+      eventType: CART_EVENTS.COUPON_APPLIED,
     });
   }
 
-  publishCouponRemoved(data) {
+  emitCouponRemoved(data) {
     this.emit(CART_EVENTS.COUPON_REMOVED, {
-      eventType: CART_EVENTS.COUPON_REMOVED,
-      timestamp: new Date().toISOString(),
       ...data,
+      timestamp: new Date(),
+      eventType: CART_EVENTS.COUPON_REMOVED,
+    });
+  }
+
+  emitCouponExpired(data) {
+    this.emit(CART_EVENTS.COUPON_EXPIRED, {
+      ...data,
+      timestamp: new Date(),
+      eventType: CART_EVENTS.COUPON_EXPIRED,
     });
   }
 
   // Analytics events
-  publishCartValueChanged(data) {
+  emitCartValueChanged(data) {
     this.emit(CART_EVENTS.CART_VALUE_CHANGED, {
-      eventType: CART_EVENTS.CART_VALUE_CHANGED,
-      timestamp: new Date().toISOString(),
       ...data,
+      timestamp: new Date(),
+      eventType: CART_EVENTS.CART_VALUE_CHANGED,
     });
   }
 
-  publishCartItemsCountChanged(data) {
+  emitCartItemsCountChanged(data) {
     this.emit(CART_EVENTS.CART_ITEMS_COUNT_CHANGED, {
-      eventType: CART_EVENTS.CART_ITEMS_COUNT_CHANGED,
-      timestamp: new Date().toISOString(),
       ...data,
+      timestamp: new Date(),
+      eventType: CART_EVENTS.CART_ITEMS_COUNT_CHANGED,
     });
   }
 }
 
-// Export singleton instance
-const cartEventPublisher = new CartEventPublisher();
+// Create singleton instance
+const cartEventEmitter = new CartEventEmitter();
 
 module.exports = {
-  CartEventPublisher,
-  cartEventPublisher,
   CART_EVENTS,
+  cartEventEmitter,
+  CartEventEmitter,
 };
