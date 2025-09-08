@@ -1,0 +1,577 @@
+{
+	"info": {
+		"_postman_id": "998771b4-94f5-4c54-9fef-ec63ed417533",
+		"name": "Payment Module API",
+		"description": "Complete API collection for Payment Management System",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "5168742"
+	},
+	"item": [
+		{
+			"name": "Public Routes",
+			"item": [
+				{
+					"name": "Get Supported Payment Options",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/payments/options",
+						"description": "Get supported payment gateways, currencies, and payment methods"
+					},
+					"response": []
+				},
+				{
+					"name": "Process Stripe Webhook",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "stripe-signature",
+								"value": "t=1234567890,v1=signature_here"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"evt_1234567890\",\n  \"object\": \"event\",\n  \"api_version\": \"2020-08-27\",\n  \"created\": 1234567890,\n  \"data\": {\n    \"object\": {\n      \"id\": \"pi_1234567890\",\n      \"object\": \"payment_intent\",\n      \"amount\": 2000,\n      \"currency\": \"usd\",\n      \"status\": \"succeeded\"\n    }\n  },\n  \"livemode\": false,\n  \"pending_webhooks\": 1,\n  \"request\": {\n    \"id\": \"req_1234567890\",\n    \"idempotency_key\": null\n  },\n  \"type\": \"payment_intent.succeeded\"\n}"
+						},
+						"url": "{{baseUrl}}/payments/webhook/stripe",
+						"description": "Webhook endpoint for Stripe payment events"
+					},
+					"response": []
+				},
+				{
+					"name": "Process PayPal Webhook",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "paypal-auth-algo",
+								"value": "SHA256withRSA"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"WH-1234567890\",\n  \"event_version\": \"1.0\",\n  \"create_time\": \"2023-01-01T00:00:00Z\",\n  \"resource_type\": \"payment\",\n  \"event_type\": \"PAYMENT.CAPTURE.COMPLETED\",\n  \"summary\": \"Payment completed\",\n  \"resource\": {\n    \"id\": \"PAY-1234567890\",\n    \"status\": \"COMPLETED\"\n  }\n}"
+						},
+						"url": "{{baseUrl}}/payments/webhook/paypal",
+						"description": "Webhook endpoint for PayPal payment events"
+					},
+					"response": []
+				}
+			],
+			"description": "Public endpoints that don't require authentication"
+		},
+		{
+			"name": "User Payment Operations",
+			"item": [
+				{
+					"name": "Create Payment Intent",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"amount\": {\n    \"subtotal\": 100.00,\n    \"tax\": 8.50,\n    \"shipping\": 10.00,\n    \"discount\": 5.00,\n    \"total\": 113.50\n  },\n  \"currency\": \"USD\",\n  \"gateway\": \"stripe\",\n  \"paymentMethod\": {\n    \"type\": \"card\"\n  },\n  \"billingAddress\": {\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"phone\": \"+1234567890\",\n    \"line1\": \"123 Main St\",\n    \"city\": \"New York\",\n    \"state\": \"NY\",\n    \"postalCode\": \"10001\",\n    \"country\": \"US\"\n  },\n  \"metadata\": {\n    \"customerNote\": \"Rush delivery\",\n    \"source\": \"web\"\n  }\n}"
+						},
+						"url": "{{baseUrl}}/payments/intent",
+						"description": "Create a new payment intent"
+					},
+					"response": []
+				},
+				{
+					"name": "Confirm Payment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"paymentMethodId\": \"pm_1234567890\",\n  \"returnUrl\": \"https://yoursite.com/payment/return\"\n}"
+						},
+						"url": "{{baseUrl}}/payments/{{paymentId}}/confirm",
+						"description": "Confirm a payment intent"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Payment by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/payments/{{paymentId}}",
+						"description": "Get payment details by payment ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Payment",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": "{{baseUrl}}/payments/{{paymentId}}/cancel",
+						"description": "Cancel a pending or processing payment"
+					},
+					"response": []
+				},
+				{
+					"name": "Retry Failed Payment",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": "{{baseUrl}}/payments/{{paymentId}}/retry",
+						"description": "Retry a failed payment"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Payments",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/payments?page=1&limit=20&status=succeeded&gateway=stripe&startDate=2023-01-01&endDate=2023-12-31",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "status",
+									"value": "succeeded"
+								},
+								{
+									"key": "gateway",
+									"value": "stripe"
+								},
+								{
+									"key": "startDate",
+									"value": "2023-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2023-12-31"
+								}
+							]
+						},
+						"description": "Get current user's payments with filtering options"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Order Payments",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/payments/order/{{orderId}}",
+						"description": "Get all payments for a specific order"
+					},
+					"response": []
+				}
+			],
+			"description": "User-level payment operations"
+		},
+		{
+			"name": "Payment Methods Management",
+			"item": [
+				{
+					"name": "Get Saved Payment Methods",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/payments/methods/saved?gateway=stripe",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"methods",
+								"saved"
+							],
+							"query": [
+								{
+									"key": "gateway",
+									"value": "stripe"
+								}
+							]
+						},
+						"description": "Get user's saved payment methods"
+					},
+					"response": []
+				},
+				{
+					"name": "Save Payment Method",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"paymentMethodId\": \"pm_1234567890\",\n  \"gateway\": \"stripe\"\n}"
+						},
+						"url": "{{baseUrl}}/payments/methods/save",
+						"description": "Save a payment method for future use"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Payment Method",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": "{{baseUrl}}/payments/methods/pm_1234567890",
+						"description": "Delete a saved payment method"
+					},
+					"response": []
+				}
+			],
+			"description": "Payment methods management endpoints"
+		},
+		{
+			"name": "Admin Operations",
+			"item": [
+				{
+					"name": "Get All Payments",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/payments/admin/all?page=1&limit=50&status=succeeded&gateway=stripe&userId={{userId}}&startDate=2023-01-01&endDate=2023-12-31",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"admin",
+								"all"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "50"
+								},
+								{
+									"key": "status",
+									"value": "succeeded"
+								},
+								{
+									"key": "gateway",
+									"value": "stripe"
+								},
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								},
+								{
+									"key": "startDate",
+									"value": "2023-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2023-12-31"
+								}
+							]
+						},
+						"description": "Get all payments with admin filters (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Payment Statistics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/payments/admin/stats?startDate=2023-01-01&endDate=2023-12-31&gateway=stripe&status=succeeded",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"admin",
+								"stats"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2023-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2023-12-31"
+								},
+								{
+									"key": "gateway",
+									"value": "stripe"
+								},
+								{
+									"key": "status",
+									"value": "succeeded"
+								}
+							]
+						},
+						"description": "Get payment statistics and analytics (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Payments (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/payments/admin/user/{{userId}}?page=1&limit=20&status=succeeded",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"admin",
+								"user",
+								"{{userId}}"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "status",
+									"value": "succeeded"
+								}
+							]
+						},
+						"description": "Get payments for a specific user (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Refund Payment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 50.00,\n  \"reason\": \"requested_by_customer\"\n}"
+						},
+						"url": "{{baseUrl}}/payments/admin/{{paymentId}}/refund",
+						"description": "Process refund for a payment (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Payment Status",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"succeeded\",\n  \"reason\": \"Manual verification completed\"\n}"
+						},
+						"url": "{{baseUrl}}/payments/admin/{{paymentId}}/status",
+						"description": "Update payment status manually (Admin only)"
+					},
+					"response": []
+				}
+			],
+			"description": "Admin-only payment management operations"
+		},
+		{
+			"name": "Test Scenarios",
+			"item": [
+				{
+					"name": "Create Failed Payment Test",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"amount\": {\n    \"subtotal\": 1.00,\n    \"tax\": 0.00,\n    \"shipping\": 0.00,\n    \"discount\": 0.00,\n    \"total\": 1.00\n  },\n  \"currency\": \"USD\",\n  \"gateway\": \"stripe\",\n  \"paymentMethod\": {\n    \"type\": \"card\"\n  },\n  \"metadata\": {\n    \"test\": \"failed_payment\",\n    \"cardNumber\": \"4000000000000002\"\n  }\n}"
+						},
+						"url": "{{baseUrl}}/payments/intent",
+						"description": "Create payment intent that will fail (for testing)"
+					},
+					"response": []
+				},
+				{
+					"name": "Create 3D Secure Payment Test",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"amount\": {\n    \"subtotal\": 10.00,\n    \"tax\": 0.00,\n    \"shipping\": 0.00,\n    \"discount\": 0.00,\n    \"total\": 10.00\n  },\n  \"currency\": \"USD\",\n  \"gateway\": \"stripe\",\n  \"paymentMethod\": {\n    \"type\": \"card\"\n  },\n  \"metadata\": {\n    \"test\": \"3d_secure\",\n    \"cardNumber\": \"4000000000003220\"\n  }\n}"
+						},
+						"url": "{{baseUrl}}/payments/intent",
+						"description": "Create payment intent that requires 3D Secure authentication"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Successful Payment Test",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"amount\": {\n    \"subtotal\": 25.00,\n    \"tax\": 2.00,\n    \"shipping\": 5.00,\n    \"discount\": 0.00,\n    \"total\": 32.00\n  },\n  \"currency\": \"USD\",\n  \"gateway\": \"stripe\",\n  \"paymentMethod\": {\n    \"type\": \"card\"\n  },\n  \"metadata\": {\n    \"test\": \"successful_payment\",\n    \"cardNumber\": \"4242424242424242\"\n  }\n}"
+						},
+						"url": "{{baseUrl}}/payments/intent",
+						"description": "Create payment intent that will succeed (for testing)"
+					},
+					"response": []
+				}
+			],
+			"description": "Test scenarios for different payment outcomes"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": {
+			"token": "{{authToken}}"
+		}
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Auto-generate test IDs if not set",
+					"if (!pm.environment.get('orderId')) {",
+					"    pm.environment.set('orderId', '507f1f77bcf86cd799439011');",
+					"}",
+					"",
+					"if (!pm.environment.get('userId')) {",
+					"    pm.environment.set('userId', '507f1f77bcf86cd799439012');",
+					"}",
+					"",
+					"// Set timestamp for unique test data",
+					"pm.environment.set('timestamp', Date.now());"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test script for all requests",
+					"pm.test('Response time is less than 5000ms', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+					"});",
+					"",
+					"pm.test('Response has correct Content-Type', function () {",
+					"    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+					"});",
+					"",
+					"// Extract paymentId from response if available",
+					"if (pm.response.json() && pm.response.json().data && pm.response.json().data.payment && pm.response.json().data.payment.paymentId) {",
+					"    pm.environment.set('paymentId', pm.response.json().data.payment.paymentId);",
+					"    console.log('PaymentId set to: ' + pm.response.json().data.payment.paymentId);",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000/api",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "paymentId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "orderId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
