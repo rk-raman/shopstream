@@ -4,10 +4,12 @@ import axios, {
   AxiosResponse,
   AxiosError,
 } from "axios";
+import { API_CONFIG, AUTH_CONFIG } from "@/constants/constants";
+import { localStorageUtils } from "@/lib/utils/storage";
 
 const axiosInstance: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1",
-  timeout: 10000,
+  baseURL: API_CONFIG.BASE_URL,
+  timeout: API_CONFIG.TIMEOUT,
   headers: {
     "Content-Type": "application/json",
   },
@@ -18,7 +20,7 @@ axiosInstance.interceptors.request.use(
   (config: AxiosRequestConfig): AxiosRequestConfig => {
     // Add seller token if available (client-side only)
     if (typeof window !== "undefined") {
-      const token = localStorage.getItem("sellerToken");
+      const token = localStorageUtils.get<string>(AUTH_CONFIG.SELLER_TOKEN_KEY);
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -36,7 +38,7 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 401) {
       // Clear seller token and redirect to seller login on unauthorized
       if (typeof window !== "undefined") {
-        localStorage.removeItem("sellerToken");
+        localStorageUtils.remove(AUTH_CONFIG.SELLER_TOKEN_KEY);
         window.location.href = "/seller/login";
       }
     }

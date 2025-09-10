@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import "./globals.css";
+import { AuthProvider } from "@/features/auth/context/AuthContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,8 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ShopStream - E-commerce Platform",
-  description: "Modern e-commerce platform for buyers and sellers",
+  title: "ShopStream - Your Trusted E-commerce Platform",
+  description:
+    "Discover amazing products and grow your business with ShopStream",
 };
 
 interface RootLayoutProps {
@@ -27,7 +29,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
