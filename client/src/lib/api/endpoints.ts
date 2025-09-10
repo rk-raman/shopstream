@@ -4,41 +4,35 @@ interface ApiEndpoint {
 }
 
 export const API_ENDPOINTS = {
-  // Authentication endpoints
+  // Authentication endpoints - UNIFIED for all user types
   AUTH: {
-    // Customer auth
-    customerRegister: (): ApiEndpoint => ({
-      url: "/auth/customer/register",
+    // Unified auth endpoints (same for customers and sellers)
+    register: (): ApiEndpoint => ({
+      url: "/auth/register",
       method: "POST",
     }),
-    customerLogin: (): ApiEndpoint => ({
-      url: "/auth/customer/login",
+    login: (): ApiEndpoint => ({
+      url: "/auth/login",
       method: "POST",
     }),
-    customerLogout: (): ApiEndpoint => ({
-      url: "/auth/customer/logout",
+    logout: (): ApiEndpoint => ({
+      url: "/auth/logout",
       method: "POST",
     }),
-    // Seller auth
-    sellerRegister: (): ApiEndpoint => ({
-      url: "/auth/seller/register",
-      method: "POST",
-    }),
-    sellerLogin: (): ApiEndpoint => ({
-      url: "/auth/seller/login",
-      method: "POST",
-    }),
-    sellerLogout: (): ApiEndpoint => ({
-      url: "/auth/seller/logout",
-      method: "POST",
-    }),
-    // Common auth
     refreshToken: (): ApiEndpoint => ({
-      url: "/auth/refresh",
+      url: "/auth/refresh-token",
       method: "POST",
     }),
-    verifyEmail: (): ApiEndpoint => ({
-      url: "/auth/verify-email",
+    me: (): ApiEndpoint => ({
+      url: "/auth/me",
+      method: "GET",
+    }),
+    verifyEmail: (token: string): ApiEndpoint => ({
+      url: `/auth/verify-email/${token}`,
+      method: "GET",
+    }),
+    resendVerification: (): ApiEndpoint => ({
+      url: "/auth/resend-verification",
       method: "POST",
     }),
     forgotPassword: (): ApiEndpoint => ({
@@ -47,6 +41,18 @@ export const API_ENDPOINTS = {
     }),
     resetPassword: (): ApiEndpoint => ({
       url: "/auth/reset-password",
+      method: "POST",
+    }),
+    changePassword: (): ApiEndpoint => ({
+      url: "/auth/change-password",
+      method: "POST",
+    }),
+    enableTwoFactor: (): ApiEndpoint => ({
+      url: "/auth/enable-2fa",
+      method: "POST",
+    }),
+    verifyTwoFactor: (): ApiEndpoint => ({
+      url: "/auth/verify-2fa",
       method: "POST",
     }),
   },

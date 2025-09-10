@@ -1,7 +1,16 @@
 // Utility functions for handling cookies without js-cookie dependency
 
+// Cookie options interface
+interface CookieOptions {
+  expires?: number | Date;
+  path?: string;
+  domain?: string;
+  secure?: boolean;
+  sameSite?: "Strict" | "Lax" | "None";
+}
+
 // Helper functions
-const isJson = (value) => {
+const isJson = (value: string): boolean => {
   try {
     JSON.parse(value);
     return true;
@@ -10,19 +19,23 @@ const isJson = (value) => {
   }
 };
 
-const isObject = (value) =>
+const isObject = (value: any): value is object =>
   value && typeof value === "object" && !Array.isArray(value);
 
 // Function to prefix cookie keys
-const getKey = (key) => `fd_${key}`;
+const getKey = (key: string): string => `fd_${key}`;
 
 // Set cookie function
-export const setCookie = (key, value, options = {}) => {
+export const setCookie = (
+  key: string,
+  value: any,
+  options: CookieOptions = {}
+): void => {
   const cookieKey = getKey(key);
-  const cookieValue = isObject(value) ? JSON.stringify(value) : value;
+  const cookieValue = isObject(value) ? JSON.stringify(value) : String(value);
 
   // Default cookie options
-  const defaults = {
+  const defaults: CookieOptions = {
     path: "/",
     ...options,
   };
@@ -50,27 +63,49 @@ export const setCookie = (key, value, options = {}) => {
 };
 
 // Get cookie function
-export const getCookie = (key) => {
+export const getCookie = (key: string): any => {
   const cookieKey = getKey(key);
-  const cookies = document.cookie.split("; ").reduce((acc, cookie) => {
-    const [name, value] = cookie.split("=");
-    acc[decodeURIComponent(name)] = decodeURIComponent(value);
-    return acc;
-  }, {});
+  const cookies = document.cookie
+    .split("; ")
+    .reduce((acc: Record<string, string>, cookie) => {
+      const [name, value] = cookie.split("=");
+      if (name && value) {
+        acc[decodeURIComponent(name)] = decodeURIComponent(value);
+      }
+      return acc;
+    }, {});
 
   const value = cookies[cookieKey];
+  if (!value) return undefined;
+
   return isJson(value) ? JSON.parse(value) : value;
 };
 
 // Delete cookie function
-export const deleteCookie = (key, options = {}) => {
+export const deleteCookie = (
+  key: string,
+  options: CookieOptions = {}
+): void => {
   setCookie(key, "", { ...options, expires: -1 });
+};
+
+// Type-safe cookie functions for specific data types
+export const setCookieTyped = <T>(
+  key: string,
+  value: T,
+  options: CookieOptions = {}
+): void => {
+  setCookie(key, value, options);
+};
+
+export const getCookieTyped = <T>(key: string): T | undefined => {
+  return getCookie(key) as T | undefined;
 };
 
 /*Examples
   
   // Import the cookie utility functions
-  import { setCookie, getCookie, deleteCookie } from './cookieUtils';
+  import { setCookie, getCookie, deleteCookie, setCookieTyped, getCookieTyped } from './cookies';
   
   // Example key and value
   const cookieKey = 'userPreferences';
@@ -96,5 +131,13 @@ export const deleteCookie = (key, options = {}) => {
   const afterDeletion = getCookie(cookieKey);
   console.log('Cookie Value After Deletion:', afterDeletion); // Output: undefined
   
+  // 4. Type-safe cookie operations
+  interface UserPreferences {
+    theme: 'light' | 'dark';
+    language: string;
+  }
+  
+  setCookieTyped<UserPreferences>('userPrefs', { theme: 'dark', language: 'en' });
+  const userPrefs = getCookieTyped<UserPreferences>('userPrefs');
   
   */
