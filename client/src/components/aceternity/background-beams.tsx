@@ -1,5 +1,5 @@
 "use client";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import React from "react";
 
 export const BackgroundBeams = ({ className }: { className?: string }) => {
