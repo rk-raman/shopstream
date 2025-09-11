@@ -8,9 +8,6 @@ const {
 
 // Register
 const register = asyncHandler(async (req, res) => {
-  console.log("🚀 [AUTH] Register controller:", {
-    requestBody: req.body,
-  });
   const { user, accessToken, refreshToken } = await authService.register(
     req.body
   );

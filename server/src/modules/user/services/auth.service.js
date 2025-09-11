@@ -42,7 +42,11 @@ const register = async (userData) => {
     });
 
     // Generate tokens
-    const { accessToken, refreshToken } = generateTokenPair(user._id);
+    const { accessToken, refreshToken } = generateTokenPair({
+      userId: user._id,
+      email: user.email,
+      role: user.role,
+    });
 
     // Store refresh token
     user.refreshTokens.push(refreshToken);

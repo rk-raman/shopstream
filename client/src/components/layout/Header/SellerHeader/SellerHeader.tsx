@@ -21,6 +21,8 @@ interface SellerHeaderProps {
 
 export default function SellerHeader({ onMenuToggle }: SellerHeaderProps) {
   const { user, logout } = useAuth();
+  console.log("user", user);
+
   const router = useRouter();
   const handleLogout = async () => {
     try {
