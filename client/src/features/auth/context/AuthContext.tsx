@@ -11,9 +11,11 @@ import React, {
 import { User } from "@/types/global";
 import {
   getCurrentUser,
+  getSellerCurrentUser,
   getCurrentUserRole,
   isAuthenticated,
   logout as logoutService,
+  clearAllTokens,
 } from "../services/AuthService";
 
 interface AuthContextType {
@@ -61,7 +63,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUserRole(role);
           // Only fetch user data if we have a valid role and token
           try {
-            const response = await getCurrentUser();
+            const response =
+              role === "customer"
+                ? await getCurrentUser()
+                : await getSellerCurrentUser();
             if (response.success && response.data?.user) {
               setUser(response.data.user);
             } else {
@@ -97,14 +102,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Logout handler
   const logout = useCallback(async () => {
-    try {
-      await logoutService(userRole || undefined);
-    } catch (error) {
-      console.error("Logout error:", error);
-    } finally {
-      setUser(null);
-      setUserRole(null);
-    }
+    clearAllTokens();
+
+    // try {
+    //   await logoutService(userRole || undefined);
+    // } catch (error) {
+    //   console.error("Logout error:", error);
+    // } finally {
+    //   setUser(null);
+    //   setUserRole(null);
+    // }
   }, [userRole]);
 
   // Refresh user data

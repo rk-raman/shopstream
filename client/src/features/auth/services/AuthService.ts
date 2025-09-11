@@ -1,5 +1,6 @@
 import { API_ENDPOINTS } from "@/lib/api/endpoints";
 import apiCustomer from "@/lib/api/axiosCustomer";
+import apiSeller from "@/lib/api/axiosSeller";
 import { ApiResponse, User, LoginForm, RegisterForm } from "@/types/global";
 import { AxiosResponse } from "axios";
 import { AUTH_CONFIG } from "@/constants/constants";
@@ -46,7 +47,7 @@ const clearTokens = (role: "customer" | "seller"): void => {
   localStorageUtils.remove(refreshKey);
 };
 
-const clearAllTokens = (): void => {
+export const clearAllTokens = (): void => {
   localStorageUtils.remove(AUTH_CONFIG.CUSTOMER_TOKEN_KEY);
   localStorageUtils.remove(AUTH_CONFIG.SELLER_TOKEN_KEY);
   localStorageUtils.remove(AUTH_CONFIG.REFRESH_TOKEN_KEY);
@@ -176,6 +177,22 @@ export const getCurrentUser = async (): Promise<
     const { url, method } = AUTH.me();
     const response: AxiosResponse<ApiResponse<{ user: User }>> =
       await apiCustomer({
+        url,
+        method,
+      });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getSellerCurrentUser = async (): Promise<
+  ApiResponse<{ user: User }>
+> => {
+  try {
+    const { url, method } = AUTH.me();
+    const response: AxiosResponse<ApiResponse<{ user: User }>> =
+      await apiSeller({
         url,
         method,
       });
