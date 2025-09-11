@@ -122,7 +122,24 @@ export interface RegisterForm {
   email: string;
   password: string;
   confirmPassword: string;
+  phone?: string;
   role: "customer" | "seller";
+}
+
+export interface ForgotPasswordForm {
+  email: string;
+}
+
+export interface ResetPasswordForm {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface ChangePasswordForm {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
 }
 
 export interface ContactForm {

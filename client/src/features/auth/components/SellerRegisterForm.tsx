@@ -3,71 +3,40 @@
 import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuthForm } from "../hooks/useAuthForm";
+import { useAuth } from "../context/AuthContext";
+import { useAuthForm, validateRegisterForm } from "../hooks/useAuthForm";
 import { register } from "../services/AuthService";
-import { AUTH_CONFIG } from "@/constants/constants";
-import { localStorageUtils } from "@/lib/utils/storage";
+import { SellerRegisterForm as SellerRegisterFormType } from "@/types/global";
 
 const SellerRegisterForm: React.FC = () => {
   const router = useRouter();
+  const { login: setAuthUser } = useAuth();
 
-  const { formData, errors, isLoading, handleChange, handleSubmit, setErrors } =
-    useAuthForm({
-      initialData: {
+  const { values, errors, isLoading, handleChange, handleSubmit } =
+    useAuthForm<SellerRegisterFormType>({
+      initialValues: {
         firstName: "",
         lastName: "",
         email: "",
         password: "",
         confirmPassword: "",
         phone: "",
+        role: "seller",
         businessName: "",
         businessType: "",
         businessAddress: "",
         businessPhone: "",
         taxId: "",
       },
-      validationType: "register",
+      validate: validateRegisterForm,
+      onSubmit: async (formData) => {
+        const response = await register(formData);
+        if (response.success && response.data) {
+          setAuthUser(response.data.user, "seller");
+          router.push("/seller/dashboard");
+        }
+      },
     });
-
-  const onSubmit = async (data: any) => {
-    try {
-      const registrationData = {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        password: data.password,
-        phone: data.phone,
-        role: "seller",
-        businessName: data.businessName,
-        businessType: data.businessType,
-        businessAddress: data.businessAddress,
-        businessPhone: data.businessPhone,
-        taxId: data.taxId,
-      };
-
-      const response = await register(registrationData);
-
-      if (response.success) {
-        // Store seller token
-        localStorageUtils.set(
-          AUTH_CONFIG.SELLER_TOKEN_KEY,
-          response.data.token
-        );
-
-        // Redirect to seller dashboard
-        router.push("/seller/dashboard");
-      } else {
-        setErrors({ general: response.message || "Registration failed" });
-      }
-    } catch (error: any) {
-      console.error("Registration error:", error);
-      setErrors({
-        general:
-          error.response?.data?.message ||
-          "Registration failed. Please try again.",
-      });
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -96,7 +65,7 @@ const SellerRegisterForm: React.FC = () => {
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {errors.general && (
             <div className="rounded-md bg-red-50 p-4">
               <div className="text-sm text-red-700">{errors.general}</div>
@@ -118,8 +87,8 @@ const SellerRegisterForm: React.FC = () => {
                   name="firstName"
                   type="text"
                   required
-                  value={formData.firstName}
-                  onChange={handleChange}
+                  value={values.firstName}
+                  onChange={(e) => handleChange("firstName", e.target.value)}
                   className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
                     errors.firstName ? "border-red-300" : "border-gray-300"
                   } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm`}
@@ -144,8 +113,8 @@ const SellerRegisterForm: React.FC = () => {
                   name="lastName"
                   type="text"
                   required
-                  value={formData.lastName}
-                  onChange={handleChange}
+                  value={values.lastName}
+                  onChange={(e) => handleChange("lastName", e.target.value)}
                   className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
                     errors.lastName ? "border-red-300" : "border-gray-300"
                   } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm`}
@@ -170,8 +139,8 @@ const SellerRegisterForm: React.FC = () => {
                 type="email"
                 autoComplete="email"
                 required
-                value={formData.email}
-                onChange={handleChange}
+                value={values.email}
+                onChange={(e) => handleChange("email", e.target.value)}
                 className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
                   errors.email ? "border-red-300" : "border-gray-300"
                 } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm`}
@@ -194,8 +163,8 @@ const SellerRegisterForm: React.FC = () => {
                 name="phone"
                 type="tel"
                 required
-                value={formData.phone}
-                onChange={handleChange}
+                value={values.phone}
+                onChange={(e) => handleChange("phone", e.target.value)}
                 className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
                   errors.phone ? "border-red-300" : "border-gray-300"
                 } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm`}
@@ -219,8 +188,8 @@ const SellerRegisterForm: React.FC = () => {
                 type="password"
                 autoComplete="new-password"
                 required
-                value={formData.password}
-                onChange={handleChange}
+                value={values.password}
+                onChange={(e) => handleChange("password", e.target.value)}
                 className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
                   errors.password ? "border-red-300" : "border-gray-300"
                 } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm`}
@@ -244,8 +213,10 @@ const SellerRegisterForm: React.FC = () => {
                 type="password"
                 autoComplete="new-password"
                 required
-                value={formData.confirmPassword}
-                onChange={handleChange}
+                value={values.confirmPassword}
+                onChange={(e) =>
+                  handleChange("confirmPassword", e.target.value)
+                }
                 className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
                   errors.confirmPassword ? "border-red-300" : "border-gray-300"
                 } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm`}
@@ -276,8 +247,8 @@ const SellerRegisterForm: React.FC = () => {
                   name="businessName"
                   type="text"
                   required
-                  value={formData.businessName}
-                  onChange={handleChange}
+                  value={values.businessName}
+                  onChange={(e) => handleChange("businessName", e.target.value)}
                   className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
                     errors.businessName ? "border-red-300" : "border-gray-300"
                   } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm`}
@@ -301,8 +272,8 @@ const SellerRegisterForm: React.FC = () => {
                   id="businessType"
                   name="businessType"
                   required
-                  value={formData.businessType}
-                  onChange={handleChange}
+                  value={values.businessType}
+                  onChange={(e) => handleChange("businessType", e.target.value)}
                   className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
                     errors.businessType ? "border-red-300" : "border-gray-300"
                   } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm`}
@@ -333,8 +304,10 @@ const SellerRegisterForm: React.FC = () => {
                   name="businessAddress"
                   rows={3}
                   required
-                  value={formData.businessAddress}
-                  onChange={handleChange}
+                  value={values.businessAddress}
+                  onChange={(e) =>
+                    handleChange("businessAddress", e.target.value)
+                  }
                   className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
                     errors.businessAddress
                       ? "border-red-300"
@@ -360,8 +333,10 @@ const SellerRegisterForm: React.FC = () => {
                   id="businessPhone"
                   name="businessPhone"
                   type="tel"
-                  value={formData.businessPhone}
-                  onChange={handleChange}
+                  value={values.businessPhone}
+                  onChange={(e) =>
+                    handleChange("businessPhone", e.target.value)
+                  }
                   className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
                     errors.businessPhone ? "border-red-300" : "border-gray-300"
                   } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm`}
@@ -385,8 +360,8 @@ const SellerRegisterForm: React.FC = () => {
                   id="taxId"
                   name="taxId"
                   type="text"
-                  value={formData.taxId}
-                  onChange={handleChange}
+                  value={values.taxId}
+                  onChange={(e) => handleChange("taxId", e.target.value)}
                   className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
                     errors.taxId ? "border-red-300" : "border-gray-300"
                   } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm`}

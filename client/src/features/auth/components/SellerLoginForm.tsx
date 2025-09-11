@@ -23,7 +23,7 @@ const SellerLoginForm: React.FC = () => {
         const response = await login(formData);
         if (response.success && response.data) {
           setAuthUser(response.data.user, "seller");
-          router.push("/seller/dashboard");
+          router.push("/dashboard");
         }
       },
     });
@@ -209,7 +209,7 @@ const SellerLoginForm: React.FC = () => {
             <p className="text-sm text-gray-600">
               New to selling?{" "}
               <Link
-                href="/seller/register"
+                href="/seller/signup"
                 className="font-medium text-purple-600 hover:text-purple-500"
               >
                 Start selling today

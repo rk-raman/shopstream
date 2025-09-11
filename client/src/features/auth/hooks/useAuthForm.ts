@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LoginForm, RegisterForm } from "@/types/global";
+import { LoginForm, RegisterForm, SellerRegisterForm } from "@/types/global";
 
 interface UseAuthFormProps<T> {
   initialValues: T;
@@ -117,7 +117,7 @@ export const validateLoginForm = (
 };
 
 export const validateRegisterForm = (
-  values: RegisterForm
+  values: RegisterForm | SellerRegisterForm
 ): Record<string, string> => {
   const errors: Record<string, string> = {};
 
@@ -155,6 +155,38 @@ export const validateRegisterForm = (
 
   if (values.phone && !/^[6-9]\d{9}$/.test(values.phone)) {
     errors.phone = "Please enter a valid Indian mobile number";
+  }
+
+  // Seller-specific validation
+  if (values.role === "seller" && "businessName" in values) {
+    const sellerValues = values as SellerRegisterForm;
+
+    if (!sellerValues.businessName) {
+      errors.businessName = "Business name is required";
+    } else if (sellerValues.businessName.length < 2) {
+      errors.businessName = "Business name must be at least 2 characters";
+    }
+
+    if (!sellerValues.businessType) {
+      errors.businessType = "Business type is required";
+    }
+
+    if (!sellerValues.businessAddress) {
+      errors.businessAddress = "Business address is required";
+    } else if (sellerValues.businessAddress.length < 10) {
+      errors.businessAddress = "Please provide a complete business address";
+    }
+
+    if (
+      sellerValues.businessPhone &&
+      !/^[6-9]\d{9}$/.test(sellerValues.businessPhone)
+    ) {
+      errors.businessPhone = "Please enter a valid business phone number";
+    }
+
+    if (sellerValues.taxId && sellerValues.taxId.length < 6) {
+      errors.taxId = "Please enter a valid tax ID";
+    }
   }
 
   return errors;

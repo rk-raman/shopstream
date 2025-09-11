@@ -10,6 +10,7 @@ import { RegisterForm } from "@/types/global";
 
 interface CustomerRegisterFormData extends RegisterForm {
   confirmPassword: string;
+  phone: string;
 }
 
 const CustomerRegisterForm: React.FC = () => {
@@ -25,11 +26,12 @@ const CustomerRegisterForm: React.FC = () => {
         password: "",
         confirmPassword: "",
         phone: "",
+        role: "customer",
       },
       validate: validateRegisterForm,
       onSubmit: async (formData) => {
         const { confirmPassword, ...registerData } = formData;
-        const response = await register({ ...registerData, role: "customer" });
+        const response = await register(registerData);
         if (response.success && response.data) {
           setAuthUser(response.data.user, "customer");
           router.push("/customer/dashboard");
