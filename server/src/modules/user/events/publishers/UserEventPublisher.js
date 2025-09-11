@@ -21,7 +21,7 @@ class UserEventPublisher {
    */
   async publishUserRegistered(userData) {
     const eventData = {
-      userId: userData.userId || userData._id,
+      userId: String(userData.userId || userData._id),
       email: userData.email,
       firstName: userData.firstName,
       lastName: userData.lastName,
@@ -29,9 +29,9 @@ class UserEventPublisher {
       registrationMethod: userData.registrationMethod || "email",
       timestamp: new Date().toISOString(),
       metadata: {
-        userAgent: userData.userAgent,
-        ipAddress: userData.ipAddress,
-        referrer: userData.referrer,
+        userAgent: userData.userAgent || "",
+        ipAddress: userData.ipAddress || "",
+        referrer: userData.referrer || "",
       },
     };
 
@@ -49,14 +49,14 @@ class UserEventPublisher {
    */
   async publishUserLoggedIn(userData) {
     const eventData = {
-      userId: userData.userId || userData._id,
+      userId: String(userData.userId || userData._id),
       email: userData.email,
       loginMethod: userData.loginMethod || "email",
       timestamp: new Date().toISOString(),
       metadata: {
-        userAgent: userData.userAgent,
-        ipAddress: userData.ipAddress,
-        sessionId: userData.sessionId,
+        userAgent: userData.userAgent || "",
+        ipAddress: userData.ipAddress || "",
+        sessionId: userData.sessionId || "",
       },
     };
 
@@ -73,12 +73,12 @@ class UserEventPublisher {
    */
   async publishUserLoggedOut(userData) {
     const eventData = {
-      userId: userData.userId || userData._id,
-      sessionId: userData.sessionId,
+      userId: String(userData.userId || userData._id),
+      sessionId: userData.sessionId || "",
       timestamp: new Date().toISOString(),
       metadata: {
         logoutReason: userData.logoutReason || "user_initiated",
-        sessionDuration: userData.sessionDuration,
+        sessionDuration: userData.sessionDuration || 0,
       },
     };
 
@@ -99,8 +99,8 @@ class UserEventPublisher {
       attemptCount: loginData.attemptCount || 1,
       timestamp: new Date().toISOString(),
       metadata: {
-        userAgent: loginData.userAgent,
-        ipAddress: loginData.ipAddress,
+        userAgent: loginData.userAgent || "",
+        ipAddress: loginData.ipAddress || "",
         failureReason: loginData.failureReason || "invalid_credentials",
       },
     };
@@ -118,10 +118,10 @@ class UserEventPublisher {
    */
   async publishUserAccountLocked(userData) {
     const eventData = {
-      userId: userData.userId || userData._id,
+      userId: String(userData.userId || userData._id),
       email: userData.email,
       reason: userData.reason || "too_many_failed_attempts",
-      lockedUntil: userData.lockedUntil,
+      lockedUntil: userData.lockedUntil || new Date().toISOString(),
       timestamp: new Date().toISOString(),
     };
 
@@ -138,10 +138,10 @@ class UserEventPublisher {
    */
   async publishUserUpdated(userData) {
     const eventData = {
-      userId: userData.userId || userData._id,
-      changes: userData.changes,
+      userId: String(userData.userId || userData._id),
+      changes: userData.changes || {},
       timestamp: new Date().toISOString(),
-      updatedBy: userData.updatedBy || userData.userId || userData._id,
+      updatedBy: String(userData.updatedBy || userData.userId || userData._id),
     };
 
     validateEventPayload(USER_EVENTS.USER_UPDATED.name, eventData);
@@ -157,9 +157,9 @@ class UserEventPublisher {
    */
   async publishUserProfileCompleted(userData) {
     const eventData = {
-      userId: userData.userId || userData._id,
-      completionPercentage: userData.completionPercentage,
-      completedFields: userData.completedFields,
+      userId: String(userData.userId || userData._id),
+      completionPercentage: userData.completionPercentage || 0,
+      completedFields: userData.completedFields || [],
       timestamp: new Date().toISOString(),
     };
 
@@ -176,12 +176,12 @@ class UserEventPublisher {
    */
   async publishPasswordChanged(userData) {
     const eventData = {
-      userId: userData.userId || userData._id,
+      userId: String(userData.userId || userData._id),
       changeMethod: userData.changeMethod || "user_initiated",
       timestamp: new Date().toISOString(),
       metadata: {
-        ipAddress: userData.ipAddress,
-        userAgent: userData.userAgent,
+        ipAddress: userData.ipAddress || "",
+        userAgent: userData.userAgent || "",
       },
     };
 
@@ -198,7 +198,7 @@ class UserEventPublisher {
    */
   async publishEmailVerified(userData) {
     const eventData = {
-      userId: userData.userId || userData._id,
+      userId: String(userData.userId || userData._id),
       email: userData.email,
       verificationMethod: userData.verificationMethod || "email_link",
       timestamp: new Date().toISOString(),
@@ -217,7 +217,7 @@ class UserEventPublisher {
    */
   async publishPhoneVerified(userData) {
     const eventData = {
-      userId: userData.userId || userData._id,
+      userId: String(userData.userId || userData._id),
       phone: userData.phone,
       verificationMethod: userData.verificationMethod || "sms_code",
       timestamp: new Date().toISOString(),
@@ -236,12 +236,12 @@ class UserEventPublisher {
    */
   async publishAddressAdded(userData) {
     const eventData = {
-      userId: userData.userId || userData._id,
-      addressId: userData.addressId,
+      userId: String(userData.userId || userData._id),
+      addressId: userData.addressId || "",
       addressType: userData.addressType || "home",
-      city: userData.city,
-      state: userData.state,
-      pincode: userData.pincode,
+      city: userData.city || "",
+      state: userData.state || "",
+      pincode: userData.pincode || "",
       timestamp: new Date().toISOString(),
     };
 
@@ -258,9 +258,9 @@ class UserEventPublisher {
    */
   async publishAddressUpdated(userData) {
     const eventData = {
-      userId: userData.userId || userData._id,
-      addressId: userData.addressId,
-      changes: userData.changes,
+      userId: String(userData.userId || userData._id),
+      addressId: userData.addressId || "",
+      changes: userData.changes || {},
       timestamp: new Date().toISOString(),
     };
 
@@ -277,8 +277,8 @@ class UserEventPublisher {
    */
   async publishAddressDeleted(userData) {
     const eventData = {
-      userId: userData.userId || userData._id,
-      addressId: userData.addressId,
+      userId: String(userData.userId || userData._id),
+      addressId: userData.addressId || "",
       timestamp: new Date().toISOString(),
     };
 
@@ -295,10 +295,10 @@ class UserEventPublisher {
    */
   async publishWishlistItemAdded(userData) {
     const eventData = {
-      userId: userData.userId || userData._id,
-      productId: userData.productId,
-      productCategory: userData.productCategory,
-      productPrice: userData.productPrice,
+      userId: String(userData.userId || userData._id),
+      productId: userData.productId || "",
+      productCategory: userData.productCategory || "",
+      productPrice: userData.productPrice || 0,
       timestamp: new Date().toISOString(),
     };
 
@@ -315,8 +315,8 @@ class UserEventPublisher {
    */
   async publishWishlistItemRemoved(userData) {
     const eventData = {
-      userId: userData.userId || userData._id,
-      productId: userData.productId,
+      userId: String(userData.userId || userData._id),
+      productId: userData.productId || "",
       timestamp: new Date().toISOString(),
     };
 
@@ -333,8 +333,10 @@ class UserEventPublisher {
    */
   async publishUserActivated(userData) {
     const eventData = {
-      userId: userData.userId || userData._id,
-      activatedBy: userData.activatedBy,
+      userId: String(userData.userId || userData._id),
+      activatedBy: String(
+        userData.activatedBy || userData.userId || userData._id
+      ),
       reason: userData.reason || "manual_activation",
       timestamp: new Date().toISOString(),
     };
@@ -352,8 +354,10 @@ class UserEventPublisher {
    */
   async publishUserDeactivated(userData) {
     const eventData = {
-      userId: userData.userId || userData._id,
-      deactivatedBy: userData.deactivatedBy,
+      userId: String(userData.userId || userData._id),
+      deactivatedBy: String(
+        userData.deactivatedBy || userData.userId || userData._id
+      ),
       reason: userData.reason || "manual_deactivation",
       timestamp: new Date().toISOString(),
     };
@@ -371,8 +375,8 @@ class UserEventPublisher {
    */
   async publishUserDeleted(userData) {
     const eventData = {
-      userId: userData.userId || userData._id,
-      deletedBy: userData.deletedBy,
+      userId: String(userData.userId || userData._id),
+      deletedBy: String(userData.deletedBy || userData.userId || userData._id),
       reason: userData.reason || "user_request",
       timestamp: new Date().toISOString(),
     };
@@ -390,10 +394,10 @@ class UserEventPublisher {
    */
   async publishUserRoleChanged(userData) {
     const eventData = {
-      userId: userData.userId || userData._id,
-      oldRole: userData.oldRole,
-      newRole: userData.newRole,
-      changedBy: userData.changedBy,
+      userId: String(userData.userId || userData._id),
+      oldRole: userData.oldRole || "",
+      newRole: userData.newRole || "",
+      changedBy: String(userData.changedBy || userData.userId || userData._id),
       reason: userData.reason || "admin_action",
       timestamp: new Date().toISOString(),
     };
@@ -411,8 +415,8 @@ class UserEventPublisher {
    */
   async publishUserActivityTracked(userData) {
     const eventData = {
-      userId: userData.userId || userData._id,
-      activityType: userData.activityType,
+      userId: String(userData.userId || userData._id),
+      activityType: userData.activityType || "",
       timestamp: new Date().toISOString(),
       metadata: userData.metadata || {},
     };

@@ -534,20 +534,43 @@ const validateEventPayload = (eventName, payload) => {
     throw new Error(`Unknown event: ${eventName}`);
   }
 
-  // Basic validation - in production, use a proper schema validation library like Joi or Yup
   const schema = eventDef.schema;
   const errors = [];
 
-  for (const [key, expectedType] of Object.entries(schema)) {
-    if (!(key in payload)) {
-      errors.push(`Missing required field: ${key}`);
-      continue;
+  const validateField = (key, expectedType, actualValue, path = "") => {
+    const fullPath = path ? `${path}.${key}` : key;
+
+    if (actualValue === undefined || actualValue === null) {
+      errors.push(`Missing required field: ${fullPath}`);
+      return;
     }
 
-    const actualType = typeof payload[key];
-    if (actualType !== expectedType) {
-      errors.push(`Field ${key} expected ${expectedType}, got ${actualType}`);
+    if (typeof expectedType === "object" && expectedType !== null) {
+      // Handle nested objects
+      if (typeof actualValue !== "object" || actualValue === null) {
+        errors.push(
+          `Field ${fullPath} expected object, got ${typeof actualValue}`
+        );
+        return;
+      }
+
+      // Validate nested fields
+      for (const [nestedKey, nestedType] of Object.entries(expectedType)) {
+        validateField(nestedKey, nestedType, actualValue[nestedKey], fullPath);
+      }
+    } else {
+      // Handle primitive types
+      const actualType = typeof actualValue;
+      if (actualType !== expectedType) {
+        errors.push(
+          `Field ${fullPath} expected ${expectedType}, got ${actualType}`
+        );
+      }
     }
+  };
+
+  for (const [key, expectedType] of Object.entries(schema)) {
+    validateField(key, expectedType, payload[key]);
   }
 
   if (errors.length > 0) {

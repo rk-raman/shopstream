@@ -31,7 +31,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       // If no specific role required, check if any user is authenticated
       if (!requiredRole) {
         if (!isCustomerAuthenticated && !isSellerAuthenticated) {
-          router.push(redirectTo || "/auth/login");
+          router.push(redirectTo || "/login");
           return;
         }
       } else {
@@ -43,7 +43,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
         if (!isAuthenticated) {
           const defaultRedirect =
-            requiredRole === "customer" ? "/auth/login" : "/seller/login";
+            requiredRole === "customer" ? "/login" : "/seller/login";
           router.push(redirectTo || defaultRedirect);
           return;
         }

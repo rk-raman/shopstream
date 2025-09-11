@@ -1,6 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+} from "react";
 import { User } from "@/types/global";
 import {
   getCurrentUser,
@@ -30,45 +37,66 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<"customer" | "seller" | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Check authentication status
-  const isCustomerAuthenticated = isAuthenticated("customer");
-  const isSellerAuthenticated = isAuthenticated("seller");
+  // Memoize authentication status to prevent unnecessary recalculations
+  const isCustomerAuthenticated = useMemo(() => {
+    return isAuthenticated("customer");
+  }, [userRole]);
 
-  // Initialize auth state
+  const isSellerAuthenticated = useMemo(() => {
+    return isAuthenticated("seller");
+  }, [userRole]);
+
+  // Initialize auth state only once
   useEffect(() => {
+    if (isInitialized) return;
+
     const initializeAuth = async () => {
       try {
+        setIsLoading(true);
         const role = getCurrentUserRole();
+
         if (role) {
           setUserRole(role);
-          // Fetch current user data
-          const response = await getCurrentUser();
-          if (response.success && response.data?.user) {
-            setUser(response.data.user);
+          // Only fetch user data if we have a valid role and token
+          try {
+            const response = await getCurrentUser();
+            if (response.success && response.data?.user) {
+              setUser(response.data.user);
+            } else {
+              // If getCurrentUser fails but we have a token, clear invalid state
+              setUser(null);
+              setUserRole(null);
+            }
+          } catch (error) {
+            console.error("Failed to fetch current user:", error);
+            // Clear invalid tokens on fetch failure
+            setUser(null);
+            setUserRole(null);
           }
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
-        // Clear invalid tokens
         setUser(null);
         setUserRole(null);
       } finally {
         setIsLoading(false);
+        setIsInitialized(true);
       }
     };
 
     initializeAuth();
-  }, []);
+  }, [isInitialized]);
 
   // Login handler
-  const login = (userData: User, role: "customer" | "seller") => {
+  const login = useCallback((userData: User, role: "customer" | "seller") => {
     setUser(userData);
     setUserRole(role);
-  };
+  }, []);
 
   // Logout handler
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await logoutService(userRole || undefined);
     } catch (error) {
@@ -77,34 +105,49 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null);
       setUserRole(null);
     }
-  };
+  }, [userRole]);
 
   // Refresh user data
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
+    if (!userRole || isLoading) return;
+
     try {
-      if (userRole) {
-        const response = await getCurrentUser();
-        if (response.success && response.data?.user) {
-          setUser(response.data.user);
-        }
+      const response = await getCurrentUser();
+      if (response.success && response.data?.user) {
+        setUser(response.data.user);
+      } else {
+        // If refresh fails, logout user
+        await logout();
       }
     } catch (error) {
       console.error("Refresh user error:", error);
       // If refresh fails, logout user
       await logout();
     }
-  };
+  }, [userRole, isLoading, logout]);
 
-  const value: AuthContextType = {
-    user,
-    userRole,
-    isLoading,
-    isCustomerAuthenticated,
-    isSellerAuthenticated,
-    login,
-    logout,
-    refreshUser,
-  };
+  const value: AuthContextType = useMemo(
+    () => ({
+      user,
+      userRole,
+      isLoading,
+      isCustomerAuthenticated,
+      isSellerAuthenticated,
+      login,
+      logout,
+      refreshUser,
+    }),
+    [
+      user,
+      userRole,
+      isLoading,
+      isCustomerAuthenticated,
+      isSellerAuthenticated,
+      login,
+      logout,
+      refreshUser,
+    ]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

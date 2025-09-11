@@ -33,7 +33,7 @@ const SellerRegisterForm: React.FC = () => {
         const response = await register(formData);
         if (response.success && response.data) {
           setAuthUser(response.data.user, "seller");
-          //router.push("/dashboard");
+          router.push("/dashboard");
         }
       },
     });
@@ -404,7 +404,7 @@ const SellerRegisterForm: React.FC = () => {
             <p className="mt-2 text-sm text-gray-600">
               Want to shop instead?{" "}
               <Link
-                href="/auth/login"
+                href="/seller/login"
                 className="font-medium text-blue-600 hover:text-blue-500"
               >
                 Customer login

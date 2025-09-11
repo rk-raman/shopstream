@@ -1,13 +1,15 @@
 const crypto = require("crypto");
 const User = require("../models/User.model");
 const ApiError = require("../../../shared/utils/apiError");
-const eventEmitter = require("../../../shared/events/eventEmitter");
-const { USER_EVENTS } = require("../../../shared/events/eventTypes");
+const UserEventPublisher = require("../events/publishers/UserEventPublisher");
 const {
   generateTokenPair,
   verifyRefreshToken,
   verifyAccessToken,
 } = require("../../../shared/utils/jwt");
+
+// Initialize event publisher
+const userEventPublisher = new UserEventPublisher();
 
 // Register new user
 const register = async (userData) => {
@@ -47,17 +49,20 @@ const register = async (userData) => {
     await user.save();
 
     // Publish registration event
-    eventEmitter.publish(USER_EVENTS.USER_REGISTERED, {
+    await userEventPublisher.publishUserRegistered({
       userId: user._id,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
       role: user.role,
-      timestamp: new Date().toISOString(),
+      registrationMethod: "email",
+      userAgent: userData.userAgent,
+      ipAddress: userData.ipAddress,
+      referrer: userData.referrer,
     });
 
     // Send verification email
-    eventEmitter.publish("notification.send_email", {
+    await userEventPublisher.eventEmitter.publish("notification.send_email", {
       type: "email_verification",
       to: user.email,
       data: {
@@ -74,7 +79,7 @@ const register = async (userData) => {
 };
 
 // Login user
-const login = async (email, password) => {
+const login = async (email, password, userData = {}) => {
   try {
     // Find user with password and refreshTokens
     const user = await User.findOne({ email }).select(
@@ -101,10 +106,13 @@ const login = async (email, password) => {
     await user.save();
 
     // Publish login event
-    eventEmitter.publish(USER_EVENTS.USER_LOGGED_IN, {
+    await userEventPublisher.publishUserLoggedIn({
       userId: user._id,
       email: user.email,
-      timestamp: new Date().toISOString(),
+      loginMethod: "email",
+      userAgent: userData.userAgent,
+      ipAddress: userData.ipAddress,
+      sessionId: userData.sessionId,
     });
 
     // Remove password from response
@@ -211,7 +219,7 @@ const forgotPassword = async (email) => {
     await user.save();
 
     // Send reset email
-    eventEmitter.publish("notification.send_email", {
+    await userEventPublisher.eventEmitter.publish("notification.send_email", {
       type: "password_reset",
       to: user.email,
       data: {
@@ -299,7 +307,7 @@ const resendVerificationEmail = async (userId) => {
     await user.save();
 
     // Send verification email
-    eventEmitter.publish("notification.send_email", {
+    await userEventPublisher.eventEmitter.publish("notification.send_email", {
       type: "email_verification",
       to: user.email,
       data: {

@@ -60,6 +60,87 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
 
+    // Seller-specific fields
+    businessName: {
+      type: String,
+      trim: true,
+      minlength: [2, "Business name must be at least 2 characters long"],
+      maxlength: [100, "Business name cannot exceed 100 characters"],
+      required: function () {
+        return this.role === "seller";
+      },
+      validate: {
+        validator: function (v) {
+          if (this.role === "seller") {
+            return v && v.length >= 2;
+          }
+          return true;
+        },
+        message: "Business name is required for sellers",
+      },
+    },
+    businessType: {
+      type: String,
+      enum: {
+        values: [
+          "retail",
+          "wholesale",
+          "manufacturer",
+          "distributor",
+          "service",
+          "other",
+        ],
+        message:
+          "Business type must be one of: retail, wholesale, manufacturer, distributor, service, other",
+      },
+      required: function () {
+        return this.role === "seller";
+      },
+    },
+    businessAddress: {
+      type: String,
+      trim: true,
+      minlength: [10, "Business address must be at least 10 characters long"],
+      maxlength: [500, "Business address cannot exceed 500 characters"],
+      required: function () {
+        return this.role === "seller";
+      },
+    },
+    businessPhone: {
+      type: String,
+      trim: true,
+      validate: {
+        validator: function (v) {
+          if (this.role === "seller") {
+            return v && /^[6-9]\d{9}$/.test(v);
+          }
+          return true;
+        },
+        message: "Business phone must be a valid 10-digit Indian mobile number",
+      },
+      required: function () {
+        return this.role === "seller";
+      },
+    },
+    taxId: {
+      type: String,
+      trim: true,
+      minlength: [5, "Tax ID must be at least 5 characters long"],
+      maxlength: [50, "Tax ID cannot exceed 50 characters"],
+      required: function () {
+        return this.role === "seller";
+      },
+      validate: {
+        validator: function (v) {
+          if (this.role === "seller") {
+            return v && v.length >= 5;
+          }
+          return true;
+        },
+        message: "Tax ID is required for sellers",
+      },
+    },
+
     // Related Data
     addresses: [addressSchema],
     wishlist: [

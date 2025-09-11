@@ -72,6 +72,100 @@ const userRegistrationSchema = createJoiSchema({
   dateOfBirth: false,
   gender: false,
   marketingConsent: false,
+}).keys({
+  // Add role field
+  role: Joi.string()
+    .valid("customer", "seller", "admin")
+    .default("customer")
+    .messages({
+      "any.only": "Role must be customer, seller, or admin",
+    }),
+
+  // Add confirmPassword field
+  confirmPassword: Joi.string().valid(Joi.ref("password")).required().messages({
+    "any.only": "Password confirmation does not match",
+    "string.empty": "Password confirmation is required",
+  }),
+
+  // Seller-specific fields (conditional validation)
+  businessName: Joi.string()
+    .min(2)
+    .max(100)
+    .trim()
+    .when("role", {
+      is: "seller",
+      then: Joi.required(),
+      otherwise: Joi.optional(),
+    })
+    .messages({
+      "string.min": "Business name must be at least 2 characters long",
+      "string.max": "Business name cannot exceed 100 characters",
+      "string.empty": "Business name is required for sellers",
+      "any.required": "Business name is required for sellers",
+    }),
+
+  businessType: Joi.string()
+    .valid(
+      "retail",
+      "wholesale",
+      "manufacturer",
+      "distributor",
+      "service",
+      "other"
+    )
+    .when("role", {
+      is: "seller",
+      then: Joi.required(),
+      otherwise: Joi.optional(),
+    })
+    .messages({
+      "any.only":
+        "Business type must be one of: retail, wholesale, manufacturer, distributor, service, other",
+      "any.required": "Business type is required for sellers",
+    }),
+
+  businessAddress: Joi.string()
+    .min(10)
+    .max(500)
+    .trim()
+    .when("role", {
+      is: "seller",
+      then: Joi.required(),
+      otherwise: Joi.optional(),
+    })
+    .messages({
+      "string.min": "Business address must be at least 10 characters long",
+      "string.max": "Business address cannot exceed 500 characters",
+      "string.empty": "Business address is required for sellers",
+      "any.required": "Business address is required for sellers",
+    }),
+
+  businessPhone: customJoiExtended
+    .phone()
+    .when("role", {
+      is: "seller",
+      then: Joi.required(),
+      otherwise: Joi.optional(),
+    })
+    .messages({
+      "any.required": "Business phone is required for sellers",
+    }),
+
+  taxId: Joi.string()
+    .min(5)
+    .max(50)
+    .trim()
+    .when("role", {
+      is: "seller",
+      then: Joi.required(),
+      otherwise: Joi.optional(),
+    })
+    .messages({
+      "string.min": "Tax ID must be at least 5 characters long",
+      "string.max": "Tax ID cannot exceed 50 characters",
+      "string.empty": "Tax ID is required for sellers",
+      "any.required": "Tax ID is required for sellers",
+    }),
 });
 
 // User Login Schema
