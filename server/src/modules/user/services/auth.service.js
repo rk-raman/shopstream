@@ -11,6 +11,11 @@ const {
 
 // Register new user
 const register = async (userData) => {
+  // Execution will pause here when breakpoint is hit
+  console.log("🚀 [AUTH] Register function called with data:", {
+    userData: userData,
+  });
+
   try {
     // Check if user exists
     const existingUser = await User.findOne({

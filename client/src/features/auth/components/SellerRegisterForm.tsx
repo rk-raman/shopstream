@@ -33,7 +33,7 @@ const SellerRegisterForm: React.FC = () => {
         const response = await register(formData);
         if (response.success && response.data) {
           setAuthUser(response.data.user, "seller");
-          router.push("/seller/dashboard");
+          //router.push("/dashboard");
         }
       },
     });

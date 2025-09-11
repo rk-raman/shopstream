@@ -114,6 +114,7 @@ export interface Address {
 export interface LoginForm {
   email: string;
   password: string;
+  role: string;
 }
 
 export interface RegisterForm {

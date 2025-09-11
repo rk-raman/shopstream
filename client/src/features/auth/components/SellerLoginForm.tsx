@@ -17,6 +17,7 @@ const SellerLoginForm: React.FC = () => {
       initialValues: {
         email: "",
         password: "",
+        role: "seller",
       },
       validate: validateLoginForm,
       onSubmit: async (formData) => {

@@ -48,7 +48,10 @@ const express = require("express");
 const router = express.Router();
 const userRoutes = require("../modules/user/routes");
 const { notificationRoutes } = require("../modules/notification/routes");
-
+const productRoutes = require("../modules/product/routes/product.routes");
+const cartRoutes = require("../modules/cart/routes/cart.routes");
+const paymentRoutes = require("../modules/payment/routes/payment.routes");
+const uploadRoutes = require("../modules/upload/routes/upload.routes");
 // Health check endpoint
 router.get("/health", (req, res) => {
   res.json({
@@ -65,6 +68,10 @@ router.get("/health", (req, res) => {
 
 router.use(userRoutes);
 router.use("/notifications", notificationRoutes);
+router.use("/products", productRoutes);
+router.use("/cart", cartRoutes);
+router.use("/payments", paymentRoutes);
+router.use("/uploads", uploadRoutes);
 
 // API Info endpoint
 router.get("/", (req, res) => {

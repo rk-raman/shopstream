@@ -12,7 +12,6 @@ const { connectRedis } = require("./config/redis");
 const { initElasticsearch } = require("./config/elasticsearch");
 
 // Import middleware
-// Import middleware
 const logger = require("./shared/middleware/logger.middleware");
 const {
   errorHandler,
@@ -20,11 +19,7 @@ const {
 } = require("./shared/middleware/error.middleware");
 
 // Import routes
-const userRoutes = require("./modules/user/routes/user.routes");
-const productRoutes = require("./modules/product/routes/product.routes");
-const cartRoutes = require("./modules/cart/routes/cart.routes");
-const paymentRoutes = require("./modules/payment/routes/payment.routes");
-const uploadRoutes = require("./modules/upload/routes/upload.routes");
+const apiRoutes = require("./routes/index");
 
 // Import event system
 const eventSystem = require("./shared/events/eventEmitter");
@@ -97,11 +92,7 @@ app.get("/health", async (req, res) => {
 });
 
 // API routes
-app.use("/api/v1/users", userRoutes);
-app.use("/api/v1/products", productRoutes);
-app.use("/api/v1/cart", cartRoutes);
-app.use("/api/v1/payments", paymentRoutes);
-app.use("/api/v1/uploads", uploadRoutes);
+app.use("/api", apiRoutes);
 
 // Serve static files
 app.use("/uploads", express.static("uploads"));
