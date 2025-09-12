@@ -2,7 +2,7 @@ const Product = require("../models/Product.model");
 const Category = require("../models/Category.model");
 const Brand = require("../models/Brand.model");
 const ApiError = require("../../../shared/utils/apiError");
-const { eventBus } = require("../../../shared/events/eventBus");
+const ProductEventPublisher = require("../events/publishers/ProductEventPublisher");
 
 // Create new product
 const createProduct = async (productData, sellerId) => {
@@ -44,8 +44,8 @@ const createProduct = async (productData, sellerId) => {
       { path: "seller", select: "firstName lastName email" },
     ]);
 
-    // Publish event
-    eventBus.emit("product.created", {
+    // Publish event using ProductEventPublisher
+    await ProductEventPublisher.publishProductCreated({
       productId: product._id,
       sellerId: sellerId,
       categoryId: product.category._id,
@@ -53,6 +53,11 @@ const createProduct = async (productData, sellerId) => {
       name: product.name,
       price: product.basePrice,
       stock: product.totalStock,
+      metadata: {
+        hasVariants: product.hasVariants,
+        isDigital: product.isDigital,
+        status: product.status,
+      },
     });
 
     return product;
@@ -87,12 +92,16 @@ const getProductById = async (productId, includeInactive = false) => {
   // Increment view count
   await Product.findByIdAndUpdate(productId, { $inc: { viewCount: 1 } });
 
-  // Publish view event
-  eventBus.emit("product.viewed", {
+  // Publish view event using ProductEventPublisher
+  await ProductEventPublisher.publishProductViewed({
     productId: product._id,
     categoryId: product.category._id,
     sellerId: product.seller._id,
     viewedAt: new Date(),
+    metadata: {
+      productName: product.name,
+      price: product.effectivePrice,
+    },
   });
 
   return product;
@@ -123,6 +132,18 @@ const getProductBySlug = async (slug, includeInactive = false) => {
 
   // Increment view count
   await Product.findByIdAndUpdate(product._id, { $inc: { viewCount: 1 } });
+
+  // Publish view event using ProductEventPublisher
+  await ProductEventPublisher.publishProductViewed({
+    productId: product._id,
+    categoryId: product.category._id,
+    sellerId: product.seller._id,
+    viewedAt: new Date(),
+    metadata: {
+      productName: product.name,
+      price: product.effectivePrice,
+    },
+  });
 
   return product;
 };
@@ -162,12 +183,16 @@ const updateProduct = async (productId, updateData, sellerId = null) => {
     );
   }
 
-  // Publish event
-  eventBus.emit("product.updated", {
+  // Publish event using ProductEventPublisher
+  await ProductEventPublisher.publishProductUpdated({
     productId: product._id,
     sellerId: product.seller._id,
     changes: updateData,
     updatedBy: sellerId || "admin",
+    metadata: {
+      productName: product.name,
+      previousData: updateData,
+    },
   });
 
   return product;
@@ -193,11 +218,15 @@ const deleteProduct = async (productId, sellerId = null) => {
     );
   }
 
-  // Publish event
-  eventBus.emit("product.deleted", {
+  // Publish event using ProductEventPublisher
+  await ProductEventPublisher.publishProductDeleted({
     productId: product._id,
     sellerId: product.seller,
     deletedBy: sellerId || "admin",
+    metadata: {
+      productName: product.name,
+      category: product.category,
+    },
   });
 
   return { message: "Product deleted successfully" };
@@ -430,6 +459,8 @@ const updateProductStock = async (productId, stockChange, variantId = null) => {
     throw new ApiError(404, "Product not found");
   }
 
+  let oldStock, newStock;
+
   if (product.hasVariants && variantId) {
     // Update variant stock
     const variant = product.variants.id(variantId);
@@ -437,20 +468,29 @@ const updateProductStock = async (productId, stockChange, variantId = null) => {
       throw new ApiError(404, "Product variant not found");
     }
 
+    oldStock = variant.stock;
     variant.stock = Math.max(0, variant.stock + stockChange);
+    newStock = variant.stock;
   } else {
     // Update main product stock
+    oldStock = product.stock;
     product.stock = Math.max(0, product.stock + stockChange);
+    newStock = product.stock;
   }
 
   await product.save();
 
-  // Publish stock update event
-  eventBus.emit("product.stock.updated", {
+  // Publish stock update event using ProductEventPublisher
+  await ProductEventPublisher.publishProductStockUpdated({
     productId: product._id,
     variantId,
-    newStock: variantId ? product.variants.id(variantId).stock : product.stock,
+    oldStock,
+    newStock,
     stockChange,
+    metadata: {
+      productName: product.name,
+      sellerId: product.seller,
+    },
   });
 
   return product;
@@ -468,11 +508,15 @@ const approveProduct = async (productId) => {
     throw new ApiError(404, "Product not found");
   }
 
-  // Publish event
-  eventBus.emit("product.approved", {
+  // Publish event using ProductEventPublisher
+  await ProductEventPublisher.publishProductApproved({
     productId: product._id,
     sellerId: product.seller,
     approvedAt: new Date(),
+    metadata: {
+      productName: product.name,
+      category: product.category,
+    },
   });
 
   return product;
@@ -490,12 +534,16 @@ const rejectProduct = async (productId, reason = "") => {
     throw new ApiError(404, "Product not found");
   }
 
-  // Publish event
-  eventBus.emit("product.rejected", {
+  // Publish event using ProductEventPublisher
+  await ProductEventPublisher.publishProductRejected({
     productId: product._id,
     sellerId: product.seller,
     reason,
     rejectedAt: new Date(),
+    metadata: {
+      productName: product.name,
+      category: product.category,
+    },
   });
 
   return product;
@@ -526,11 +574,15 @@ const bulkUpdateProducts = async (productIds, updateData) => {
     { runValidators: true }
   );
 
-  // Publish bulk update event
-  eventBus.emit("products.bulk.updated", {
+  // Publish bulk update event using ProductEventPublisher
+  await ProductEventPublisher.publishProductsBulkUpdated({
     productIds,
     updateData,
     modifiedCount: result.modifiedCount,
+    metadata: {
+      operation: "bulk_update",
+      timestamp: new Date(),
+    },
   });
 
   return result;
@@ -564,13 +616,17 @@ const addProductReview = async (productId, reviewData) => {
 
   const newReview = product.reviews[product.reviews.length - 1];
 
-  // Publish review event
-  eventBus.emit("product.review.added", {
+  // Publish review event using ProductEventPublisher
+  await ProductEventPublisher.publishProductReviewAdded({
     productId: product._id,
     reviewId: newReview._id,
     userId: reviewData.user,
     rating: reviewData.rating,
     sellerId: product.seller,
+    metadata: {
+      productName: product.name,
+      reviewComment: reviewData.comment,
+    },
   });
 
   return newReview;

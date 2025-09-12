@@ -1243,7 +1243,7 @@ productSchema.statics.getCategoryStatistics = function () {
 productSchema.statics.getSellerStatistics = function (sellerId) {
   return this.aggregate([
     {
-      $match: { seller: mongoose.Types.ObjectId(sellerId) },
+      $match: { seller: new mongoose.Types.ObjectId(sellerId) },
     },
     {
       $group: {

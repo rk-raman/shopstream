@@ -17,7 +17,7 @@ const {
   bulkProductOperationSchema,
   stockUpdateSchema,
   specificationUpdateSchema,
-} = require("../schemas/product.schemas");
+} = require("./product.schemas");
 
 // ==================== VALIDATION MIDDLEWARE ====================
 
