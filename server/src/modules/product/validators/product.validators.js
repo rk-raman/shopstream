@@ -7,153 +7,19 @@ const {
   commonJoiPatterns,
 } = require("../../../shared/middleware/validation.middleware");
 
-const Joi = require("joi");
+const {
+  productCreateSchema,
+  productUpdateSchema,
+  productSearchSchema,
+  productReviewSchema,
+  variantCreateSchema,
+  variantUpdateSchema,
+  bulkProductOperationSchema,
+  stockUpdateSchema,
+  specificationUpdateSchema,
+} = require("../schemas/product.schemas");
 
-// ==================== PRODUCT SCHEMAS ====================
-
-/**
- * Product Creation Schema
- */
-const productCreateSchema = Joi.object({
-  name: Joi.string().min(2).max(100).trim().required().messages({
-    "string.min": "Product name must be at least 2 characters long",
-    "string.max": "Product name cannot exceed 100 characters",
-    "string.empty": "Product name is required",
-  }),
-
-  description: Joi.string().min(10).max(2000).trim().required().messages({
-    "string.min": "Product description must be at least 10 characters long",
-    "string.max": "Product description cannot exceed 2000 characters",
-    "string.empty": "Product description is required",
-  }),
-
-  price: Joi.number().positive().precision(2).required().messages({
-    "number.positive": "Price must be a positive number",
-    "number.base": "Price must be a valid number",
-    "any.required": "Price is required",
-  }),
-
-  categoryId: commonJoiPatterns.objectId.required().messages({
-    "any.required": "Category ID is required",
-  }),
-
-  brandId: commonJoiPatterns.objectId.optional(),
-
-  sku: Joi.string().alphanum().min(3).max(20).uppercase().required().messages({
-    "string.alphanum": "SKU must contain only alphanumeric characters",
-    "string.min": "SKU must be at least 3 characters long",
-    "string.max": "SKU cannot exceed 20 characters",
-    "string.empty": "SKU is required",
-  }),
-
-  stock: Joi.number().integer().min(0).required().messages({
-    "number.integer": "Stock must be a whole number",
-    "number.min": "Stock cannot be negative",
-    "any.required": "Stock is required",
-  }),
-
-  images: Joi.array()
-    .items(Joi.string().uri())
-    .min(1)
-    .max(10)
-    .optional()
-    .messages({
-      "array.min": "At least one product image is required",
-      "array.max": "Cannot have more than 10 images",
-      "string.uri": "Image must be a valid URL",
-    }),
-
-  tags: Joi.array()
-    .items(Joi.string().min(2).max(20))
-    .max(10)
-    .optional()
-    .messages({
-      "array.max": "Cannot have more than 10 tags",
-      "string.min": "Each tag must be at least 2 characters long",
-      "string.max": "Each tag cannot exceed 20 characters",
-    }),
-
-  specifications: Joi.object()
-    .pattern(Joi.string(), Joi.string().min(1).max(100))
-    .optional(),
-
-  isActive: Joi.boolean().optional().default(true),
-  isFeatured: Joi.boolean().optional().default(false),
-});
-
-/**
- * Product Update Schema
- */
-const productUpdateSchema = Joi.object({
-  name: Joi.string().min(2).max(100).trim().optional(),
-  description: Joi.string().min(10).max(2000).trim().optional(),
-  price: Joi.number().positive().precision(2).optional(),
-  categoryId: commonJoiPatterns.objectId.optional(),
-  brandId: commonJoiPatterns.objectId.optional(),
-  sku: Joi.string().alphanum().min(3).max(20).uppercase().optional(),
-  stock: Joi.number().integer().min(0).optional(),
-  images: Joi.array().items(Joi.string().uri()).min(1).max(10).optional(),
-  tags: Joi.array().items(Joi.string().min(2).max(20)).max(10).optional(),
-  specifications: Joi.object()
-    .pattern(Joi.string(), Joi.string().min(1).max(100))
-    .optional(),
-  isActive: Joi.boolean().optional(),
-  isFeatured: Joi.boolean().optional(),
-})
-  .min(1)
-  .messages({
-    "object.min": "At least one field must be provided for update",
-  });
-
-/**
- * Product Search Schema
- */
-const productSearchSchema = Joi.object({
-  q: Joi.string().min(1).max(100).trim().optional(),
-  category: commonJoiPatterns.objectId.optional(),
-  brand: commonJoiPatterns.objectId.optional(),
-  minPrice: Joi.number().positive().optional(),
-  maxPrice: Joi.number().positive().optional(),
-  inStock: Joi.boolean().optional(),
-  isActive: Joi.boolean().optional(),
-  sortBy: Joi.string()
-    .valid("name", "price", "createdAt", "rating", "popularity")
-    .optional()
-    .default("createdAt"),
-  sortOrder: Joi.string().valid("asc", "desc").optional().default("desc"),
-}).concat(commonJoiPatterns.pagination);
-
-/**
- * Product Review Schema
- */
-const productReviewSchema = Joi.object({
-  rating: Joi.number().integer().min(1).max(5).required().messages({
-    "number.min": "Rating must be at least 1",
-    "number.max": "Rating cannot exceed 5",
-    "any.required": "Rating is required",
-  }),
-
-  title: Joi.string().min(5).max(100).trim().required().messages({
-    "string.min": "Review title must be at least 5 characters long",
-    "string.max": "Review title cannot exceed 100 characters",
-    "string.empty": "Review title is required",
-  }),
-
-  comment: Joi.string().min(10).max(1000).trim().required().messages({
-    "string.min": "Review comment must be at least 10 characters long",
-    "string.max": "Review comment cannot exceed 1000 characters",
-    "string.empty": "Review comment is required",
-  }),
-
-  images: Joi.array().items(Joi.string().uri()).max(5).optional().messages({
-    "array.max": "Cannot upload more than 5 review images",
-    "string.uri": "Image must be a valid URL",
-  }),
-
-  isAnonymous: Joi.boolean().optional().default(false),
-});
-
-// ==================== VALIDATORS ====================
+// ==================== VALIDATION MIDDLEWARE ====================
 
 /**
  * Product Creation Validation
@@ -186,14 +52,42 @@ const validateProductId = [
 ];
 
 /**
+ * Product and Variant ID Validation
+ */
+const validateProductAndVariantId = [
+  validateJoiParams({
+    productId: commonJoiPatterns.objectId.required(),
+    variantId: commonJoiPatterns.objectId.required(),
+  }),
+];
+
+/**
  * Product Image Upload Validation
  */
 const validateProductImageUpload = [
   validateFile({
     required: true,
-    allowedTypes: ["image/jpeg", "image/jpg", "image/png", "image/webp"],
-    maxSize: 5 * 1024 * 1024, // 5MB
+    allowedTypes: [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+      "image/svg+xml",
+    ],
+    maxSize: 10 * 1024 * 1024, // 10MB
     fieldName: "image",
+  }),
+];
+
+/**
+ * Product Video Upload Validation
+ */
+const validateProductVideoUpload = [
+  validateFile({
+    required: true,
+    allowedTypes: ["video/mp4", "video/webm", "video/ogg"],
+    maxSize: 50 * 1024 * 1024, // 50MB
+    fieldName: "video",
   }),
 ];
 
@@ -206,48 +100,230 @@ const validateProductReview = [
 ];
 
 /**
+ * Variant Creation Validation
+ */
+const validateVariantCreate = [
+  sanitizeMiddleware,
+  validateJoiBody(variantCreateSchema),
+];
+
+/**
+ * Variant Update Validation
+ */
+const validateVariantUpdate = [
+  sanitizeMiddleware,
+  validateJoiBody(variantUpdateSchema),
+];
+
+/**
  * Bulk Product Operations Validation
  */
 const validateBulkProductOperation = [
   sanitizeMiddleware,
+  validateJoiBody(bulkProductOperationSchema),
+];
+
+/**
+ * Stock Update Validation
+ */
+const validateStockUpdate = [
+  sanitizeMiddleware,
+  validateJoiBody(stockUpdateSchema),
+];
+
+/**
+ * Specification Management Validation
+ */
+const validateSpecificationUpdate = [
+  sanitizeMiddleware,
+  validateJoiBody(specificationUpdateSchema),
+];
+
+/**
+ * Variant ID Validation
+ */
+const validateVariantId = [
+  validateJoiParams({
+    variantId: commonJoiPatterns.objectId.required(),
+  }),
+];
+
+/**
+ * Product Image Delete Validation
+ */
+const validateProductImageDelete = [
+  validateJoiParams({
+    productId: commonJoiPatterns.objectId.required(),
+    imageId: commonJoiPatterns.objectId.required(),
+  }),
+];
+
+/**
+ * Product Video Delete Validation
+ */
+const validateProductVideoDelete = [
+  validateJoiParams({
+    productId: commonJoiPatterns.objectId.required(),
+    videoId: commonJoiPatterns.objectId.required(),
+  }),
+];
+
+/**
+ * Product Review ID Validation
+ */
+const validateProductReviewId = [
+  validateJoiParams({
+    productId: commonJoiPatterns.objectId.required(),
+    reviewId: commonJoiPatterns.objectId.required(),
+  }),
+];
+
+/**
+ * Product Status Update Validation
+ */
+const validateProductStatusUpdate = [
+  sanitizeMiddleware,
   validateJoiBody({
-    productIds: Joi.array()
-      .items(commonJoiPatterns.objectId)
-      .min(1)
-      .max(100)
-      .required()
-      .messages({
-        "array.min": "At least one product ID is required",
-        "array.max": "Cannot process more than 100 products at once",
-        "any.required": "Product IDs are required",
-      }),
-    operation: Joi.string()
-      .valid("activate", "deactivate", "delete", "updatePrice", "updateStock")
+    status: require("joi")
+      .string()
+      .valid("draft", "active", "inactive", "discontinued")
       .required()
       .messages({
         "any.only":
-          "Operation must be one of: activate, deactivate, delete, updatePrice, updateStock",
-        "any.required": "Operation is required",
+          "Status must be one of: draft, active, inactive, discontinued",
+        "any.required": "Status is required",
       }),
-    data: Joi.object().optional(), // Additional data for specific operations
+  }),
+];
+
+/**
+ * Product Feature Toggle Validation
+ */
+const validateProductFeatureToggle = [
+  sanitizeMiddleware,
+  validateJoiBody({
+    isFeatured: require("joi").boolean().required().messages({
+      "any.required": "Featured status is required",
+    }),
+  }),
+];
+
+/**
+ * Product Approval Validation
+ */
+const validateProductApproval = [
+  sanitizeMiddleware,
+  validateJoiBody({
+    isApproved: require("joi").boolean().required().messages({
+      "any.required": "Approval status is required",
+    }),
+    approvalNotes: require("joi").string().max(500).trim().optional().messages({
+      "string.max": "Approval notes cannot exceed 500 characters",
+    }),
+  }),
+];
+
+/**
+ * Product Duplicate Validation
+ */
+const validateProductDuplicate = [
+  sanitizeMiddleware,
+  validateJoiBody({
+    newName: require("joi")
+      .string()
+      .min(2)
+      .max(200)
+      .trim()
+      .optional()
+      .messages({
+        "string.min": "New product name must be at least 2 characters long",
+        "string.max": "New product name cannot exceed 200 characters",
+      }),
+    duplicateVariants: require("joi").boolean().optional().default(true),
+    duplicateImages: require("joi").boolean().optional().default(true),
+    duplicateSpecifications: require("joi").boolean().optional().default(true),
+  }),
+];
+
+/**
+ * Product Category Update Validation
+ */
+const validateProductCategoryUpdate = [
+  sanitizeMiddleware,
+  validateJoiBody({
+    category: commonJoiPatterns.objectId.required().messages({
+      "any.required": "Category is required",
+    }),
+    subcategory: commonJoiPatterns.objectId.optional(),
+  }),
+];
+
+/**
+ * Product Price Update Validation
+ */
+const validateProductPriceUpdate = [
+  sanitizeMiddleware,
+  validateJoiBody({
+    basePrice: require("joi")
+      .number()
+      .positive()
+      .precision(2)
+      .optional()
+      .messages({
+        "number.positive": "Base price must be a positive number",
+      }),
+    discountPrice: require("joi")
+      .number()
+      .positive()
+      .precision(2)
+      .optional()
+      .messages({
+        "number.positive": "Discount price must be a positive number",
+      }),
+    discountPercentage: require("joi")
+      .number()
+      .min(0)
+      .max(100)
+      .precision(2)
+      .optional()
+      .messages({
+        "number.min": "Discount percentage cannot be negative",
+        "number.max": "Discount percentage cannot exceed 100",
+      }),
   }),
 ];
 
 // ==================== EXPORTS ====================
 
 module.exports = {
-  // Product validators
+  // Main product validators
   validateProductCreate,
   validateProductUpdate,
   validateProductSearch,
   validateProductId,
+  validateProductAndVariantId,
   validateProductImageUpload,
+  validateProductVideoUpload,
   validateProductReview,
+
+  // Variant validators
+  validateVariantCreate,
+  validateVariantUpdate,
+  validateVariantId,
+
+  // Bulk operations
   validateBulkProductOperation,
 
-  // Schemas (for reuse in other modules)
-  productCreateSchema,
-  productUpdateSchema,
-  productSearchSchema,
-  productReviewSchema,
+  // Additional validators
+  validateStockUpdate,
+  validateSpecificationUpdate,
+  validateProductImageDelete,
+  validateProductVideoDelete,
+  validateProductReviewId,
+  validateProductStatusUpdate,
+  validateProductFeatureToggle,
+  validateProductApproval,
+  validateProductDuplicate,
+  validateProductCategoryUpdate,
+  validateProductPriceUpdate,
 };
