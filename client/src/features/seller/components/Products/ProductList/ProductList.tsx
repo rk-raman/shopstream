@@ -1,21 +1,21 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Search,
   Filter,
   Plus,
-  Edit,
   Trash2,
+  Edit,
   Eye,
   MoreHorizontal,
 } from "lucide-react";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,22 +23,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { Product } from "@/types/global";
-import { PAGINATION, PRODUCT_CONFIG } from "@/constants/constants";
+import { PRODUCT_CONFIG } from "@/constants/constants";
 import {
-  productService,
-  ProductFilters,
-} from "@/features/seller/services/productService";
+  useProducts,
+  useDeleteProduct,
+  useBulkDeleteProducts,
+  useCategories,
+} from "@/features/seller/hooks/useProducts";
 
 interface ProductListProps {
   onCreateProduct?: () => void;
@@ -46,78 +45,100 @@ interface ProductListProps {
   onViewProduct?: (product: Product) => void;
 }
 
+interface Filters {
+  category: string;
+  status: string;
+  minPrice: string;
+  maxPrice: string;
+  inStock: boolean;
+}
+
+const ITEMS_PER_PAGE = 12;
+
 export const ProductList: React.FC<ProductListProps> = ({
   onCreateProduct,
   onEditProduct,
   onViewProduct,
 }) => {
-  const queryClient = useQueryClient();
-  const [filters, setFilters] = useState<ProductFilters>({
-    page: 1,
-    limit: PAGINATION.PRODUCTS_PER_PAGE,
-    sortBy: "createdAt",
-    sortOrder: "desc",
-  });
-  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [productToDelete, setProductToDelete] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [filters, setFilters] = useState<Filters>({
+    category: "",
+    status: "",
+    minPrice: "",
+    maxPrice: "",
+    inStock: false,
+  });
 
-  // Fetch products
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1); // Reset to first page on search
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Build query parameters
+  const queryParams = useMemo(() => {
+    const params: Record<string, any> = {
+      page: currentPage,
+      limit: ITEMS_PER_PAGE,
+      sortBy,
+      sortOrder,
+    };
+
+    if (debouncedSearchTerm) {
+      params.search = debouncedSearchTerm;
+    }
+
+    if (filters.category) {
+      params.category = filters.category;
+    }
+
+    if (filters.status) {
+      params.status = filters.status;
+    }
+
+    if (filters.minPrice) {
+      params.minPrice = parseFloat(filters.minPrice);
+    }
+
+    if (filters.maxPrice) {
+      params.maxPrice = parseFloat(filters.maxPrice);
+    }
+
+    if (filters.inStock) {
+      params.inStock = true;
+    }
+
+    return params;
+  }, [currentPage, debouncedSearchTerm, filters, sortBy, sortOrder]);
+
+  // Fetch data
   const {
     data: productsData,
     isLoading,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ["products", filters],
-    queryFn: () => productService.getProducts(filters),
-  });
+  } = useProducts(queryParams);
 
-  // Delete product mutation
-  const deleteProductMutation = useMutation({
-    mutationFn: (productId: string) => productService.deleteProduct(productId),
-    onSuccess: () => {
-      toast.success("Product deleted successfully");
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      setDeleteDialogOpen(false);
-      setProductToDelete(null);
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to delete product");
-    },
-  });
+  const { data: categoriesData } = useCategories();
 
-  // Bulk delete mutation
-  const bulkDeleteMutation = useMutation({
-    mutationFn: (productIds: string[]) =>
-      productService.bulkDeleteProducts(productIds),
-    onSuccess: () => {
-      toast.success(`${selectedProducts.length} products deleted successfully`);
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      setSelectedProducts([]);
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to delete products");
-    },
-  });
+  // Mutations
+  const deleteProductMutation = useDeleteProduct();
+  const bulkDeleteMutation = useBulkDeleteProducts();
 
-  // Handle search with debounce
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setFilters((prev) => ({ ...prev, search: searchTerm, page: 1 }));
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm]);
-
-  const handleFilterChange = (newFilters: Partial<ProductFilters>) => {
-    setFilters((prev) => ({ ...prev, ...newFilters, page: 1 }));
-  };
-
-  const handlePageChange = (page: number) => {
-    setFilters((prev) => ({ ...prev, page }));
-  };
+  const products = productsData?.data || [];
+  const totalProducts = productsData?.total || 0;
+  const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
+  const categories = categoriesData?.data || [];
 
   const handleSelectProduct = (productId: string) => {
     setSelectedProducts((prev) =>
@@ -128,28 +149,61 @@ export const ProductList: React.FC<ProductListProps> = ({
   };
 
   const handleSelectAll = () => {
-    if (!productsData?.data?.products) return;
-
-    const allProductIds = productsData.data.products.map((p) => p.id);
-    setSelectedProducts(
-      selectedProducts.length === allProductIds.length ? [] : allProductIds
-    );
-  };
-
-  const handleDeleteProduct = (productId: string) => {
-    setProductToDelete(productId);
-    setDeleteDialogOpen(true);
-  };
-
-  const confirmDelete = () => {
-    if (productToDelete) {
-      deleteProductMutation.mutate(productToDelete);
+    if (selectedProducts.length === products.length) {
+      setSelectedProducts([]);
+    } else {
+      setSelectedProducts(products.map((product) => product.id));
     }
   };
 
-  const handleBulkDelete = () => {
-    if (selectedProducts.length > 0) {
-      bulkDeleteMutation.mutate(selectedProducts);
+  const handleDeleteProduct = async (productId: string) => {
+    if (window.confirm("Are you sure you want to delete this product?")) {
+      await deleteProductMutation.mutateAsync(productId);
+      setSelectedProducts((prev) => prev.filter((id) => id !== productId));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedProducts.length === 0) return;
+
+    if (
+      window.confirm(
+        `Are you sure you want to delete ${selectedProducts.length} selected products?`
+      )
+    ) {
+      await bulkDeleteMutation.mutateAsync(selectedProducts);
+      setSelectedProducts([]);
+    }
+  };
+
+  const handleFilterChange = (key: keyof Filters, value: any) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    setCurrentPage(1);
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      category: "",
+      status: "",
+      minPrice: "",
+      maxPrice: "",
+      inStock: false,
+    });
+    setCurrentPage(1);
+  };
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case "active":
+        return "default";
+      case "draft":
+        return "secondary";
+      case "inactive":
+        return "outline";
+      case "discontinued":
+        return "destructive";
+      default:
+        return "secondary";
     }
   };
 
@@ -160,14 +214,13 @@ export const ProductList: React.FC<ProductListProps> = ({
     }).format(price);
   };
 
-  const products = productsData?.data?.products || [];
-  const pagination = productsData?.data?.pagination;
-
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center p-8">
-        <p className="text-red-500 mb-4">Failed to load products</p>
-        <Button onClick={() => refetch()}>Try Again</Button>
+      <div className="flex flex-col items-center justify-center py-12">
+        <p className="text-red-600 mb-4">Failed to load products</p>
+        <Button onClick={() => refetch()} variant="outline">
+          Try Again
+        </Button>
       </div>
     );
   }
@@ -175,10 +228,12 @@ export const ProductList: React.FC<ProductListProps> = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Products</h1>
-          <p className="text-gray-600">Manage your product catalog</p>
+          <p className="text-gray-600">
+            Manage your product catalog ({totalProducts} products)
+          </p>
         </div>
         <Button onClick={onCreateProduct} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
@@ -186,9 +241,10 @@ export const ProductList: React.FC<ProductListProps> = ({
         </Button>
       </div>
 
-      {/* Filters and Search */}
+      {/* Search and Filters */}
       <Card className="p-4">
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Search */}
           <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -200,57 +256,160 @@ export const ProductList: React.FC<ProductListProps> = ({
               />
             </div>
           </div>
+
+          {/* Sort */}
           <div className="flex gap-2">
-            <select
-              value={filters.category || ""}
-              onChange={(e) =>
-                handleFilterChange({ category: e.target.value || undefined })
-              }
-              className="px-3 py-2 border rounded-md"
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="createdAt">Date Created</SelectItem>
+                <SelectItem value="name">Name</SelectItem>
+                <SelectItem value="basePrice">Price</SelectItem>
+                <SelectItem value="stock">Stock</SelectItem>
+                <SelectItem value="status">Status</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={sortOrder}
+              onValueChange={(value: "asc" | "desc") => setSortOrder(value)}
             >
-              <option value="">All Categories</option>
-              <option value="electronics">Electronics</option>
-              <option value="clothing">Clothing</option>
-              <option value="books">Books</option>
-              <option value="home">Home & Garden</option>
-            </select>
-            <select
-              value={`${filters.sortBy}-${filters.sortOrder}`}
-              onChange={(e) => {
-                const [sortBy, sortOrder] = e.target.value.split("-");
-                handleFilterChange({
-                  sortBy: sortBy as any,
-                  sortOrder: sortOrder as any,
-                });
-              }}
-              className="px-3 py-2 border rounded-md"
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="desc">Descending</SelectItem>
+                <SelectItem value="asc">Ascending</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Button
+              variant="outline"
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2"
             >
-              <option value="createdAt-desc">Newest First</option>
-              <option value="createdAt-asc">Oldest First</option>
-              <option value="name-asc">Name A-Z</option>
-              <option value="name-desc">Name Z-A</option>
-              <option value="price-asc">Price Low-High</option>
-              <option value="price-desc">Price High-Low</option>
-            </select>
+              <Filter className="h-4 w-4" />
+              Filters
+            </Button>
           </div>
         </div>
+
+        {/* Advanced Filters */}
+        {showFilters && (
+          <div className="mt-4 pt-4 border-t">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Category
+                </label>
+                <Select
+                  value={filters.category}
+                  onValueChange={(value) =>
+                    handleFilterChange("category", value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="All categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All categories</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category._id} value={category._id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Status</label>
+                <Select
+                  value={filters.status}
+                  onValueChange={(value) => handleFilterChange("status", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="All statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All statuses</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="discontinued">Discontinued</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Min Price
+                </label>
+                <Input
+                  type="number"
+                  placeholder="0.00"
+                  value={filters.minPrice}
+                  onChange={(e) =>
+                    handleFilterChange("minPrice", e.target.value)
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Max Price
+                </label>
+                <Input
+                  type="number"
+                  placeholder="999.99"
+                  value={filters.maxPrice}
+                  onChange={(e) =>
+                    handleFilterChange("maxPrice", e.target.value)
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between mt-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="inStock"
+                  checked={filters.inStock}
+                  onCheckedChange={(checked) =>
+                    handleFilterChange("inStock", checked)
+                  }
+                />
+                <label htmlFor="inStock" className="text-sm font-medium">
+                  In stock only
+                </label>
+              </div>
+
+              <Button variant="outline" onClick={clearFilters}>
+                Clear Filters
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
 
       {/* Bulk Actions */}
       {selectedProducts.length > 0 && (
         <Card className="p-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600">
               {selectedProducts.length} product(s) selected
-            </span>
+            </p>
             <div className="flex gap-2">
               <Button
                 variant="destructive"
                 size="sm"
                 onClick={handleBulkDelete}
                 disabled={bulkDeleteMutation.isPending}
+                className="flex items-center gap-2"
               >
-                <Trash2 className="h-4 w-4 mr-2" />
+                <Trash2 className="h-4 w-4" />
                 Delete Selected
               </Button>
             </div>
@@ -261,96 +420,156 @@ export const ProductList: React.FC<ProductListProps> = ({
       {/* Products Grid */}
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Card key={i} className="p-4 animate-pulse">
-              <div className="bg-gray-200 h-48 rounded mb-4"></div>
-              <div className="bg-gray-200 h-4 rounded mb-2"></div>
-              <div className="bg-gray-200 h-4 rounded w-2/3"></div>
+          {Array.from({ length: 8 }).map((_, index) => (
+            <Card key={index} className="p-4 animate-pulse">
+              <div className="bg-gray-200 h-48 rounded-lg mb-4"></div>
+              <div className="space-y-2">
+                <div className="bg-gray-200 h-4 rounded"></div>
+                <div className="bg-gray-200 h-4 rounded w-3/4"></div>
+                <div className="bg-gray-200 h-4 rounded w-1/2"></div>
+              </div>
             </Card>
           ))}
         </div>
       ) : products.length === 0 ? (
-        <Card className="p-8 text-center">
-          <p className="text-gray-500 mb-4">No products found</p>
+        <Card className="p-12 text-center">
+          <p className="text-gray-600 mb-4">
+            {debouncedSearchTerm || Object.values(filters).some(Boolean)
+              ? "No products found matching your criteria"
+              : "No products yet"}
+          </p>
           <Button onClick={onCreateProduct}>Create Your First Product</Button>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {products.map((product) => (
-            <Card key={product.id} className="overflow-hidden">
+            <Card
+              key={product.id}
+              className="overflow-hidden hover:shadow-lg transition-shadow"
+            >
               <div className="relative">
-                <input
-                  type="checkbox"
-                  checked={selectedProducts.includes(product.id)}
-                  onChange={() => handleSelectProduct(product.id)}
-                  className="absolute top-2 left-2 z-10"
-                />
-                <img
-                  src={product.images[0] || "/placeholder-product.jpg"}
-                  alt={product.name}
-                  className="w-full h-48 object-cover"
-                />
-                <div className="absolute top-2 right-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="bg-white/80">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem
-                        onClick={() => onViewProduct?.(product)}
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        View
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => onEditProduct?.(product)}
-                      >
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleDeleteProduct(product.id)}
-                        className="text-red-600"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                {/* Selection Checkbox */}
+                <div className="absolute top-2 left-2 z-10">
+                  <Checkbox
+                    checked={selectedProducts.includes(product.id)}
+                    onCheckedChange={() => handleSelectProduct(product.id)}
+                    className="bg-white"
+                  />
                 </div>
-              </div>
-              <div className="p-4">
-                <h3 className="font-semibold truncate">{product.name}</h3>
-                <p className="text-sm text-gray-600 mb-2">{product.category}</p>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="font-bold">
-                      {formatPrice(product.price)}
-                    </span>
-                    {product.originalPrice &&
-                      product.originalPrice > product.price && (
-                        <span className="text-sm text-gray-500 line-through ml-2">
-                          {formatPrice(product.originalPrice)}
-                        </span>
-                      )}
+
+                {/* Product Image */}
+                <div className="h-48 bg-gray-100 relative overflow-hidden">
+                  {product.images && product.images.length > 0 ? (
+                    <img
+                      src={product.images[0]}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                      No Image
+                    </div>
+                  )}
+
+                  {/* Actions Overlay */}
+                  <div className="absolute top-2 right-2">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => onViewProduct?.(product)}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          View
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => onEditProduct?.(product)}
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleDeleteProduct(product.id)}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                  <span
-                    className={`text-sm px-2 py-1 rounded ${
-                      product.isActive
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {product.isActive ? "Active" : "Inactive"}
-                  </span>
                 </div>
-                <div className="flex items-center justify-between mt-2 text-sm text-gray-600">
-                  <span>Stock: {product.stock}</span>
-                  <span>
-                    ★ {product.rating.toFixed(1)} ({product.reviewCount})
-                  </span>
+
+                {/* Product Info */}
+                <div className="p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-semibold text-sm line-clamp-2 flex-1">
+                      {product.name}
+                    </h3>
+                    <Badge
+                      variant={getStatusBadgeVariant(product.status)}
+                      className="ml-2 text-xs"
+                    >
+                      {product.status}
+                    </Badge>
+                  </div>
+
+                  <div className="space-y-2">
+                    {/* Price */}
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-lg">
+                        {formatPrice(product.basePrice)}
+                      </span>
+                      {product.discountPrice &&
+                        product.discountPrice < product.basePrice && (
+                          <span className="text-sm text-gray-500 line-through">
+                            {formatPrice(product.discountPrice)}
+                          </span>
+                        )}
+                    </div>
+
+                    {/* Stock */}
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Stock:</span>
+                      <span
+                        className={
+                          product.stock > 0 ? "text-green-600" : "text-red-600"
+                        }
+                      >
+                        {product.stock} units
+                      </span>
+                    </div>
+
+                    {/* SKU */}
+                    {product.sku && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">SKU:</span>
+                        <span className="font-mono text-xs">{product.sku}</span>
+                      </div>
+                    )}
+
+                    {/* Rating */}
+                    {product.rating && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Rating:</span>
+                        <span className="flex items-center gap-1">
+                          <span className="text-yellow-500">★</span>
+                          <span>{product.rating.average.toFixed(1)}</span>
+                          <span className="text-gray-500">
+                            ({product.rating.count})
+                          </span>
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </Card>
@@ -359,70 +578,68 @@ export const ProductList: React.FC<ProductListProps> = ({
       )}
 
       {/* Pagination */}
-      {pagination && pagination.pages > 1 && (
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-600">
-              Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
-              {Math.min(pagination.page * pagination.limit, pagination.total)}{" "}
-              of {pagination.total} products
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(pagination.page - 1)}
-                disabled={pagination.page === 1}
-              >
-                Previous
-              </Button>
-              {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
-                const page = i + 1;
-                return (
-                  <Button
-                    key={page}
-                    variant={pagination.page === page ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handlePageChange(page)}
-                  >
-                    {page}
-                  </Button>
-                );
-              })}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(pagination.page + 1)}
-                disabled={pagination.page === pagination.pages}
-              >
-                Next
-              </Button>
-            </div>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </Button>
+
+          <div className="flex items-center gap-1">
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNumber;
+              if (totalPages <= 5) {
+                pageNumber = i + 1;
+              } else if (currentPage <= 3) {
+                pageNumber = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNumber = totalPages - 4 + i;
+              } else {
+                pageNumber = currentPage - 2 + i;
+              }
+
+              return (
+                <Button
+                  key={pageNumber}
+                  variant={currentPage === pageNumber ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCurrentPage(pageNumber)}
+                >
+                  {pageNumber}
+                </Button>
+              );
+            })}
           </div>
-        </Card>
+
+          <Button
+            variant="outline"
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+            }
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </Button>
+        </div>
       )}
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Product</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this product? This action cannot
-              be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Select All Checkbox */}
+      {products.length > 0 && (
+        <div className="fixed bottom-4 right-4">
+          <Card className="p-3">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={selectedProducts.length === products.length}
+                onCheckedChange={handleSelectAll}
+              />
+              <label className="text-sm font-medium">Select All</label>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

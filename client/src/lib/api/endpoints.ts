@@ -99,6 +99,10 @@ export const API_ENDPOINTS = {
       url: `/products/${id}`,
       method: "GET",
     }),
+    getProductBySlug: (slug: string): ApiEndpoint => ({
+      url: `/products/slug/${slug}`,
+      method: "GET",
+    }),
     createProduct: (): ApiEndpoint => ({
       url: "/products",
       method: "POST",
@@ -110,6 +114,18 @@ export const API_ENDPOINTS = {
     deleteProduct: (id: string): ApiEndpoint => ({
       url: `/products/${id}`,
       method: "DELETE",
+    }),
+    bulkDeleteProducts: (): ApiEndpoint => ({
+      url: "/products/bulk-delete",
+      method: "DELETE",
+    }),
+    bulkUpdateProducts: (): ApiEndpoint => ({
+      url: "/products/bulk-update",
+      method: "PUT",
+    }),
+    getMyProducts: (): ApiEndpoint => ({
+      url: "/products/my/products",
+      method: "GET",
     }),
     getProductReviews: (id: string): ApiEndpoint => ({
       url: `/products/${id}/reviews`,
@@ -126,6 +142,22 @@ export const API_ENDPOINTS = {
     getCategories: (): ApiEndpoint => ({
       url: "/products/categories",
       method: "GET",
+    }),
+    getBrands: (): ApiEndpoint => ({
+      url: "/products/brands",
+      method: "GET",
+    }),
+    getProductStats: (): ApiEndpoint => ({
+      url: "/products/stats",
+      method: "GET",
+    }),
+    updateProductStatus: (id: string): ApiEndpoint => ({
+      url: `/products/${id}/status`,
+      method: "PATCH",
+    }),
+    uploadProductImages: (): ApiEndpoint => ({
+      url: "/products/upload-images",
+      method: "POST",
     }),
   },
 

@@ -2,9 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { X, Upload, Plus, Trash2, Save, ArrowLeft } from "lucide-react";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,10 +18,14 @@ import {
 
 import { Product } from "@/types/global";
 import { PRODUCT_CONFIG, VALIDATION } from "@/constants/constants";
+import { ProductFormData } from "@/features/seller/services/productService";
 import {
-  productService,
-  ProductFormData,
-} from "@/features/seller/services/productService";
+  useCreateProduct,
+  useUpdateProduct,
+  useUploadImages,
+  useCategories,
+  useBrands,
+} from "@/features/seller/hooks/useProducts";
 
 interface ProductFormProps {
   product?: Product;
@@ -31,10 +33,10 @@ interface ProductFormProps {
   onCancel?: () => void;
 }
 
-interface FormData extends Omit<ProductFormData, "images"> {
+interface FormData extends Omit<ProductFormData, "images" | "specifications"> {
   imageFiles?: FileList;
   tags: string;
-  specifications: { key: string; value: string }[];
+  specifications: { name: string; value: string; category?: string }[];
 }
 
 export const ProductForm: React.FC<ProductFormProps> = ({
@@ -42,7 +44,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   onSuccess,
   onCancel,
 }) => {
-  const queryClient = useQueryClient();
   const [imagePreview, setImagePreview] = useState<string[]>(
     product?.images || []
   );
@@ -61,63 +62,44 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     defaultValues: {
       name: product?.name || "",
       description: product?.description || "",
-      price: product?.price || 0,
-      originalPrice: product?.originalPrice || undefined,
+      shortDescription: product?.shortDescription || "",
+      basePrice: product?.basePrice || 0,
+      discountPrice: product?.discountPrice || undefined,
       category: product?.category || "",
       subcategory: product?.subcategory || "",
+      brand: product?.brand || "",
       stock: product?.stock || 0,
+      sku: product?.sku || "",
       tags: product?.tags?.join(", ") || "",
       specifications: product?.specifications
-        ? Object.entries(product.specifications).map(([key, value]) => ({
-            key,
-            value,
+        ? product.specifications.map((spec) => ({
+            name: spec.name,
+            value: spec.value,
+            category: spec.category || "other",
           }))
-        : [{ key: "", value: "" }],
-      isActive: product?.isActive ?? true,
+        : [{ name: "", value: "", category: "other" }],
+      status: product?.status || "draft",
+      weight: product?.weight || undefined,
+      dimensions: product?.dimensions || undefined,
+      shippingClass: product?.shippingClass || "standard",
+      freeShipping: product?.freeShipping || false,
+      shippingCost: product?.shippingCost || 0,
+      lowStockThreshold: product?.lowStockThreshold || 10,
+      isDigital: product?.isDigital || false,
+      metaTitle: product?.metaTitle || "",
+      metaDescription: product?.metaDescription || "",
+      metaKeywords: product?.metaKeywords?.join(", ") || "",
     },
   });
 
-  // Fetch categories
-  const { data: categoriesData } = useQuery({
-    queryKey: ["categories"],
-    queryFn: () => productService.getCategories(),
-  });
+  // Fetch categories and brands
+  const { data: categoriesData } = useCategories();
+  const { data: brandsData } = useBrands();
 
-  // Create/Update product mutation
-  const saveProductMutation = useMutation({
-    mutationFn: async (data: ProductFormData) => {
-      if (isEditing && product) {
-        return productService.updateProduct(product.id, data);
-      } else {
-        return productService.createProduct(data);
-      }
-    },
-    onSuccess: (response) => {
-      toast.success(
-        isEditing
-          ? "Product updated successfully"
-          : "Product created successfully"
-      );
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      onSuccess?.(response.data!);
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to save product");
-    },
-  });
-
-  // Upload images mutation
-  const uploadImagesMutation = useMutation({
-    mutationFn: (files: File[]) => productService.uploadImages(files),
-    onSuccess: (response) => {
-      const newImages = response.data || [];
-      setImagePreview((prev) => [...prev, ...newImages]);
-      toast.success("Images uploaded successfully");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to upload images");
-    },
-  });
+  // Mutations
+  const createProductMutation = useCreateProduct();
+  const updateProductMutation = useUpdateProduct();
+  const uploadImagesMutation = useUploadImages();
 
   const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -128,11 +110,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     // Validate file types and sizes
     const validFiles = files.filter((file) => {
       if (!PRODUCT_CONFIG.ALLOWED_IMAGE_TYPES.includes(file.type)) {
-        toast.error(`Invalid file type: ${file.name}`);
         return false;
       }
       if (file.size > PRODUCT_CONFIG.MAX_IMAGE_SIZE) {
-        toast.error(`File too large: ${file.name}`);
         return false;
       }
       return true;
@@ -142,13 +122,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
     // Check total image limit
     if (imagePreview.length + validFiles.length > PRODUCT_CONFIG.MAX_IMAGES) {
-      toast.error(`Maximum ${PRODUCT_CONFIG.MAX_IMAGES} images allowed`);
       return;
     }
 
     setIsUploading(true);
     try {
-      await uploadImagesMutation.mutateAsync(validFiles);
+      const response = await uploadImagesMutation.mutateAsync(validFiles);
+      const newImages = response.data || [];
+      setImagePreview((prev) => [...prev, ...newImages]);
     } finally {
       setIsUploading(false);
       // Reset file input
@@ -162,7 +143,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
   const addSpecification = () => {
     const currentSpecs = watch("specifications");
-    setValue("specifications", [...currentSpecs, { key: "", value: "" }]);
+    setValue("specifications", [
+      ...currentSpecs,
+      { name: "", value: "", category: "other" },
+    ]);
   };
 
   const removeSpecification = (index: number) => {
@@ -175,44 +159,77 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
   const onSubmit = async (data: FormData) => {
     if (imagePreview.length === 0) {
-      toast.error("At least one product image is required");
       return;
     }
 
     // Process form data
     const specifications = data.specifications
-      .filter((spec) => spec.key.trim() && spec.value.trim())
-      .reduce((acc, spec) => {
-        acc[spec.key.trim()] = spec.value.trim();
-        return acc;
-      }, {} as Record<string, string>);
+      .filter((spec) => spec.name.trim() && spec.value.trim())
+      .map((spec) => ({
+        name: spec.name.trim(),
+        value: spec.value.trim(),
+        category: spec.category || "other",
+      }));
 
     const tags = data.tags
       .split(",")
       .map((tag) => tag.trim())
       .filter((tag) => tag.length > 0);
 
+    const metaKeywords = data.metaKeywords
+      ? data.metaKeywords
+          .split(",")
+          .map((keyword) => keyword.trim())
+          .filter((keyword) => keyword.length > 0)
+      : undefined;
+
     const productData: ProductFormData = {
       name: data.name.trim(),
       description: data.description.trim(),
-      price: Number(data.price),
-      originalPrice: data.originalPrice
-        ? Number(data.originalPrice)
+      shortDescription: data.shortDescription?.trim() || undefined,
+      basePrice: Number(data.basePrice),
+      discountPrice: data.discountPrice
+        ? Number(data.discountPrice)
         : undefined,
       category: data.category,
       subcategory: data.subcategory || undefined,
+      brand: data.brand || undefined,
       stock: Number(data.stock),
+      sku: data.sku?.trim() || undefined,
       images: imagePreview,
       tags: tags.length > 0 ? tags : undefined,
-      specifications:
-        Object.keys(specifications).length > 0 ? specifications : undefined,
-      isActive: data.isActive,
+      specifications: specifications.length > 0 ? specifications : undefined,
+      status: data.status,
+      weight: data.weight ? Number(data.weight) : undefined,
+      dimensions: data.dimensions,
+      shippingClass: data.shippingClass,
+      freeShipping: data.freeShipping,
+      shippingCost: Number(data.shippingCost),
+      lowStockThreshold: Number(data.lowStockThreshold),
+      isDigital: data.isDigital,
+      metaTitle: data.metaTitle?.trim() || undefined,
+      metaDescription: data.metaDescription?.trim() || undefined,
+      metaKeywords: metaKeywords,
     };
 
-    await saveProductMutation.mutateAsync(productData);
+    try {
+      let response;
+      if (isEditing && product) {
+        response = await updateProductMutation.mutateAsync({
+          id: product.id,
+          productData,
+        });
+      } else {
+        response = await createProductMutation.mutateAsync(productData);
+      }
+      onSuccess?.(response.data!);
+    } catch (error) {
+      // Error handling is done in the mutation hooks
+    }
   };
 
   const categories = categoriesData?.data || [];
+  const brands = brandsData?.data || [];
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -235,7 +252,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         </div>
         <Button
           onClick={handleSubmit(onSubmit)}
-          disabled={isSubmitting || saveProductMutation.isPending}
+          disabled={
+            isSubmitting ||
+            createProductMutation.isPending ||
+            updateProductMutation.isPending
+          }
           className="flex items-center gap-2"
         >
           <Save className="h-4 w-4" />
@@ -291,7 +312,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     </SelectTrigger>
                     <SelectContent>
                       {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.name}>
+                        <SelectItem key={category._id} value={category._id}>
                           {category.name}
                         </SelectItem>
                       ))}
@@ -307,24 +328,38 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
-                Subcategory
-              </label>
-              <Input
-                {...register("subcategory")}
-                placeholder="Enter subcategory (optional)"
+              <label className="block text-sm font-medium mb-2">Brand</label>
+              <Controller
+                name="brand"
+                control={control}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select brand (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {brands.map((brand) => (
+                        <SelectItem key={brand._id} value={brand._id}>
+                          {brand.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Price *</label>
+              <label className="block text-sm font-medium mb-2">
+                Base Price *
+              </label>
               <Input
                 type="number"
                 step="0.01"
                 min={PRODUCT_CONFIG.MIN_PRICE}
                 max={PRODUCT_CONFIG.MAX_PRICE}
-                {...register("price", {
-                  required: "Price is required",
+                {...register("basePrice", {
+                  required: "Base price is required",
                   min: {
                     value: PRODUCT_CONFIG.MIN_PRICE,
                     message: `Price must be at least $${PRODUCT_CONFIG.MIN_PRICE}`,
@@ -335,25 +370,25 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   },
                 })}
                 placeholder="0.00"
-                className={errors.price ? "border-red-500" : ""}
+                className={errors.basePrice ? "border-red-500" : ""}
               />
-              {errors.price && (
+              {errors.basePrice && (
                 <p className="text-red-500 text-sm mt-1">
-                  {errors.price.message}
+                  {errors.basePrice.message}
                 </p>
               )}
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-2">
-                Original Price
+                Discount Price
               </label>
               <Input
                 type="number"
                 step="0.01"
                 min={PRODUCT_CONFIG.MIN_PRICE}
                 max={PRODUCT_CONFIG.MAX_PRICE}
-                {...register("originalPrice")}
+                {...register("discountPrice")}
                 placeholder="0.00 (optional)"
               />
             </div>
@@ -387,18 +422,33 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               )}
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div>
+              <label className="block text-sm font-medium mb-2">SKU</label>
+              <Input
+                {...register("sku")}
+                placeholder="Product SKU (optional)"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Status</label>
               <Controller
-                name="isActive"
+                name="status"
                 control={control}
                 render={({ field }) => (
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="discontinued">Discontinued</SelectItem>
+                    </SelectContent>
+                  </Select>
                 )}
               />
-              <label className="text-sm font-medium">Active Product</label>
             </div>
           </div>
         </Card>
@@ -406,29 +456,43 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         {/* Description */}
         <Card className="p-6">
           <h2 className="text-lg font-semibold mb-4">Description</h2>
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Product Description *
-            </label>
-            <textarea
-              {...register("description", {
-                required: "Description is required",
-                maxLength: {
-                  value: VALIDATION.DESCRIPTION_MAX_LENGTH,
-                  message: `Description must be less than ${VALIDATION.DESCRIPTION_MAX_LENGTH} characters`,
-                },
-              })}
-              rows={6}
-              placeholder="Describe your product in detail..."
-              className={`w-full px-3 py-2 border rounded-md resize-none ${
-                errors.description ? "border-red-500" : "border-gray-300"
-              }`}
-            />
-            {errors.description && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.description.message}
-              </p>
-            )}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Product Description *
+              </label>
+              <textarea
+                {...register("description", {
+                  required: "Description is required",
+                  maxLength: {
+                    value: VALIDATION.DESCRIPTION_MAX_LENGTH,
+                    message: `Description must be less than ${VALIDATION.DESCRIPTION_MAX_LENGTH} characters`,
+                  },
+                })}
+                rows={6}
+                placeholder="Describe your product in detail..."
+                className={`w-full px-3 py-2 border rounded-md resize-none ${
+                  errors.description ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              {errors.description && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.description.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Short Description
+              </label>
+              <textarea
+                {...register("shortDescription")}
+                rows={3}
+                placeholder="Brief product summary (optional)"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none"
+              />
+            </div>
           </div>
         </Card>
 
@@ -536,7 +600,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             {watch("specifications").map((spec, index) => (
               <div key={index} className="flex gap-3">
                 <Input
-                  {...register(`specifications.${index}.key`)}
+                  {...register(`specifications.${index}.name`)}
                   placeholder="Specification name"
                   className="flex-1"
                 />
@@ -545,6 +609,23 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   placeholder="Specification value"
                   className="flex-1"
                 />
+                <Select
+                  value={watch(`specifications.${index}.category`) || "other"}
+                  onValueChange={(value) =>
+                    setValue(`specifications.${index}.category`, value)
+                  }
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="technical">Technical</SelectItem>
+                    <SelectItem value="physical">Physical</SelectItem>
+                    <SelectItem value="performance">Performance</SelectItem>
+                    <SelectItem value="compatibility">Compatibility</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Button
                   type="button"
                   variant="outline"
@@ -559,6 +640,44 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           </div>
         </Card>
 
+        {/* SEO */}
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold mb-4">SEO Settings</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Meta Title
+              </label>
+              <Input
+                {...register("metaTitle")}
+                placeholder="SEO title (optional)"
+                maxLength={60}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Meta Description
+              </label>
+              <textarea
+                {...register("metaDescription")}
+                rows={3}
+                placeholder="SEO description (optional)"
+                maxLength={160}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Meta Keywords
+              </label>
+              <Input
+                {...register("metaKeywords")}
+                placeholder="SEO keywords separated by commas (optional)"
+              />
+            </div>
+          </div>
+        </Card>
+
         {/* Form Actions */}
         <div className="flex justify-end gap-4">
           <Button type="button" variant="outline" onClick={onCancel}>
@@ -566,7 +685,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           </Button>
           <Button
             type="submit"
-            disabled={isSubmitting || saveProductMutation.isPending}
+            disabled={
+              isSubmitting ||
+              createProductMutation.isPending ||
+              updateProductMutation.isPending
+            }
             className="flex items-center gap-2"
           >
             <Save className="h-4 w-4" />

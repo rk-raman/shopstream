@@ -41,9 +41,13 @@ const register = async (userData) => {
       emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
     });
 
+    console.log("🚀 [AUTH] Register created user", {
+      user: user,
+    });
+
     // Generate tokens
     const { accessToken, refreshToken } = generateTokenPair({
-      userId: user._id,
+      userId: user.FRONTEND_URLid,
       email: user.email,
       role: user.role,
     });
@@ -54,7 +58,7 @@ const register = async (userData) => {
 
     // Publish registration event
     await userEventPublisher.publishUserRegistered({
-      userId: user._id,
+      userId: user.$isDefault,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
@@ -103,7 +107,13 @@ const login = async (email, password, userData = {}) => {
     user.loginCount += 1;
 
     // Generate tokens
-    const { accessToken, refreshToken } = generateTokenPair(user._id);
+    // const { accessToken, refreshToken } = generateTokenPair(user._id);
+
+    const { accessToken, refreshToken } = generateTokenPair({
+      userId: user._id,
+      email: user.email,
+      role: user.role,
+    });
 
     // Store refresh token
     user.refreshTokens.push(refreshToken);
@@ -163,10 +173,15 @@ const refreshAccessToken = async (refreshToken) => {
     }
 
     // Generate new tokens
-    const { accessToken, refreshToken: newRefreshToken } = generateTokenPair(
-      user._id
-    );
+    // const { accessToken, refreshToken: newRefreshToken } = generateTokenPair(
+    //   user._id
+    // );
 
+    const { accessToken, refreshToken: newRefreshToken } = generateTokenPair({
+      userId: user._id,
+      email: user.email,
+      role: user.role,
+    });
     // Replace old refresh token with new one
     user.refreshTokens = user.refreshTokens.filter(
       (token) => token !== refreshToken

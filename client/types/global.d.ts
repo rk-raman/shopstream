@@ -32,26 +32,123 @@ export interface User {
 }
 
 // Product types
+export interface ProductVariant {
+  _id?: string;
+  name: string;
+  value: string;
+  price?: number;
+  stock?: number;
+  sku?: string;
+  images?: string[];
+}
+
+export interface ProductSpecification {
+  name: string;
+  value: string;
+  category?: string;
+}
+
+export interface ProductDimensions {
+  length?: number;
+  width?: number;
+  height?: number;
+  unit?: string;
+}
+
+export interface ProductSEO {
+  title?: string;
+  description?: string;
+  keywords?: string[];
+}
+
+export interface ProductShipping {
+  weight?: number;
+  dimensions?: ProductDimensions;
+  shippingClass?: string;
+  freeShipping?: boolean;
+  shippingCost?: number;
+}
+
+export interface ProductRating {
+  average: number;
+  count: number;
+  breakdown: {
+    1: number;
+    2: number;
+    3: number;
+    4: number;
+    5: number;
+  };
+}
+
 export interface Product {
   id: string;
+  _id?: string;
   name: string;
+  slug?: string;
   description: string;
-  price: number;
-  originalPrice?: number;
+  shortDescription?: string;
+  basePrice: number;
+  discountPrice?: number;
   category: string;
   subcategory?: string;
+  brand?: string;
   images: string[];
+  videos?: string[];
   stock: number;
+  sku?: string;
+  tags?: string[];
+  specifications?: ProductSpecification[];
+  variants?: ProductVariant[];
   seller: {
     id: string;
     name: string;
     avatar?: string;
   };
-  rating: number;
-  reviewCount: number;
-  isActive: boolean;
+  rating?: ProductRating;
+  reviewCount?: number;
+  status: "draft" | "active" | "inactive" | "discontinued";
+  isApproved?: boolean;
+  isDigital?: boolean;
+  weight?: number;
+  dimensions?: ProductDimensions;
+  shippingClass?: string;
+  freeShipping?: boolean;
+  shippingCost?: number;
+  lowStockThreshold?: number;
+  metaTitle?: string;
+  metaDescription?: string;
+  metaKeywords?: string[];
+  views?: number;
+  sales?: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Category {
+  _id: string;
+  id: string;
+  name: string;
+  slug?: string;
+  description?: string;
+  image?: string;
+  parent?: string;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Brand {
+  _id: string;
+  id: string;
+  name: string;
+  slug?: string;
+  description?: string;
+  logo?: string;
+  website?: string;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // Cart types

@@ -1,196 +1,372 @@
 import { ApiResponse, Product } from "@/types/global";
 import { API_CONFIG } from "@/constants/constants";
+import { API_ENDPOINTS } from "@/lib/api/endpoints";
 import axiosSeller from "@/lib/api/axiosSeller";
 
 export interface ProductFormData {
   name: string;
   description: string;
-  price: number;
-  originalPrice?: number;
+  shortDescription?: string;
+  basePrice: number;
+  discountPrice?: number;
   category: string;
   subcategory?: string;
+  brand?: string;
   stock: number;
+  sku?: string;
   images: string[];
   tags?: string[];
-  specifications?: Record<string, string>;
-  isActive?: boolean;
+  specifications?: { name: string; value: string; category?: string }[];
+  metaTitle?: string;
+  metaDescription?: string;
+  metaKeywords?: string[];
+  weight?: number;
+  dimensions?: {
+    length?: number;
+    width?: number;
+    height?: number;
+    unit?: string;
+  };
+  shippingClass?: string;
+  freeShipping?: boolean;
+  shippingCost?: number;
+  lowStockThreshold?: number;
+  isDigital?: boolean;
+  status?: "draft" | "active" | "inactive" | "discontinued";
 }
 
 export interface ProductFilters {
   page?: number;
   limit?: number;
+  search?: string;
   category?: string;
   subcategory?: string;
+  brand?: string;
+  seller?: string;
   minPrice?: number;
   maxPrice?: number;
-  search?: string;
-  sortBy?: "name" | "price" | "createdAt" | "rating";
+  inStock?: boolean;
+  status?: string;
+  isApproved?: boolean;
+  sortBy?: "name" | "basePrice" | "createdAt" | "rating.average" | "salesCount";
   sortOrder?: "asc" | "desc";
-  isActive?: boolean;
+  featured?: boolean;
 }
 
 export interface ProductListResponse {
-  products: Product[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
-  };
+  docs: Product[];
+  totalDocs: number;
+  limit: number;
+  page: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+  nextPage: number | null;
+  prevPage: number | null;
 }
 
-class ProductService {
-  private baseURL = "/products";
+// Helper function to build query parameters
+const buildQueryParams = (filters: ProductFilters): string => {
+  const params = new URLSearchParams();
 
-  // Get all products with filters
-  async getProducts(
-    filters: ProductFilters = {}
-  ): Promise<ApiResponse<ProductListResponse>> {
-    try {
-      const params = new URLSearchParams();
-
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== "") {
-          params.append(key, value.toString());
-        }
-      });
-
-      const response = await axiosSeller.get(
-        `${this.baseURL}?${params.toString()}`
-      );
-      return response.data;
-    } catch (error: any) {
-      throw new Error(
-        error.response?.data?.message || "Failed to fetch products"
-      );
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      params.append(key, value.toString());
     }
+  });
+
+  return params.toString();
+};
+
+// Get all products with filters (seller's products)
+export const getMyProducts = async (
+  filters: ProductFilters = {}
+): Promise<ApiResponse<ProductListResponse>> => {
+  try {
+    const endpoint = API_ENDPOINTS.PRODUCTS.getMyProducts();
+    const queryParams = buildQueryParams(filters);
+    const url = queryParams ? `${endpoint.url}?${queryParams}` : endpoint.url;
+
+    const response = await axiosSeller.get(url);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch products"
+    );
   }
+};
 
-  // Get single product by ID
-  async getProduct(id: string): Promise<ApiResponse<Product>> {
-    try {
-      const response = await axiosSeller.get(`${this.baseURL}/${id}`);
-      return response.data;
-    } catch (error: any) {
-      throw new Error(
-        error.response?.data?.message || "Failed to fetch product"
-      );
-    }
+// Get all products with filters (public endpoint)
+export const getProducts = async (
+  filters: ProductFilters = {}
+): Promise<ApiResponse<ProductListResponse>> => {
+  try {
+    const endpoint = API_ENDPOINTS.PRODUCTS.getProducts();
+    const queryParams = buildQueryParams(filters);
+    const url = queryParams ? `${endpoint.url}?${queryParams}` : endpoint.url;
+
+    const response = await axiosSeller.get(url);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch products"
+    );
   }
+};
 
-  // Create new product
-  async createProduct(
-    productData: ProductFormData
-  ): Promise<ApiResponse<Product>> {
-    try {
-      const response = await axiosSeller.post(this.baseURL, productData);
-      return response.data;
-    } catch (error: any) {
-      throw new Error(
-        error.response?.data?.message || "Failed to create product"
-      );
-    }
+// Get single product by ID
+export const getProduct = async (id: string): Promise<ApiResponse<Product>> => {
+  try {
+    const endpoint = API_ENDPOINTS.PRODUCTS.getProduct(id);
+    const response = await axiosSeller.get(endpoint.url);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "Failed to fetch product");
   }
+};
 
-  // Update product
-  async updateProduct(
-    id: string,
-    productData: Partial<ProductFormData>
-  ): Promise<ApiResponse<Product>> {
-    try {
-      const response = await axiosSeller.put(
-        `${this.baseURL}/${id}`,
-        productData
-      );
-      return response.data;
-    } catch (error: any) {
-      throw new Error(
-        error.response?.data?.message || "Failed to update product"
-      );
-    }
+// Get product by slug
+export const getProductBySlug = async (
+  slug: string
+): Promise<ApiResponse<Product>> => {
+  try {
+    const endpoint = API_ENDPOINTS.PRODUCTS.getProductBySlug(slug);
+    const response = await axiosSeller.get(endpoint.url);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "Failed to fetch product");
   }
+};
 
-  // Delete product
-  async deleteProduct(id: string): Promise<ApiResponse<void>> {
-    try {
-      const response = await axiosSeller.delete(`${this.baseURL}/${id}`);
-      return response.data;
-    } catch (error: any) {
-      throw new Error(
-        error.response?.data?.message || "Failed to delete product"
-      );
-    }
+// Create new product
+export const createProduct = async (
+  productData: ProductFormData
+): Promise<ApiResponse<Product>> => {
+  try {
+    const endpoint = API_ENDPOINTS.PRODUCTS.createProduct();
+    const response = await axiosSeller.post(endpoint.url, productData);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to create product"
+    );
   }
+};
 
-  // Bulk operations
-  async bulkUpdateProducts(
-    productIds: string[],
-    updates: Partial<ProductFormData>
-  ): Promise<ApiResponse<Product[]>> {
-    try {
-      const response = await axiosSeller.patch(`${this.baseURL}/bulk`, {
-        productIds,
-        updates,
-      });
-      return response.data;
-    } catch (error: any) {
-      throw new Error(
-        error.response?.data?.message || "Failed to bulk update products"
-      );
-    }
+// Update product
+export const updateProduct = async (
+  id: string,
+  productData: Partial<ProductFormData>
+): Promise<ApiResponse<Product>> => {
+  try {
+    const endpoint = API_ENDPOINTS.PRODUCTS.updateProduct(id);
+    const response = await axiosSeller.put(endpoint.url, productData);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to update product"
+    );
   }
+};
 
-  async bulkDeleteProducts(productIds: string[]): Promise<ApiResponse<void>> {
-    try {
-      const response = await axiosSeller.delete(`${this.baseURL}/bulk`, {
-        data: { productIds },
-      });
-      return response.data;
-    } catch (error: any) {
-      throw new Error(
-        error.response?.data?.message || "Failed to bulk delete products"
-      );
-    }
+// Delete product
+export const deleteProduct = async (id: string): Promise<ApiResponse<void>> => {
+  try {
+    const endpoint = API_ENDPOINTS.PRODUCTS.deleteProduct(id);
+    const response = await axiosSeller.delete(endpoint.url);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to delete product"
+    );
   }
+};
 
-  // Get categories
-  async getCategories(): Promise<
-    ApiResponse<{ id: string; name: string; subcategories?: string[] }[]>
-  > {
-    try {
-      const response = await axiosSeller.get("/categories");
-      return response.data;
-    } catch (error: any) {
-      throw new Error(
-        error.response?.data?.message || "Failed to fetch categories"
-      );
-    }
+// Bulk delete products
+export const bulkDeleteProducts = async (
+  productIds: string[]
+): Promise<ApiResponse<{ deletedCount: number }>> => {
+  try {
+    const endpoint = API_ENDPOINTS.PRODUCTS.bulkDeleteProducts();
+    const response = await axiosSeller.delete(endpoint.url, {
+      data: { productIds },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to delete products"
+    );
   }
+};
 
-  // Upload product images
-  async uploadImages(files: File[]): Promise<ApiResponse<string[]>> {
-    try {
-      const formData = new FormData();
-      files.forEach((file, index) => {
-        formData.append(`images`, file);
-      });
-
-      const response = await axiosSeller.post(
-        "/uploads/product-images",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      return response.data;
-    } catch (error: any) {
-      throw new Error(
-        error.response?.data?.message || "Failed to upload images"
-      );
-    }
+// Bulk update products
+export const bulkUpdateProducts = async (
+  updates: { productId: string; data: Partial<ProductFormData> }[]
+): Promise<ApiResponse<{ modifiedCount: number }>> => {
+  try {
+    const endpoint = API_ENDPOINTS.PRODUCTS.bulkUpdateProducts();
+    const response = await axiosSeller.put(endpoint.url, { updates });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to update products"
+    );
   }
-}
+};
 
-export const productService = new ProductService();
+// Update product status
+export const updateProductStatus = async (
+  id: string,
+  status: "draft" | "active" | "inactive" | "discontinued"
+): Promise<ApiResponse<Product>> => {
+  try {
+    const endpoint = API_ENDPOINTS.PRODUCTS.updateProductStatus(id);
+    const response = await axiosSeller.patch(endpoint.url, { status });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to update product status"
+    );
+  }
+};
+
+// Upload product images
+export const uploadProductImages = async (
+  files: File[]
+): Promise<ApiResponse<{ urls: string[] }>> => {
+  try {
+    const endpoint = API_ENDPOINTS.PRODUCTS.uploadProductImages();
+    const formData = new FormData();
+
+    files.forEach((file, index) => {
+      formData.append(`images`, file);
+    });
+
+    const response = await axiosSeller.post(endpoint.url, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "Failed to upload images");
+  }
+};
+
+// Get categories
+export const getCategories = async (): Promise<ApiResponse<any[]>> => {
+  try {
+    const endpoint = API_ENDPOINTS.PRODUCTS.getCategories();
+    const response = await axiosSeller.get(endpoint.url);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch categories"
+    );
+  }
+};
+
+// Get brands
+export const getBrands = async (): Promise<ApiResponse<any[]>> => {
+  try {
+    const endpoint = API_ENDPOINTS.PRODUCTS.getBrands();
+    const response = await axiosSeller.get(endpoint.url);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "Failed to fetch brands");
+  }
+};
+
+// Get product statistics
+export const getProductStats = async (): Promise<ApiResponse<any>> => {
+  try {
+    const endpoint = API_ENDPOINTS.PRODUCTS.getProductStats();
+    const response = await axiosSeller.get(endpoint.url);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch product statistics"
+    );
+  }
+};
+
+// Search products
+export const searchProducts = async (
+  query: string,
+  filters: ProductFilters = {}
+): Promise<ApiResponse<ProductListResponse>> => {
+  try {
+    const endpoint = API_ENDPOINTS.PRODUCTS.searchProducts();
+    const searchFilters = { ...filters, search: query };
+    const queryParams = buildQueryParams(searchFilters);
+    const url = queryParams ? `${endpoint.url}?${queryParams}` : endpoint.url;
+
+    const response = await axiosSeller.get(url);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to search products"
+    );
+  }
+};
+
+// Get product reviews
+export const getProductReviews = async (
+  productId: string,
+  page: number = 1,
+  limit: number = 10
+): Promise<ApiResponse<any>> => {
+  try {
+    const endpoint = API_ENDPOINTS.PRODUCTS.getProductReviews(productId);
+    const queryParams = buildQueryParams({ page, limit });
+    const url = queryParams ? `${endpoint.url}?${queryParams}` : endpoint.url;
+
+    const response = await axiosSeller.get(url);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch product reviews"
+    );
+  }
+};
+
+// Add product review
+export const addProductReview = async (
+  productId: string,
+  reviewData: {
+    rating: number;
+    comment: string;
+    title?: string;
+  }
+): Promise<ApiResponse<any>> => {
+  try {
+    const endpoint = API_ENDPOINTS.PRODUCTS.addProductReview(productId);
+    const response = await axiosSeller.post(endpoint.url, reviewData);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to add product review"
+    );
+  }
+};
+
+// Export all functions as default object for backward compatibility
+export default {
+  getMyProducts,
+  getProducts,
+  getProduct,
+  getProductBySlug,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  bulkDeleteProducts,
+  bulkUpdateProducts,
+  updateProductStatus,
+  uploadProductImages,
+  getCategories,
+  getBrands,
+  getProductStats,
+  searchProducts,
+  getProductReviews,
+  addProductReview,
+};

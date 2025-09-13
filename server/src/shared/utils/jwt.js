@@ -30,6 +30,10 @@ const generateAccessToken = (
       jti: crypto.randomBytes(16).toString("hex"),
     };
 
+    console.log("🚀 [JWT] Generate access token", {
+      tokenPayload,
+    });
+
     return jwt.sign(tokenPayload, secret, options);
   } catch (error) {
     throw new ApiError(500, `Error generating access token: ${error.message}`);
