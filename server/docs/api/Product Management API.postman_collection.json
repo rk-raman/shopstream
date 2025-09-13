@@ -1,0 +1,1146 @@
+{
+	"info": {
+		"_postman_id": "77e67c89-f1e7-44e2-a007-f6d540e5efc7",
+		"name": "Product Management API",
+		"description": "Complete API collection for Product Management System including products, variants, categories, and admin operations",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "5168742"
+	},
+	"item": [
+		{
+			"name": "🔓 Public Routes",
+			"item": [
+				{
+					"name": "Get All Products",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/products?page=1&limit=12&search=laptop&category={{categoryId}}&brand={{brandId}}&minPrice=100&maxPrice=1000&inStock=true&status=active&isApproved=true&sortBy=createdAt&sortOrder=desc&featured=true",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"products"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number for pagination"
+								},
+								{
+									"key": "limit",
+									"value": "12",
+									"description": "Number of products per page"
+								},
+								{
+									"key": "search",
+									"value": "laptop",
+									"description": "Search term for products"
+								},
+								{
+									"key": "category",
+									"value": "{{categoryId}}",
+									"description": "Filter by category ID"
+								},
+								{
+									"key": "brand",
+									"value": "{{brandId}}",
+									"description": "Filter by brand ID"
+								},
+								{
+									"key": "minPrice",
+									"value": "100",
+									"description": "Minimum price filter"
+								},
+								{
+									"key": "maxPrice",
+									"value": "1000",
+									"description": "Maximum price filter"
+								},
+								{
+									"key": "inStock",
+									"value": "true",
+									"description": "Filter products in stock"
+								},
+								{
+									"key": "status",
+									"value": "active",
+									"description": "Product status filter"
+								},
+								{
+									"key": "isApproved",
+									"value": "true",
+									"description": "Filter approved products"
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt",
+									"description": "Sort by field"
+								},
+								{
+									"key": "sortOrder",
+									"value": "desc",
+									"description": "Sort order (asc/desc)"
+								},
+								{
+									"key": "featured",
+									"value": "true",
+									"description": "Filter featured products"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Products",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/products/search?q=gaming laptop&page=1&limit=12&category={{categoryId}}&brand={{brandId}}&minPrice=500&maxPrice=2000",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"search"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "gaming laptop",
+									"description": "Search query"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "12"
+								},
+								{
+									"key": "category",
+									"value": "{{categoryId}}"
+								},
+								{
+									"key": "brand",
+									"value": "{{brandId}}"
+								},
+								{
+									"key": "minPrice",
+									"value": "500"
+								},
+								{
+									"key": "maxPrice",
+									"value": "2000"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Featured Products",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/products/featured?limit=8",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"featured"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "8",
+									"description": "Number of featured products to return"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Product by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/products/{{productId}}?includeInactive=false",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"{{productId}}"
+							],
+							"query": [
+								{
+									"key": "includeInactive",
+									"value": "false",
+									"description": "Include inactive products"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Product by Slug",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/products/slug/gaming-laptop?includeInactive=false",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"slug",
+								"gaming-laptop"
+							],
+							"query": [
+								{
+									"key": "includeInactive",
+									"value": "false"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Products by Category",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/products/category/{{categoryId}}?page=1&limit=12&sortBy=createdAt&sortOrder=desc",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"category",
+								"{{categoryId}}"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "12"
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt"
+								},
+								{
+									"key": "sortOrder",
+									"value": "desc"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Products by Seller",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/products/seller/{{sellerId}}?page=1&limit=12&status=active&sortBy=createdAt&sortOrder=desc",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"seller",
+								"{{sellerId}}"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "12"
+								},
+								{
+									"key": "status",
+									"value": "active"
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt"
+								},
+								{
+									"key": "sortOrder",
+									"value": "desc"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Related Products",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/products/{{productId}}/related?limit=6",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"{{productId}}",
+								"related"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "6"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Product Variants",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{baseURL}}/api/products/{{productId}}/variants"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🔐 Authenticated Routes",
+			"item": [
+				{
+					"name": "Add Product Review",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"rating\": 5,\n  \"title\": \"Amazing product!\",\n  \"comment\": \"This laptop exceeded my expectations. Great performance and build quality. The RTX graphics are phenomenal for gaming and the i9 processor handles everything I throw at it. Highly recommended!\",\n  \"images\": [\n    \"https://example.com/review-image1.jpg\",\n    \"https://example.com/review-image2.jpg\"\n  ],\n  \"isAnonymous\": false,\n  \"variantId\": \"{{variantId}}\"\n}"
+						},
+						"url": "{{baseURL}}/api/products/{{productId}}/reviews"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🏪 Seller/Admin Routes",
+			"item": [
+				{
+					"name": "Create Product",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Premium Gaming Laptop RTX 4080\",\n  \"slug\": \"premium-gaming-laptop-rtx-4080\",\n  \"description\": \"High-end gaming laptop with latest RTX 4080 GPU, Intel i9 processor, and 32GB RAM. Perfect for gaming, content creation, and professional work. Features a stunning 15.6-inch 4K OLED display with 120Hz refresh rate for smooth gaming experience.\",\n  \"shortDescription\": \"Premium gaming laptop with RTX 4080 GPU, Intel i9 processor, and 32GB RAM for ultimate performance.\",\n  \"category\": \"{{categoryId}}\",\n  \"subcategory\": \"{{subcategoryId}}\",\n  \"brand\": \"{{brandId}}\",\n  \"tags\": [\"gaming\", \"laptop\", \"rtx\", \"i9\", \"premium\", \"4k\", \"oled\"],\n  \"basePrice\": 2499.99,\n  \"discountPrice\": 2299.99,\n  \"discountPercentage\": 8,\n  \"images\": [\n    {\n      \"url\": \"https://example.com/laptop-main.jpg\",\n      \"isMain\": true,\n      \"public_id\": \"laptop_main_001\",\n      \"alt\": \"Gaming laptop front view\"\n    },\n    {\n      \"url\": \"https://example.com/laptop-side.jpg\",\n      \"isMain\": false,\n      \"public_id\": \"laptop_side_001\",\n      \"alt\": \"Gaming laptop side view\"\n    },\n    {\n      \"url\": \"https://example.com/laptop-keyboard.jpg\",\n      \"isMain\": false,\n      \"public_id\": \"laptop_keyboard_001\",\n      \"alt\": \"Gaming laptop keyboard RGB lighting\"\n    }\n  ],\n  \"videos\": [\n    {\n      \"url\": \"https://example.com/laptop-demo.mp4\",\n      \"public_id\": \"laptop_demo_001\",\n      \"thumbnail\": \"https://example.com/laptop-demo-thumb.jpg\",\n      \"duration\": 120\n    }\n  ],\n  \"stock\": 25,\n  \"sku\": \"GAMING-LAPTOP-RTX4080-001\",\n  \"specifications\": [\n    {\n      \"name\": \"Processor\",\n      \"value\": \"Intel Core i9-12900H (14 cores, up to 5.0 GHz)\",\n      \"category\": \"technical\"\n    },\n    {\n      \"name\": \"Graphics Card\",\n      \"value\": \"NVIDIA RTX 4080 8GB GDDR6X\",\n      \"category\": \"technical\"\n    },\n    {\n      \"name\": \"RAM\",\n      \"value\": \"32GB DDR5-4800MHz (2x16GB)\",\n      \"category\": \"technical\"\n    },\n    {\n      \"name\": \"Storage\",\n      \"value\": \"1TB NVMe SSD PCIe 4.0\",\n      \"category\": \"technical\"\n    },\n    {\n      \"name\": \"Display\",\n      \"value\": \"15.6\\\" 4K OLED (3840x2160) 120Hz\",\n      \"category\": \"physical\"\n    },\n    {\n      \"name\": \"Weight\",\n      \"value\": \"2.3 kg\",\n      \"category\": \"physical\"\n    },\n    {\n      \"name\": \"Battery\",\n      \"value\": \"90Wh Li-ion, up to 8 hours\",\n      \"category\": \"performance\"\n    },\n    {\n      \"name\": \"Ports\",\n      \"value\": \"3x USB 3.2, 1x USB-C, HDMI 2.1, Ethernet\",\n      \"category\": \"compatibility\"\n    }\n  ],\n  \"weight\": 2300,\n  \"dimensions\": {\n    \"length\": 35.5,\n    \"width\": 25.4,\n    \"height\": 2.3,\n    \"unit\": \"cm\"\n  },\n  \"shippingClass\": \"standard\",\n  \"lowStockThreshold\": 5,\n  \"isDigital\": false,\n  \"metaTitle\": \"Premium Gaming Laptop RTX 4080 - High Performance Gaming\",\n  \"metaDescription\": \"Experience ultimate gaming performance with our premium laptop featuring RTX 4080 GPU and Intel i9 processor. 4K OLED display, 32GB RAM. Fast shipping available.\",\n  \"metaKeywords\": [\"gaming laptop\", \"rtx 4080\", \"intel i9\", \"premium laptop\", \"4k oled\"]\n}"
+						},
+						"url": "{{baseURL}}/api/products"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Product",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Gaming Laptop Pro RTX 4090\",\n  \"description\": \"Updated description with new features and enhanced specifications. Now with RTX 4090 for even better performance.\",\n  \"basePrice\": 2799.99,\n  \"discountPrice\": 2599.99,\n  \"stock\": 30,\n  \"specifications\": [\n    {\n      \"name\": \"Processor\",\n      \"value\": \"Intel Core i9-13900H (24 threads, up to 5.4 GHz)\",\n      \"category\": \"technical\"\n    },\n    {\n      \"name\": \"Graphics Card\",\n      \"value\": \"NVIDIA RTX 4090 16GB GDDR6X\",\n      \"category\": \"technical\"\n    },\n    {\n      \"name\": \"RAM\",\n      \"value\": \"32GB DDR5-5200MHz (2x16GB)\",\n      \"category\": \"technical\"\n    }\n  ],\n  \"tags\": [\"gaming\", \"laptop\", \"rtx\", \"i9\", \"premium\", \"updated\", \"4090\"],\n  \"metaTitle\": \"Updated Gaming Laptop Pro RTX 4090 - Ultimate Performance\"\n}"
+						},
+						"url": "{{baseURL}}/api/products/{{productId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Product",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": "{{baseURL}}/api/products/{{productId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Products",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/api/products/my/products?page=1&limit=12&status=active&sortBy=createdAt&sortOrder=desc",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"my",
+								"products"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "12"
+								},
+								{
+									"key": "status",
+									"value": "active"
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt"
+								},
+								{
+									"key": "sortOrder",
+									"value": "desc"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Product Images",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "images",
+									"description": "Select multiple image files (max 10)",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": "{{baseURL}}/api/products/{{productId}}/images"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Product Stock",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"stockChange\": 15,\n  \"variantId\": \"{{variantId}}\"\n}"
+						},
+						"url": "{{baseURL}}/api/products/{{productId}}/stock"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Product Variant",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Color\",\n  \"value\": \"Midnight Black\",\n  \"price\": 2499.99,\n  \"discountPrice\": 2299.99,\n  \"stock\": 15,\n  \"sku\": \"GAMING-LAPTOP-RTX4080-BLACK\",\n  \"images\": [\n    \"https://example.com/laptop-black-1.jpg\",\n    \"https://example.com/laptop-black-2.jpg\"\n  ],\n  \"isActive\": true,\n  \"lowStockThreshold\": 3\n}"
+						},
+						"url": "{{baseURL}}/api/products/{{productId}}/variants"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Product Variant",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Color\",\n  \"value\": \"Space Gray\",\n  \"price\": 2599.99,\n  \"discountPrice\": 2399.99,\n  \"stock\": 20,\n  \"isActive\": true,\n  \"lowStockThreshold\": 5\n}"
+						},
+						"url": "{{baseURL}}/api/products/{{productId}}/variants/{{variantId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Product Variant",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": "{{baseURL}}/api/products/{{productId}}/variants/{{variantId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Product Statistics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": "{{baseURL}}/api/products/{{productId}}/stats"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "👑 Admin Only Routes",
+			"item": [
+				{
+					"name": "Approve Product",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"approvalNotes\": \"Product meets all quality standards and guidelines. Approved for listing.\"\n}"
+						},
+						"url": "{{baseURL}}/api/products/{{productId}}/approve"
+					},
+					"response": []
+				},
+				{
+					"name": "Reject Product",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Product images are not clear enough and specifications are incomplete. Please upload high-quality images showing all product details and complete the technical specifications section.\"\n}"
+						},
+						"url": "{{baseURL}}/api/products/{{productId}}/reject"
+					},
+					"response": []
+				},
+				{
+					"name": "Toggle Featured Status",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"isFeatured\": true\n}"
+						},
+						"url": "{{baseURL}}/api/products/{{productId}}/featured"
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk Update Products",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productIds\": [\n    \"{{productId}}\",\n    \"64a1b2c3d4e5f6789012346\",\n    \"64a1b2c3d4e5f6789012347\"\n  ],\n  \"updateData\": {\n    \"status\": \"active\",\n    \"isApproved\": true,\n    \"isFeatured\": false,\n    \"shippingClass\": \"standard\"\n  }\n}"
+						},
+						"url": "{{baseURL}}/api/products/bulk/update"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Pending Products",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/api/products/admin/pending?page=1&limit=12&sortBy=createdAt&sortOrder=desc",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"admin",
+								"pending"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "12"
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt"
+								},
+								{
+									"key": "sortOrder",
+									"value": "desc"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🧪 Additional Test Scenarios",
+			"item": [
+				{
+					"name": "Create Product with Variants",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Gaming Smartphone Pro\",\n  \"description\": \"High-performance gaming smartphone with multiple storage and color variants. Features flagship processor and advanced cooling system.\",\n  \"shortDescription\": \"Gaming smartphone with multiple variants and flagship performance.\",\n  \"category\": \"{{categoryId}}\",\n  \"brand\": \"{{brandId}}\",\n  \"tags\": [\"smartphone\", \"gaming\", \"android\", \"flagship\"],\n  \"basePrice\": 999.99,\n  \"hasVariants\": true,\n  \"variants\": [\n    {\n      \"name\": \"Storage-Color\",\n      \"value\": \"128GB-Black\",\n      \"price\": 999.99,\n      \"discountPrice\": 899.99,\n      \"stock\": 50,\n      \"sku\": \"SMARTPHONE-128GB-BLACK\",\n      \"images\": [\"https://example.com/phone-black.jpg\"],\n      \"isActive\": true\n    },\n    {\n      \"name\": \"Storage-Color\",\n      \"value\": \"256GB-Black\",\n      \"price\": 1199.99,\n      \"discountPrice\": 1099.99,\n      \"stock\": 30,\n      \"sku\": \"SMARTPHONE-256GB-BLACK\",\n      \"images\": [\"https://example.com/phone-256gb-black.jpg\"],\n      \"isActive\": true\n    },\n    {\n      \"name\": \"Storage-Color\",\n      \"value\": \"128GB-Blue\",\n      \"price\": 999.99,\n      \"discountPrice\": 899.99,\n      \"stock\": 40,\n      \"sku\": \"SMARTPHONE-128GB-BLUE\",\n      \"images\": [\"https://example.com/phone-blue.jpg\"],\n      \"isActive\": true\n    }\n  ],\n  \"specifications\": [\n    {\n      \"name\": \"Display\",\n      \"value\": \"6.7\\\" AMOLED 120Hz\",\n      \"category\": \"technical\"\n    },\n    {\n      \"name\": \"Processor\",\n      \"value\": \"Snapdragon 8 Gen 3\",\n      \"category\": \"technical\"\n    },\n    {\n      \"name\": \"RAM\",\n      \"value\": \"12GB LPDDR5X\",\n      \"category\": \"technical\"\n    }\n  ],\n  \"images\": [\n    {\n      \"url\": \"https://example.com/phone-main.jpg\",\n      \"isMain\": true,\n      \"public_id\": \"phone_main_001\"\n    }\n  ],\n  \"weight\": 210,\n  \"dimensions\": {\n    \"length\": 16.3,\n    \"width\": 7.8,\n    \"height\": 0.89,\n    \"unit\": \"cm\"\n  },\n  \"shippingClass\": \"standard\",\n  \"metaTitle\": \"Gaming Smartphone Pro - Multiple Variants Available\",\n  \"metaDescription\": \"Choose from multiple storage and color options for the ultimate gaming smartphone experience.\"\n}"
+						},
+						"url": "{{baseURL}}/api/products"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Digital Product",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Web Development Course Bundle\",\n  \"description\": \"Complete web development course bundle including HTML, CSS, JavaScript, React, and Node.js. Over 50 hours of video content with practical projects and source code.\",\n  \"shortDescription\": \"Complete web development course bundle with 50+ hours of content.\",\n  \"category\": \"{{categoryId}}\",\n  \"tags\": [\"course\", \"web development\", \"javascript\", \"react\", \"nodejs\", \"digital\"],\n  \"basePrice\": 199.99,\n  \"discountPrice\": 149.99,\n  \"stock\": 999,\n  \"sku\": \"WEB-DEV-COURSE-BUNDLE\",\n  \"isDigital\": true,\n  \"downloadableFiles\": [\n    {\n      \"name\": \"Complete Course Videos\",\n      \"url\": \"https://example.com/course-videos.zip\",\n      \"size\": 15728640000,\n      \"type\": \"video/zip\",\n      \"downloadLimit\": 5,\n      \"expiryDays\": 365\n    },\n    {\n      \"name\": \"Source Code Repository\",\n      \"url\": \"https://example.com/source-code.zip\",\n      \"size\": 52428800,\n      \"type\": \"application/zip\",\n      \"downloadLimit\": 10,\n      \"expiryDays\": 365\n    },\n    {\n      \"name\": \"Course Materials PDF\",\n      \"url\": \"https://example.com/course-materials.pdf\",\n      \"size\": 10485760,\n      \"type\": \"application/pdf\",\n      \"downloadLimit\": -1,\n      \"expiryDays\": 0\n    }\n  ],\n  \"specifications\": [\n    {\n      \"name\": \"Duration\",\n      \"value\": \"50+ hours\",\n      \"category\": \"other\"\n    },\n    {\n      \"name\": \"Language\",\n      \"value\": \"English\",\n      \"category\": \"other\"\n    },\n    {\n      \"name\": \"Level\",\n      \"value\": \"Beginner to Advanced\",\n      \"category\": \"other\"\n    },\n    {\n      \"name\": \"Projects\",\n      \"value\": \"10 Hands-on Projects\",\n      \"category\": \"other\"\n    }\n  ],\n  \"images\": [\n    {\n      \"url\": \"https://example.com/course-cover.jpg\",\n      \"isMain\": true,\n      \"public_id\": \"course_cover_001\"\n    }\n  ],\n  \"metaTitle\": \"Web Development Course Bundle - Complete Learning Package\",\n  \"metaDescription\": \"Master web development with our comprehensive course bundle. 50+ hours of content, practical projects, and lifetime access.\"\n}"
+						},
+						"url": "{{baseURL}}/api/products"
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk Price Update",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productIds\": [\n    \"{{productId}}\",\n    \"64a1b2c3d4e5f6789012346\",\n    \"64a1b2c3d4e5f6789012347\"\n  ],\n  \"operation\": \"updatePrice\",\n  \"data\": {\n    \"priceMultiplier\": 1.1,\n    \"discountPercentage\": 15\n  }\n}"
+						},
+						"url": "{{baseURL}}/api/products/bulk/update"
+					},
+					"response": []
+				},
+				{
+					"name": "Advanced Product Search",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/products?search=laptop gaming&category={{categoryId}}&minPrice=1000&maxPrice=3000&minRating=4&tags=gaming,premium&inStock=true&hasVariants=false&shippingClass=standard&sortBy=rating.average&sortOrder=desc&page=1&limit=20",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"products"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "laptop gaming",
+									"description": "Search for gaming laptops"
+								},
+								{
+									"key": "category",
+									"value": "{{categoryId}}"
+								},
+								{
+									"key": "minPrice",
+									"value": "1000"
+								},
+								{
+									"key": "maxPrice",
+									"value": "3000"
+								},
+								{
+									"key": "minRating",
+									"value": "4"
+								},
+								{
+									"key": "tags",
+									"value": "gaming,premium"
+								},
+								{
+									"key": "inStock",
+									"value": "true"
+								},
+								{
+									"key": "hasVariants",
+									"value": "false"
+								},
+								{
+									"key": "shippingClass",
+									"value": "standard"
+								},
+								{
+									"key": "sortBy",
+									"value": "rating.average"
+								},
+								{
+									"key": "sortOrder",
+									"value": "desc"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Stock Management Test",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"quantity\": 50,\n  \"operation\": \"add\",\n  \"variantId\": \"{{variantId}}\"\n}"
+						},
+						"url": "{{baseURL}}/api/products/{{productId}}/stock"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Auto-generate test data if not present",
+					"if (!pm.environment.get('productId')) {",
+					"    pm.environment.set('productId', '64a1b2c3d4e5f6789012345');",
+					"}",
+					"if (!pm.environment.get('categoryId')) {",
+					"    pm.environment.set('categoryId', '64a1b2c3d4e5f6789012346');",
+					"}",
+					"if (!pm.environment.get('brandId')) {",
+					"    pm.environment.set('brandId', '64a1b2c3d4e5f6789012347');",
+					"}",
+					"if (!pm.environment.get('sellerId')) {",
+					"    pm.environment.set('sellerId', '64a1b2c3d4e5f6789012348');",
+					"}",
+					"if (!pm.environment.get('variantId')) {",
+					"    pm.environment.set('variantId', '64a1b2c3d4e5f6789012349');",
+					"}",
+					"if (!pm.environment.get('subcategoryId')) {",
+					"    pm.environment.set('subcategoryId', '64a1b2c3d4e5f6789012366');",
+					"}",
+					"",
+					"// Add timestamp for unique data",
+					"pm.environment.set('timestamp', Date.now());",
+					"",
+					"// Log current request info",
+					"console.log('Request:', pm.info.requestName);",
+					"console.log('Method:', pm.request.method);",
+					"console.log('URL:', pm.request.url);"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Common response validation tests",
+					"pm.test('Response time is acceptable', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+					"});",
+					"",
+					"pm.test('Status code is successful', function () {",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+					"});",
+					"",
+					"pm.test('Response has proper content type', function () {",
+					"    if (pm.response.code !== 204) {",
+					"        pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+					"    }",
+					"});",
+					"",
+					"// Validate successful responses",
+					"if (pm.response.code === 200 || pm.response.code === 201) {",
+					"    pm.test('Response has success property', function () {",
+					"        const jsonData = pm.response.json();",
+					"        pm.expect(jsonData).to.have.property('success');",
+					"        pm.expect(jsonData.success).to.be.true;",
+					"    });",
+					"",
+					"    pm.test('Response has message property', function () {",
+					"        const jsonData = pm.response.json();",
+					"        pm.expect(jsonData).to.have.property('message');",
+					"        pm.expect(jsonData.message).to.be.a('string');",
+					"        pm.expect(jsonData.message.length).to.be.above(0);",
+					"    });",
+					"",
+					"    // Extract and store important IDs from responses",
+					"    const jsonData = pm.response.json();",
+					"",
+					"    // Store product ID from create operations",
+					"    if (pm.request.method === 'POST' && pm.request.url.path.includes('products') && !pm.request.url.path.includes('bulk')) {",
+					"        if (jsonData.data && jsonData.data.product && jsonData.data.product._id) {",
+					"            pm.environment.set('lastCreatedProductId', jsonData.data.product._id);",
+					"            console.log('✅ Created Product ID:', jsonData.data.product._id);",
+					"        }",
+					"    }",
+					"",
+					"    // Store variant ID from variant creation",
+					"    if (pm.request.method === 'POST' && pm.request.url.path.includes('variants')) {",
+					"        if (jsonData.data && jsonData.data.product && jsonData.data.product.variants) {",
+					"            const variants = jsonData.data.product.variants;",
+					"            if (variants.length > 0) {",
+					"                const lastVariant = variants[variants.length - 1];",
+					"                pm.environment.set('lastCreatedVariantId', lastVariant._id);",
+					"                console.log('✅ Created Variant ID:', lastVariant._id);",
+					"            }",
+					"        }",
+					"    }",
+					"",
+					"    // Validate pagination for list endpoints",
+					"    if (jsonData.data && jsonData.data.docs) {",
+					"        pm.test('Pagination data is present', function () {",
+					"            pm.expect(jsonData.data).to.have.property('totalDocs');",
+					"            pm.expect(jsonData.data).to.have.property('limit');",
+					"            pm.expect(jsonData.data).to.have.property('page');",
+					"            pm.expect(jsonData.data).to.have.property('totalPages');",
+					"        });",
+					"    }",
+					"",
+					"    // Validate product structure for product endpoints",
+					"    if (jsonData.data && jsonData.data.product) {",
+					"        pm.test('Product has required fields', function () {",
+					"            const product = jsonData.data.product;",
+					"            pm.expect(product).to.have.property('_id');",
+					"            pm.expect(product).to.have.property('name');",
+					"            pm.expect(product).to.have.property('slug');",
+					"            pm.expect(product).to.have.property('basePrice');",
+					"            pm.expect(product).to.have.property('status');",
+					"        });",
+					"    }",
+					"}",
+					"",
+					"// Handle error responses",
+					"if (pm.response.code >= 400) {",
+					"    pm.test('Error response has proper structure', function () {",
+					"        if (pm.response.headers.get('Content-Type') && pm.response.headers.get('Content-Type').includes('application/json')) {",
+					"            const jsonData = pm.response.json();",
+					"            pm.expect(jsonData).to.have.property('success');",
+					"            pm.expect(jsonData.success).to.be.false;",
+					"            pm.expect(jsonData).to.have.property('message');",
+					"        }",
+					"    });",
+					"",
+					"    console.log('❌ Request failed:', pm.response.code, pm.response.status);",
+					"    if (pm.response.json && pm.response.json().message) {",
+					"        console.log('Error message:', pm.response.json().message);",
+					"    }",
+					"}",
+					"",
+					"// Log successful operations",
+					"if (pm.response.code < 400) {",
+					"    console.log('✅ Request successful:', pm.info.requestName);",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "http://localhost:3000",
+			"type": "string",
+			"description": "Base URL for the API server"
+		},
+		{
+			"key": "authToken",
+			"value": "your_jwt_token_here",
+			"type": "string",
+			"description": "JWT authentication token for authenticated requests"
+		},
+		{
+			"key": "productId",
+			"value": "64a1b2c3d4e5f6789012345",
+			"type": "string",
+			"description": "Sample product ID for testing"
+		},
+		{
+			"key": "categoryId",
+			"value": "64a1b2c3d4e5f6789012346",
+			"type": "string",
+			"description": "Sample category ID for testing"
+		},
+		{
+			"key": "subcategoryId",
+			"value": "64a1b2c3d4e5f6789012366",
+			"type": "string",
+			"description": "Sample subcategory ID for testing"
+		},
+		{
+			"key": "brandId",
+			"value": "64a1b2c3d4e5f6789012347",
+			"type": "string",
+			"description": "Sample brand ID for testing"
+		},
+		{
+			"key": "sellerId",
+			"value": "64a1b2c3d4e5f6789012348",
+			"type": "string",
+			"description": "Sample seller ID for testing"
+		},
+		{
+			"key": "variantId",
+			"value": "64a1b2c3d4e5f6789012349",
+			"type": "string",
+			"description": "Sample variant ID for testing"
+		},
+		{
+			"key": "lastCreatedProductId",
+			"value": "",
+			"type": "string",
+			"description": "ID of the last created product (auto-populated from responses)"
+		},
+		{
+			"key": "lastCreatedVariantId",
+			"value": "",
+			"type": "string",
+			"description": "ID of the last created variant (auto-populated from responses)"
+		},
+		{
+			"key": "timestamp",
+			"value": "",
+			"type": "string",
+			"description": "Current timestamp for unique data generation"
+		}
+	]
+}
