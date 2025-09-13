@@ -275,6 +275,7 @@ export const API_ENDPOINTS = {
 
   // Collections endpoints
   COLLECTIONS: {
+    // Public endpoints
     getCollections: (): ApiEndpoint => ({
       url: "/collections",
       method: "GET",
@@ -287,6 +288,34 @@ export const API_ENDPOINTS = {
       url: `/collections/handle/${handle}`,
       method: "GET",
     }),
+    getCollectionProducts: (id: string): ApiEndpoint => ({
+      url: `/collections/${id}/products`,
+      method: "GET",
+    }),
+    getPublishedCollections: (): ApiEndpoint => ({
+      url: "/collections/published",
+      method: "GET",
+    }),
+    searchCollections: (): ApiEndpoint => ({
+      url: "/collections/search",
+      method: "GET",
+    }),
+    getCollectionsBySeller: (sellerId: string): ApiEndpoint => ({
+      url: `/collections/seller/${sellerId}`,
+      method: "GET",
+    }),
+
+    // Authenticated endpoints
+    getMyCollections: (): ApiEndpoint => ({
+      url: "/collections/my/collections",
+      method: "GET",
+    }),
+    getCollectionStats: (): ApiEndpoint => ({
+      url: "/collections/stats/overview",
+      method: "GET",
+    }),
+
+    // Seller/Admin endpoints
     createCollection: (): ApiEndpoint => ({
       url: "/collections",
       method: "POST",
@@ -299,13 +328,13 @@ export const API_ENDPOINTS = {
       url: `/collections/${id}`,
       method: "DELETE",
     }),
-    bulkDeleteCollections: (): ApiEndpoint => ({
-      url: "/collections/bulk-delete",
-      method: "DELETE",
+    duplicateCollection: (id: string): ApiEndpoint => ({
+      url: `/collections/${id}/duplicate`,
+      method: "POST",
     }),
-    getMyCollections: (): ApiEndpoint => ({
-      url: "/collections/my/collections",
-      method: "GET",
+    updateCollectionVisibility: (id: string): ApiEndpoint => ({
+      url: `/collections/${id}/visibility`,
+      method: "PATCH",
     }),
     addProductsToCollection: (id: string): ApiEndpoint => ({
       url: `/collections/${id}/products`,
@@ -315,21 +344,17 @@ export const API_ENDPOINTS = {
       url: `/collections/${id}/products`,
       method: "DELETE",
     }),
-    updateCollectionVisibility: (id: string): ApiEndpoint => ({
-      url: `/collections/${id}/visibility`,
+    bulkUpdateCollections: (): ApiEndpoint => ({
+      url: "/collections/bulk/update",
       method: "PATCH",
     }),
-    uploadCollectionImage: (): ApiEndpoint => ({
-      url: "/collections/upload-image",
+    uploadCollectionImage: (id: string): ApiEndpoint => ({
+      url: `/collections/${id}/image`,
       method: "POST",
     }),
-    getCollectionStats: (): ApiEndpoint => ({
-      url: "/collections/stats",
-      method: "GET",
-    }),
-    searchCollections: (): ApiEndpoint => ({
-      url: "/collections/search",
-      method: "GET",
+    removeCollectionImage: (id: string): ApiEndpoint => ({
+      url: `/collections/${id}/image`,
+      method: "DELETE",
     }),
   },
 } as const;

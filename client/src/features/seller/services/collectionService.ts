@@ -9,8 +9,12 @@ export interface CollectionFilters {
   search?: string;
   type?: "manual" | "automated";
   isVisible?: boolean;
-  sortBy?: "name" | "createdAt" | "productCount";
+  isPublished?: boolean;
+  sellerId?: string;
+  sortBy?: "name" | "createdAt" | "updatedAt" | "productCount" | "viewCount";
   sortOrder?: "asc" | "desc";
+  includeHidden?: boolean;
+  includeUnpublished?: boolean;
 }
 
 export interface CollectionListResponse {
@@ -23,6 +27,39 @@ export interface CollectionListResponse {
   hasPrevPage: boolean;
   nextPage: number | null;
   prevPage: number | null;
+}
+
+export interface CollectionStats {
+  totalCollections: number;
+  publishedCollections: number;
+  visibleCollections: number;
+  manualCollections: number;
+  automatedCollections: number;
+  totalProducts: number;
+  totalViews: number;
+  avgProductsPerCollection: number;
+}
+
+export interface BulkUpdateItem {
+  collectionId: string;
+  name?: string;
+  description?: string;
+  isVisible?: boolean;
+  isPublished?: boolean;
+  sortOrder?: string;
+  seo?: {
+    title?: string;
+    description?: string;
+    keywords?: string[];
+  };
+}
+
+export interface BulkUpdateResult {
+  updated: number;
+  errors: Array<{
+    collectionId: string;
+    error: string;
+  }>;
 }
 
 // Helper function to build query parameters
@@ -38,23 +75,7 @@ const buildQueryParams = (filters: CollectionFilters): string => {
   return params.toString();
 };
 
-// Get all collections with filters (seller's collections)
-export const getMyCollections = async (
-  filters: CollectionFilters = {}
-): Promise<ApiResponse<CollectionListResponse>> => {
-  try {
-    const endpoint = API_ENDPOINTS.COLLECTIONS.getMyCollections();
-    const queryParams = buildQueryParams(filters);
-    const url = queryParams ? `${endpoint.url}?${queryParams}` : endpoint.url;
-
-    const response = await axiosSeller.get(url);
-    return response.data;
-  } catch (error: any) {
-    throw new Error(
-      error.response?.data?.message || "Failed to fetch collections"
-    );
-  }
-};
+// ==================== PUBLIC ENDPOINTS ====================
 
 // Get all collections with filters (public endpoint)
 export const getCollections = async (
@@ -76,11 +97,15 @@ export const getCollections = async (
 
 // Get single collection by ID
 export const getCollection = async (
-  id: string
+  id: string,
+  includeProducts: boolean = false
 ): Promise<ApiResponse<Collection>> => {
   try {
     const endpoint = API_ENDPOINTS.COLLECTIONS.getCollection(id);
-    const response = await axiosSeller.get(endpoint.url);
+    const url = includeProducts
+      ? `${endpoint.url}?includeProducts=true`
+      : endpoint.url;
+    const response = await axiosSeller.get(url);
     return response.data;
   } catch (error: any) {
     throw new Error(
@@ -91,11 +116,15 @@ export const getCollection = async (
 
 // Get collection by handle
 export const getCollectionByHandle = async (
-  handle: string
+  handle: string,
+  includeProducts: boolean = false
 ): Promise<ApiResponse<Collection>> => {
   try {
     const endpoint = API_ENDPOINTS.COLLECTIONS.getCollectionByHandle(handle);
-    const response = await axiosSeller.get(endpoint.url);
+    const url = includeProducts
+      ? `${endpoint.url}?includeProducts=true`
+      : endpoint.url;
+    const response = await axiosSeller.get(url);
     return response.data;
   } catch (error: any) {
     throw new Error(
@@ -103,6 +132,141 @@ export const getCollectionByHandle = async (
     );
   }
 };
+
+// Get collection products
+export const getCollectionProducts = async (
+  id: string,
+  options: {
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    populate?: boolean;
+  } = {}
+): Promise<ApiResponse<any>> => {
+  try {
+    const endpoint = API_ENDPOINTS.COLLECTIONS.getCollectionProducts(id);
+    const queryParams = buildQueryParams(options as any);
+    const url = queryParams ? `${endpoint.url}?${queryParams}` : endpoint.url;
+
+    const response = await axiosSeller.get(url);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch collection products"
+    );
+  }
+};
+
+// Get published collections
+export const getPublishedCollections = async (
+  options: {
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: string;
+  } = {}
+): Promise<ApiResponse<Collection[]>> => {
+  try {
+    const endpoint = API_ENDPOINTS.COLLECTIONS.getPublishedCollections();
+    const queryParams = buildQueryParams(options as any);
+    const url = queryParams ? `${endpoint.url}?${queryParams}` : endpoint.url;
+
+    const response = await axiosSeller.get(url);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch published collections"
+    );
+  }
+};
+
+// Search collections
+export const searchCollections = async (
+  query: string,
+  options: {
+    limit?: number;
+    sellerId?: string;
+  } = {}
+): Promise<ApiResponse<Collection[]>> => {
+  try {
+    const endpoint = API_ENDPOINTS.COLLECTIONS.searchCollections();
+    const searchParams = { q: query, ...options };
+    const queryParams = buildQueryParams(searchParams as any);
+    const url = queryParams ? `${endpoint.url}?${queryParams}` : endpoint.url;
+
+    const response = await axiosSeller.get(url);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to search collections"
+    );
+  }
+};
+
+// Get collections by seller
+export const getCollectionsBySeller = async (
+  sellerId: string,
+  options: {
+    includeHidden?: boolean;
+    includeUnpublished?: boolean;
+  } = {}
+): Promise<ApiResponse<Collection[]>> => {
+  try {
+    const endpoint = API_ENDPOINTS.COLLECTIONS.getCollectionsBySeller(sellerId);
+    const queryParams = buildQueryParams(options as any);
+    const url = queryParams ? `${endpoint.url}?${queryParams}` : endpoint.url;
+
+    const response = await axiosSeller.get(url);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch seller collections"
+    );
+  }
+};
+
+// ==================== AUTHENTICATED ENDPOINTS ====================
+
+// Get my collections (authenticated seller)
+export const getMyCollections = async (
+  options: {
+    includeHidden?: boolean;
+    includeUnpublished?: boolean;
+  } = {}
+): Promise<ApiResponse<Collection[]>> => {
+  try {
+    const endpoint = API_ENDPOINTS.COLLECTIONS.getMyCollections();
+    const queryParams = buildQueryParams(options as any);
+    const url = queryParams ? `${endpoint.url}?${queryParams}` : endpoint.url;
+
+    const response = await axiosSeller.get(url);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch your collections"
+    );
+  }
+};
+
+// Get collection statistics
+export const getCollectionStats = async (
+  sellerId?: string
+): Promise<ApiResponse<CollectionStats>> => {
+  try {
+    const endpoint = API_ENDPOINTS.COLLECTIONS.getCollectionStats();
+    const url = sellerId
+      ? `${endpoint.url}?sellerId=${sellerId}`
+      : endpoint.url;
+
+    const response = await axiosSeller.get(url);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch collection statistics"
+    );
+  }
+};
+
+// ==================== SELLER/ADMIN ENDPOINTS ====================
 
 // Create new collection
 export const createCollection = async (
@@ -150,19 +314,33 @@ export const deleteCollection = async (
   }
 };
 
-// Bulk delete collections
-export const bulkDeleteCollections = async (
-  collectionIds: string[]
-): Promise<ApiResponse<{ deletedCount: number }>> => {
+// Duplicate collection
+export const duplicateCollection = async (
+  id: string
+): Promise<ApiResponse<Collection>> => {
   try {
-    const endpoint = API_ENDPOINTS.COLLECTIONS.bulkDeleteCollections();
-    const response = await axiosSeller.delete(endpoint.url, {
-      data: { collectionIds },
-    });
+    const endpoint = API_ENDPOINTS.COLLECTIONS.duplicateCollection(id);
+    const response = await axiosSeller.post(endpoint.url);
     return response.data;
   } catch (error: any) {
     throw new Error(
-      error.response?.data?.message || "Failed to delete collections"
+      error.response?.data?.message || "Failed to duplicate collection"
+    );
+  }
+};
+
+// Update collection visibility
+export const updateCollectionVisibility = async (
+  id: string,
+  isVisible: boolean
+): Promise<ApiResponse<Collection>> => {
+  try {
+    const endpoint = API_ENDPOINTS.COLLECTIONS.updateCollectionVisibility(id);
+    const response = await axiosSeller.patch(endpoint.url, { isVisible });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to update collection visibility"
     );
   }
 };
@@ -202,28 +380,28 @@ export const removeProductsFromCollection = async (
   }
 };
 
-// Update collection visibility
-export const updateCollectionVisibility = async (
-  id: string,
-  isVisible: boolean
-): Promise<ApiResponse<Collection>> => {
+// Bulk update collections
+export const bulkUpdateCollections = async (
+  updates: BulkUpdateItem[]
+): Promise<ApiResponse<BulkUpdateResult>> => {
   try {
-    const endpoint = API_ENDPOINTS.COLLECTIONS.updateCollectionVisibility(id);
-    const response = await axiosSeller.patch(endpoint.url, { isVisible });
+    const endpoint = API_ENDPOINTS.COLLECTIONS.bulkUpdateCollections();
+    const response = await axiosSeller.patch(endpoint.url, { updates });
     return response.data;
   } catch (error: any) {
     throw new Error(
-      error.response?.data?.message || "Failed to update collection visibility"
+      error.response?.data?.message || "Failed to bulk update collections"
     );
   }
 };
 
 // Upload collection image
 export const uploadCollectionImage = async (
+  id: string,
   file: File
-): Promise<ApiResponse<{ url: string }>> => {
+): Promise<ApiResponse<{ collection: Collection; image: any }>> => {
   try {
-    const endpoint = API_ENDPOINTS.COLLECTIONS.uploadCollectionImage();
+    const endpoint = API_ENDPOINTS.COLLECTIONS.uploadCollectionImage(id);
     const formData = new FormData();
     formData.append("image", file);
 
@@ -234,57 +412,51 @@ export const uploadCollectionImage = async (
     });
     return response.data;
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || "Failed to upload image");
-  }
-};
-
-// Get collection statistics
-export const getCollectionStats = async (): Promise<ApiResponse<any>> => {
-  try {
-    const endpoint = API_ENDPOINTS.COLLECTIONS.getCollectionStats();
-    const response = await axiosSeller.get(endpoint.url);
-    return response.data;
-  } catch (error: any) {
     throw new Error(
-      error.response?.data?.message || "Failed to fetch collection statistics"
+      error.response?.data?.message || "Failed to upload collection image"
     );
   }
 };
 
-// Search collections
-export const searchCollections = async (
-  query: string,
-  filters: CollectionFilters = {}
-): Promise<ApiResponse<CollectionListResponse>> => {
+// Remove collection image
+export const removeCollectionImage = async (
+  id: string
+): Promise<ApiResponse<Collection>> => {
   try {
-    const endpoint = API_ENDPOINTS.COLLECTIONS.searchCollections();
-    const searchFilters = { ...filters, search: query };
-    const queryParams = buildQueryParams(searchFilters);
-    const url = queryParams ? `${endpoint.url}?${queryParams}` : endpoint.url;
-
-    const response = await axiosSeller.get(url);
+    const endpoint = API_ENDPOINTS.COLLECTIONS.removeCollectionImage(id);
+    const response = await axiosSeller.delete(endpoint.url);
     return response.data;
   } catch (error: any) {
     throw new Error(
-      error.response?.data?.message || "Failed to search collections"
+      error.response?.data?.message || "Failed to remove collection image"
     );
   }
 };
 
 // Export all functions as default object for backward compatibility
 export default {
-  getMyCollections,
+  // Public endpoints
   getCollections,
   getCollection,
   getCollectionByHandle,
+  getCollectionProducts,
+  getPublishedCollections,
+  searchCollections,
+  getCollectionsBySeller,
+
+  // Authenticated endpoints
+  getMyCollections,
+  getCollectionStats,
+
+  // Seller/Admin endpoints
   createCollection,
   updateCollection,
   deleteCollection,
-  bulkDeleteCollections,
+  duplicateCollection,
+  updateCollectionVisibility,
   addProductsToCollection,
   removeProductsFromCollection,
-  updateCollectionVisibility,
+  bulkUpdateCollections,
   uploadCollectionImage,
-  getCollectionStats,
-  searchCollections,
+  removeCollectionImage,
 };
