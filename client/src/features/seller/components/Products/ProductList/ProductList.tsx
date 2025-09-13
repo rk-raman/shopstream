@@ -36,8 +36,9 @@ import {
   useProducts,
   useDeleteProduct,
   useBulkDeleteProducts,
-  useCategories,
 } from "@/features/seller/hooks/useProducts";
+import { useCategories } from "@/features/seller/hooks/useCategories";
+import { useBrands } from "@/features/seller/hooks/useBrands";
 
 interface ProductListProps {
   onCreateProduct?: () => void;
@@ -47,6 +48,7 @@ interface ProductListProps {
 
 interface Filters {
   category: string;
+  brand: string;
   status: string;
   minPrice: string;
   maxPrice: string;
@@ -69,6 +71,7 @@ export const ProductList: React.FC<ProductListProps> = ({
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [filters, setFilters] = useState<Filters>({
     category: "",
+    brand: "",
     status: "",
     minPrice: "",
     maxPrice: "",
@@ -102,6 +105,10 @@ export const ProductList: React.FC<ProductListProps> = ({
       params.category = filters.category;
     }
 
+    if (filters.brand) {
+      params.brand = filters.brand;
+    }
+
     if (filters.status) {
       params.status = filters.status;
     }
@@ -130,6 +137,7 @@ export const ProductList: React.FC<ProductListProps> = ({
   } = useProducts(queryParams);
 
   const { data: categoriesData } = useCategories();
+  const { data: brandsData } = useBrands();
 
   // Mutations
   const deleteProductMutation = useDeleteProduct();
@@ -138,7 +146,8 @@ export const ProductList: React.FC<ProductListProps> = ({
   const products = productsData?.data || [];
   const totalProducts = productsData?.total || 0;
   const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
-  const categories = categoriesData?.data || [];
+  const categories = categoriesData || [];
+  const brands = brandsData || [];
 
   const handleSelectProduct = (productId: string) => {
     setSelectedProducts((prev) =>
@@ -184,6 +193,7 @@ export const ProductList: React.FC<ProductListProps> = ({
   const clearFilters = () => {
     setFilters({
       category: "",
+      brand: "",
       status: "",
       minPrice: "",
       maxPrice: "",
@@ -299,7 +309,7 @@ export const ProductList: React.FC<ProductListProps> = ({
         {/* Advanced Filters */}
         {showFilters && (
           <div className="mt-4 pt-4 border-t">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">
                   Category
@@ -314,10 +324,66 @@ export const ProductList: React.FC<ProductListProps> = ({
                     <SelectValue placeholder="All categories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All categories</SelectItem>
+                    <SelectItem value="all-categories">
+                      All categories
+                    </SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category._id} value={category._id}>
-                        {category.name}
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500">
+                            {"  ".repeat(category.level || 0)}
+                          </span>
+                          {category.icon && (
+                            <span className="text-sm">{category.icon}</span>
+                          )}
+                          <span>{category.name}</span>
+                          {!category.isActive && (
+                            <span className="text-xs text-red-500">
+                              (Inactive)
+                            </span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Brand</label>
+                <Select
+                  value={filters.brand}
+                  onValueChange={(value) => handleFilterChange("brand", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="All brands" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all-brands">All brands</SelectItem>
+                    {brands.map((brand) => (
+                      <SelectItem key={brand._id} value={brand._id}>
+                        <div className="flex items-center gap-2">
+                          {brand.logo?.url ? (
+                            <img
+                              src={brand.logo.url}
+                              alt={brand.name}
+                              className="w-4 h-4 rounded object-cover"
+                            />
+                          ) : (
+                            <div className="w-4 h-4 bg-gray-200 rounded flex items-center justify-center">
+                              <span className="text-xs">B</span>
+                            </div>
+                          )}
+                          <span>{brand.name}</span>
+                          {brand.isVerified && (
+                            <span className="text-xs text-blue-500">✓</span>
+                          )}
+                          {!brand.isActive && (
+                            <span className="text-xs text-red-500">
+                              (Inactive)
+                            </span>
+                          )}
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -334,7 +400,7 @@ export const ProductList: React.FC<ProductListProps> = ({
                     <SelectValue placeholder="All statuses" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All statuses</SelectItem>
+                    <SelectItem value="all-statuses">All statuses</SelectItem>
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="draft">Draft</SelectItem>
                     <SelectItem value="inactive">Inactive</SelectItem>

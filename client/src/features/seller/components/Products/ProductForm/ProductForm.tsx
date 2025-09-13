@@ -23,9 +23,9 @@ import {
   useCreateProduct,
   useUpdateProduct,
   useUploadProductImages,
-  useCategories,
-  useBrands,
 } from "@/features/seller/hooks/useProducts";
+import { useCategories } from "@/features/seller/hooks/useCategories";
+import { useBrands } from "@/features/seller/hooks/useBrands";
 
 interface ProductFormProps {
   product?: Product;
@@ -228,8 +228,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     }
   };
 
-  const categories = categoriesData?.data || [];
-  const brands = brandsData?.data || [];
+  const categories = categoriesData || [];
+  const brands = brandsData || [];
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -311,9 +311,22 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.map((category) => (
+                      {categoriesData?.map((category) => (
                         <SelectItem key={category._id} value={category._id}>
-                          {category.name}
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500">
+                              {"  ".repeat(category.level || 0)}
+                            </span>
+                            {category.icon && (
+                              <span className="text-sm">{category.icon}</span>
+                            )}
+                            <span>{category.name}</span>
+                            {!category.isActive && (
+                              <span className="text-xs text-red-500">
+                                (Inactive)
+                              </span>
+                            )}
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -338,9 +351,31 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                       <SelectValue placeholder="Select brand (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      {brands.map((brand) => (
+                      <SelectItem value="no-brand">No Brand</SelectItem>
+                      {brandsData?.map((brand) => (
                         <SelectItem key={brand._id} value={brand._id}>
-                          {brand.name}
+                          <div className="flex items-center gap-2">
+                            {brand.logo?.url ? (
+                              <img
+                                src={brand.logo.url}
+                                alt={brand.name}
+                                className="w-4 h-4 rounded object-cover"
+                              />
+                            ) : (
+                              <div className="w-4 h-4 bg-gray-200 rounded flex items-center justify-center">
+                                <span className="text-xs">B</span>
+                              </div>
+                            )}
+                            <span>{brand.name}</span>
+                            {brand.isVerified && (
+                              <span className="text-xs text-blue-500">✓</span>
+                            )}
+                            {!brand.isActive && (
+                              <span className="text-xs text-red-500">
+                                (Inactive)
+                              </span>
+                            )}
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -1,10 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
 import { ProductList } from "@/features/seller/components/Products/ProductList/ProductList";
+import { CategoryNavigation } from "@/features/seller/components/Categories/CategoryNavigation/CategoryNavigation";
 
 // Create a query client instance
 const queryClient = new QueryClient({
@@ -18,6 +19,9 @@ const queryClient = new QueryClient({
 
 export default function ProductsPage() {
   const router = useRouter();
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null
+  );
 
   const handleCreateProduct = () => {
     router.push("/dashboard/products/add");
@@ -31,14 +35,34 @@ export default function ProductsPage() {
     router.push(`/dashboard/products/${productId}`);
   };
 
+  const handleCategorySelect = (categoryId: string | null) => {
+    setSelectedCategoryId(categoryId);
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <div className="container mx-auto px-4 py-6">
-        <ProductList
-          onCreateProduct={handleCreateProduct}
-          onEditProduct={handleEditProduct}
-          onViewProduct={handleViewProduct}
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Category Navigation Sidebar */}
+          <div className="lg:col-span-1">
+            <CategoryNavigation
+              selectedCategoryId={selectedCategoryId || undefined}
+              onCategorySelect={handleCategorySelect}
+              showProductCount={true}
+              className="sticky top-6"
+            />
+          </div>
+
+          {/* Product List */}
+          <div className="lg:col-span-3">
+            <ProductList
+              onCreateProduct={handleCreateProduct}
+              onEditProduct={handleEditProduct}
+              onViewProduct={handleViewProduct}
+              selectedCategoryId={selectedCategoryId}
+            />
+          </div>
+        </div>
       </div>
     </QueryClientProvider>
   );

@@ -14,6 +14,7 @@ import {
   Settings,
   Home,
   Plus,
+  FolderOpen,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -33,6 +34,15 @@ const navigation = [
     children: [
       { name: "All Products", href: "/dashboard/products" },
       { name: "Add Product", href: "/dashboard/products/add" },
+    ],
+  },
+  {
+    name: "Collections",
+    href: "/dashboard/collections",
+    icon: FolderOpen,
+    children: [
+      { name: "All Collections", href: "/dashboard/collections" },
+      { name: "Create Collection", href: "/dashboard/collections/create" },
     ],
   },
   {
@@ -130,6 +140,16 @@ export default function SellerSidebar({ className }: SidebarProps) {
               <Button className="w-full justify-start" size="sm">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Product
+              </Button>
+            </Link>
+            <Link href="/dashboard/collections/create">
+              <Button
+                className="w-full justify-start"
+                size="sm"
+                variant="outline"
+              >
+                <FolderOpen className="mr-2 h-4 w-4" />
+                Create Collection
               </Button>
             </Link>
           </div>
