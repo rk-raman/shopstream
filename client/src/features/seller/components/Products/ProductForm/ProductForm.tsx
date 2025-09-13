@@ -22,7 +22,7 @@ import { ProductFormData } from "@/features/seller/services/productService";
 import {
   useCreateProduct,
   useUpdateProduct,
-  useUploadImages,
+  useUploadProductImages,
   useCategories,
   useBrands,
 } from "@/features/seller/hooks/useProducts";
@@ -99,7 +99,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   // Mutations
   const createProductMutation = useCreateProduct();
   const updateProductMutation = useUpdateProduct();
-  const uploadImagesMutation = useUploadImages();
+  const uploadImagesMutation = useUploadProductImages();
 
   const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
