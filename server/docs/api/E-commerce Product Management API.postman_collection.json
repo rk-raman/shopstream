@@ -1,0 +1,1713 @@
+{
+	"info": {
+		"_postman_id": "7db2949d-374c-489b-ac4a-ca96c7786c21",
+		"name": "E-commerce Product Management API",
+		"description": "Complete API collection for e-commerce product management system including products, categories, brands, and collections",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "5168742"
+	},
+	"item": [
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "Public Routes",
+					"item": [
+						{
+							"name": "Get All Products",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/products?page=1&limit=12&sortBy=createdAt&sortOrder=desc",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"products"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "12"
+										},
+										{
+											"key": "search",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "category",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "brand",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "minPrice",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "maxPrice",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "sortBy",
+											"value": "createdAt"
+										},
+										{
+											"key": "sortOrder",
+											"value": "desc"
+										},
+										{
+											"key": "featured",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "inStock",
+											"value": "",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Search Products",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/products/search?q=laptop&page=1&limit=12",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"products",
+										"search"
+									],
+									"query": [
+										{
+											"key": "q",
+											"value": "laptop"
+										},
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "12"
+										},
+										{
+											"key": "category",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "brand",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "minPrice",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "maxPrice",
+											"value": "",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Featured Products",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/products/featured?limit=8",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"products",
+										"featured"
+									],
+									"query": [
+										{
+											"key": "limit",
+											"value": "8"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Product by ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/products/{{product_id}}"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Product by Slug",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/products/slug/macbook-pro-16"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Products by Category",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/products/category/{{category_id}}?page=1&limit=12",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"products",
+										"category",
+										"{{category_id}}"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "12"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Products by Seller",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/products/seller/64f1b2c3d4e5f6789abcdef0"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Related Products",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/products/{{product_id}}/related?limit=6",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"products",
+										"{{product_id}}",
+										"related"
+									],
+									"query": [
+										{
+											"key": "limit",
+											"value": "6"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Product Variants",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/products/{{product_id}}/variants"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Authenticated Routes",
+					"item": [
+						{
+							"name": "Create Product",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"MacBook Pro 16-inch\",\n  \"description\": \"Apple MacBook Pro 16-inch with M2 Pro chip, 16GB RAM, 512GB SSD\",\n  \"shortDescription\": \"Powerful laptop for professionals\",\n  \"category\": \"{{category_id}}\",\n  \"brand\": \"{{brand_id}}\",\n  \"basePrice\": 2499.00,\n  \"discountPrice\": 2299.00,\n  \"stock\": 50,\n  \"sku\": \"APPLE-MBP-16-M2PRO-512\",\n  \"tags\": [\"laptop\", \"apple\", \"macbook\", \"professional\"],\n  \"weight\": 2100,\n  \"dimensions\": {\n    \"length\": 35.57,\n    \"width\": 24.81,\n    \"height\": 1.68,\n    \"unit\": \"cm\"\n  },\n  \"specifications\": [\n    {\n      \"name\": \"Processor\",\n      \"value\": \"Apple M2 Pro\",\n      \"category\": \"technical\"\n    },\n    {\n      \"name\": \"RAM\",\n      \"value\": \"16GB\",\n      \"category\": \"technical\"\n    },\n    {\n      \"name\": \"Storage\",\n      \"value\": \"512GB SSD\",\n      \"category\": \"technical\"\n    }\n  ],\n  \"metaTitle\": \"MacBook Pro 16-inch - Professional Laptop\",\n  \"metaDescription\": \"Buy MacBook Pro 16-inch with M2 Pro chip. Perfect for professionals and creatives.\"\n}"
+								},
+								"url": "{{base_url}}/products"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Product",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"MacBook Pro 16-inch (Updated)\",\n  \"basePrice\": 2399.00,\n  \"stock\": 45,\n  \"status\": \"active\"\n}"
+								},
+								"url": "{{base_url}}/products/{{product_id}}"
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Product",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": "{{base_url}}/products/{{product_id}}"
+							},
+							"response": []
+						},
+						{
+							"name": "Get My Products",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/products/my/products?page=1&limit=12",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"products",
+										"my",
+										"products"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "12"
+										},
+										{
+											"key": "status",
+											"value": "",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Upload Product Images",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "images",
+											"type": "file",
+											"src": []
+										}
+									]
+								},
+								"url": "{{base_url}}/products/{{product_id}}/images"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Product Stock",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"stockChange\": 10,\n  \"variantId\": null\n}"
+								},
+								"url": "{{base_url}}/products/{{product_id}}/stock"
+							},
+							"response": []
+						},
+						{
+							"name": "Add Product Review",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"rating\": 5,\n  \"comment\": \"Excellent product! Highly recommended.\"\n}"
+								},
+								"url": "{{base_url}}/products/{{product_id}}/reviews"
+							},
+							"response": []
+						},
+						{
+							"name": "Add Product Variant",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Storage\",\n  \"value\": \"1TB SSD\",\n  \"price\": 2799.00,\n  \"stock\": 25,\n  \"sku\": \"APPLE-MBP-16-M2PRO-1TB\"\n}"
+								},
+								"url": "{{base_url}}/products/{{product_id}}/variants"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Product Variant",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"price\": 2699.00,\n  \"stock\": 30\n}"
+								},
+								"url": "{{base_url}}/products/{{product_id}}/variants/64f1b2c3d4e5f6789abcdef1"
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Product Variant",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": "{{base_url}}/products/{{product_id}}/variants/64f1b2c3d4e5f6789abcdef1"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Product Stats",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/products/{{product_id}}/stats"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Admin Routes",
+					"item": [
+						{
+							"name": "Approve Product",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"url": "{{base_url}}/products/{{product_id}}/approve"
+							},
+							"response": []
+						},
+						{
+							"name": "Reject Product",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"reason\": \"Product images are not clear. Please upload better quality images.\"\n}"
+								},
+								"url": "{{base_url}}/products/{{product_id}}/reject"
+							},
+							"response": []
+						},
+						{
+							"name": "Toggle Featured Status",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"isFeatured\": true\n}"
+								},
+								"url": "{{base_url}}/products/{{product_id}}/featured"
+							},
+							"response": []
+						},
+						{
+							"name": "Bulk Update Products",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"productIds\": [\"64f1b2c3d4e5f6789abcdef0\", \"64f1b2c3d4e5f6789abcdef1\"],\n  \"updateData\": {\n    \"status\": \"active\",\n    \"isApproved\": true\n  }\n}"
+								},
+								"url": "{{base_url}}/products/bulk/update"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Pending Products",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/products/admin/pending?page=1&limit=12",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"products",
+										"admin",
+										"pending"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "12"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Categories",
+			"item": [
+				{
+					"name": "Public Routes",
+					"item": [
+						{
+							"name": "Get Categories",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/categories?page=1&limit=20&populate=true",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"categories"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "20"
+										},
+										{
+											"key": "search",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "parent",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "level",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "isActive",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "isFeatured",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "populate",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Category Tree",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/categories/tree"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Featured Categories",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/categories/featured?limit=10",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"categories",
+										"featured"
+									],
+									"query": [
+										{
+											"key": "limit",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Search Categories",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/categories/search?q=electronics&limit=20",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"categories",
+										"search"
+									],
+									"query": [
+										{
+											"key": "q",
+											"value": "electronics"
+										},
+										{
+											"key": "limit",
+											"value": "20"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Categories by Level",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/categories/level/0"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Root Categories",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/categories/root"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Category by Slug",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/categories/slug/electronics"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Category by ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/categories/{{category_id}}"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Category Children",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/categories/{{category_id}}/children"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Category Ancestors",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/categories/{{category_id}}/ancestors"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Category Descendants",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/categories/{{category_id}}/descendants"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Authenticated Routes",
+					"item": [
+						{
+							"name": "Create Category",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Laptops\",\n  \"description\": \"High-performance laptops for work and gaming\",\n  \"shortDescription\": \"Laptops and notebooks\",\n  \"parent\": \"{{category_id}}\",\n  \"icon\": \"💻\",\n  \"metaTitle\": \"Laptops - Buy Best Laptops Online\",\n  \"metaDescription\": \"Shop for the latest laptops from top brands. Free shipping and warranty.\",\n  \"metaKeywords\": [\"laptops\", \"notebooks\", \"computers\"],\n  \"attributes\": [\n    {\n      \"name\": \"Brand\",\n      \"type\": \"select\",\n      \"options\": [\"Apple\", \"Dell\", \"HP\", \"Lenovo\"],\n      \"isRequired\": true,\n      \"isFilterable\": true\n    },\n    {\n      \"name\": \"Screen Size\",\n      \"type\": \"select\",\n      \"options\": [\"13 inch\", \"14 inch\", \"15 inch\", \"16 inch\"],\n      \"isFilterable\": true\n    }\n  ]\n}"
+								},
+								"url": "{{base_url}}/categories"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Category",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Gaming Laptops\",\n  \"description\": \"High-performance gaming laptops with powerful graphics\",\n  \"isFeatured\": true\n}"
+								},
+								"url": "{{base_url}}/categories/{{category_id}}"
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Category",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": "{{base_url}}/categories/{{category_id}}"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Category Sort Order",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"sortOrder\": 5\n}"
+								},
+								"url": "{{base_url}}/categories/{{category_id}}/sort-order"
+							},
+							"response": []
+						},
+						{
+							"name": "Bulk Update Categories",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"categoryIds\": [\"64f1b2c3d4e5f6789abcdef0\", \"64f1b2c3d4e5f6789abcdef1\"],\n  \"updateData\": {\n    \"isActive\": true,\n    \"isFeatured\": false\n  }\n}"
+								},
+								"url": "{{base_url}}/categories/bulk/update"
+							},
+							"response": []
+						},
+						{
+							"name": "Upload Category Image",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "image",
+											"type": "file",
+											"src": []
+										}
+									]
+								},
+								"url": "{{base_url}}/categories/{{category_id}}/image"
+							},
+							"response": []
+						},
+						{
+							"name": "Remove Category Image",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": "{{base_url}}/categories/{{category_id}}/image"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Admin Routes",
+					"item": [
+						{
+							"name": "Get Category Statistics",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/categories/admin/stats"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Category Product Count",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"url": "{{base_url}}/categories/{{category_id}}/product-count"
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Brands",
+			"item": [
+				{
+					"name": "Get All Brands",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/brands?page=1&limit=20&isActive=true",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"brands"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "search",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "isActive",
+									"value": "true"
+								},
+								{
+									"key": "isFeatured",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "isVerified",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Brand by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/brands/{{brand_id}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Brand by Slug",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/brands/slug/apple"
+					},
+					"response": []
+				},
+				{
+					"name": "Search Brands",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/brands/search?q=apple",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"brands",
+								"search"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "apple"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Featured Brands",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/brands/featured?limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"brands",
+								"featured"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Popular Brands",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/brands/popular?limit=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"brands",
+								"popular"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Brands by Category",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/brands/category/{{category_id}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Brands by Alphabet",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/brands/alphabet"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Brand",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Apple\",\n  \"description\": \"Apple Inc. is an American multinational technology company that designs, manufactures, and markets consumer electronics, computer software, and online services.\",\n  \"shortDescription\": \"Innovation and design leader in technology\",\n  \"companyInfo\": {\n    \"foundedYear\": 1976,\n    \"headquarters\": \"Cupertino, California, USA\",\n    \"website\": \"https://www.apple.com\",\n    \"email\": \"info@apple.com\",\n    \"address\": {\n      \"street\": \"One Apple Park Way\",\n      \"city\": \"Cupertino\",\n      \"state\": \"California\",\n      \"country\": \"USA\",\n      \"zipCode\": \"95014\"\n    }\n  },\n  \"socialMedia\": {\n    \"facebook\": \"https://facebook.com/Apple\",\n    \"twitter\": \"https://twitter.com/Apple\",\n    \"instagram\": \"https://instagram.com/Apple\",\n    \"youtube\": \"https://youtube.com/Apple\"\n  },\n  \"metaTitle\": \"Apple Products - Innovation at Its Best\",\n  \"metaDescription\": \"Discover Apple's innovative products including iPhone, iPad, Mac, and more.\",\n  \"metaKeywords\": [\"apple\", \"iphone\", \"ipad\", \"mac\", \"technology\"],\n  \"categories\": [\"{{category_id}}\"],\n  \"tags\": [\"technology\", \"innovation\", \"premium\"],\n  \"guidelines\": {\n    \"logoUsage\": \"Use official Apple logo with proper spacing\",\n    \"colorPalette\": [\"#000000\", \"#FFFFFF\", \"#007AFF\"],\n    \"typography\": \"San Francisco font family\",\n    \"toneOfVoice\": \"Simple, elegant, and innovative\"\n  }\n}"
+						},
+						"url": "{{base_url}}/brands"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Brand",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"description\": \"Updated description for Apple Inc.\",\n  \"isVerified\": true,\n  \"isFeatured\": true\n}"
+						},
+						"url": "{{base_url}}/brands/{{brand_id}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Brand",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": "{{base_url}}/brands/{{brand_id}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Brand Logo",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "logo",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": "{{base_url}}/brands/{{brand_id}}/logo"
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Brand Banner",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "banner",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": "{{base_url}}/brands/{{brand_id}}/banner"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Collections",
+			"item": [
+				{
+					"name": "Public Routes",
+					"item": [
+						{
+							"name": "Get Published Collections",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/collections/published?limit=20&sortBy=createdAt&sortOrder=desc",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"collections",
+										"published"
+									],
+									"query": [
+										{
+											"key": "limit",
+											"value": "20"
+										},
+										{
+											"key": "sortBy",
+											"value": "createdAt"
+										},
+										{
+											"key": "sortOrder",
+											"value": "desc"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Search Collections",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/collections/search?q=summer&limit=20",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"collections",
+										"search"
+									],
+									"query": [
+										{
+											"key": "q",
+											"value": "summer"
+										},
+										{
+											"key": "limit",
+											"value": "20"
+										},
+										{
+											"key": "sellerId",
+											"value": "",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get All Collections",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/collections?page=1&limit=20&isVisible=true&isPublished=true",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"collections"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "20"
+										},
+										{
+											"key": "sortBy",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "sortOrder",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "sellerId",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "type",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "isVisible",
+											"value": "true"
+										},
+										{
+											"key": "isPublished",
+											"value": "true"
+										},
+										{
+											"key": "search",
+											"value": "",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Collections by Seller",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/collections/seller/64f1b2c3d4e5f6789abcdef0",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"collections",
+										"seller",
+										"64f1b2c3d4e5f6789abcdef0"
+									],
+									"query": [
+										{
+											"key": "includeHidden",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "includeUnpublished",
+											"value": "",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Collection by Handle",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/collections/handle/summer-collection-2024?includeProducts=true",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"collections",
+										"handle",
+										"summer-collection-2024"
+									],
+									"query": [
+										{
+											"key": "includeProducts",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Collection by ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/collections/{{collection_id}}?includeProducts=true",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"collections",
+										"{{collection_id}}"
+									],
+									"query": [
+										{
+											"key": "includeProducts",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Collection Products",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/collections/{{collection_id}}/products?page=1&limit=20&sortBy=manual&populate=true",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"collections",
+										"{{collection_id}}",
+										"products"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "20"
+										},
+										{
+											"key": "sortBy",
+											"value": "manual"
+										},
+										{
+											"key": "populate",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Authenticated Routes",
+					"item": [
+						{
+							"name": "Get My Collections",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/collections/my/collections?includeHidden=true&includeUnpublished=true",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"collections",
+										"my",
+										"collections"
+									],
+									"query": [
+										{
+											"key": "includeHidden",
+											"value": "true"
+										},
+										{
+											"key": "includeUnpublished",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Collection Statistics",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/collections/stats/overview",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"collections",
+										"stats",
+										"overview"
+									],
+									"query": [
+										{
+											"key": "sellerId",
+											"value": "",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Collection",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Summer Collection 2024\",\n  \"description\": \"Trending summer products for the season\",\n  \"type\": \"manual\",\n  \"products\": [\"{{product_id}}\"],\n  \"seo\": {\n    \"title\": \"Summer Collection 2024 - Best Summer Products\",\n    \"description\": \"Discover our curated summer collection with the best products for the season.\",\n    \"keywords\": [\"summer\", \"collection\", \"seasonal\", \"trending\"]\n  },\n  \"sortOrder\": \"manual\",\n  \"isVisible\": true,\n  \"isPublished\": false\n}"
+								},
+								"url": "{{base_url}}/collections"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Collection",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Summer Collection 2024 (Updated)\",\n  \"description\": \"Updated trending summer products for the season\",\n  \"isPublished\": true\n}"
+								},
+								"url": "{{base_url}}/collections/{{collection_id}}"
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Collection",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": "{{base_url}}/collections/{{collection_id}}"
+							},
+							"response": []
+						},
+						{
+							"name": "Duplicate Collection",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": "{{base_url}}/collections/{{collection_id}}/duplicate"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Collection Visibility",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"isVisible\": false\n}"
+								},
+								"url": "{{base_url}}/collections/{{collection_id}}/visibility"
+							},
+							"response": []
+						},
+						{
+							"name": "Add Products to Collection",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"productIds\": [\"64f1b2c3d4e5f6789abcdef0\", \"64f1b2c3d4e5f6789abcdef1\"]\n}"
+								},
+								"url": "{{base_url}}/collections/{{collection_id}}/products"
+							},
+							"response": []
+						},
+						{
+							"name": "Remove Products from Collection",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"productIds\": [\"64f1b2c3d4e5f6789abcdef0\"]\n}"
+								},
+								"url": "{{base_url}}/collections/{{collection_id}}/products"
+							},
+							"response": []
+						},
+						{
+							"name": "Bulk Update Collections",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"updates\": [\n    {\n      \"id\": \"{{collection_id}}\",\n      \"data\": {\n        \"isVisible\": true,\n        \"isPublished\": true\n      }\n    }\n  ]\n}"
+								},
+								"url": "{{base_url}}/collections/bulk/update"
+							},
+							"response": []
+						},
+						{
+							"name": "Upload Collection Image",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "image",
+											"type": "file",
+											"src": []
+										}
+									]
+								},
+								"url": "{{base_url}}/collections/{{collection_id}}/image"
+							},
+							"response": []
+						},
+						{
+							"name": "Remove Collection Image",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": "{{base_url}}/collections/{{collection_id}}/image"
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": {
+			"token": "{{auth_token}}"
+		}
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Auto-generate test data for sample requests",
+					"if (!pm.environment.get('product_id')) {",
+					"    pm.environment.set('product_id', '64f1b2c3d4e5f6789abcdef0');",
+					"}",
+					"",
+					"if (!pm.environment.get('category_id')) {",
+					"    pm.environment.set('category_id', '64f1b2c3d4e5f6789abcdef1');",
+					"}",
+					"",
+					"if (!pm.environment.get('brand_id')) {",
+					"    pm.environment.set('brand_id', '64f1b2c3d4e5f6789abcdef2');",
+					"}",
+					"",
+					"if (!pm.environment.get('collection_id')) {",
+					"    pm.environment.set('collection_id', '64f1b2c3d4e5f6789abcdef3');",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Common test scripts for all requests",
+					"pm.test('Response time is less than 2000ms', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+					"});",
+					"",
+					"pm.test('Status code is successful', function () {",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+					"});",
+					"",
+					"pm.test('Response has correct content type', function () {",
+					"    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+					"});",
+					"",
+					"// Auto-extract IDs from responses for chaining requests",
+					"if (pm.response.code === 200 || pm.response.code === 201) {",
+					"    try {",
+					"        const responseJson = pm.response.json();",
+					"        ",
+					"        // Extract product ID",
+					"        if (responseJson.data && responseJson.data.product && responseJson.data.product._id) {",
+					"            pm.environment.set('product_id', responseJson.data.product._id);",
+					"        }",
+					"        ",
+					"        // Extract category ID",
+					"        if (responseJson.data && responseJson.data.category && responseJson.data.category._id) {",
+					"            pm.environment.set('category_id', responseJson.data.category._id);",
+					"        }",
+					"        ",
+					"        // Extract brand ID",
+					"        if (responseJson.data && responseJson.data.brand && responseJson.data.brand._id) {",
+					"            pm.environment.set('brand_id', responseJson.data.brand._id);",
+					"        }",
+					"        ",
+					"        // Extract collection ID",
+					"        if (responseJson.data && responseJson.data.collection && responseJson.data.collection._id) {",
+					"            pm.environment.set('collection_id', responseJson.data.collection._id);",
+					"        }",
+					"        ",
+					"        // Extract from array responses",
+					"        if (responseJson.data && responseJson.data.docs && responseJson.data.docs.length > 0) {",
+					"            const firstItem = responseJson.data.docs[0];",
+					"            if (firstItem._id) {",
+					"                const requestUrl = pm.request.url.toString();",
+					"                if (requestUrl.includes('/products')) {",
+					"                    pm.environment.set('product_id', firstItem._id);",
+					"                } else if (requestUrl.includes('/categories')) {",
+					"                    pm.environment.set('category_id', firstItem._id);",
+					"                } else if (requestUrl.includes('/brands')) {",
+					"                    pm.environment.set('brand_id', firstItem._id);",
+					"                } else if (requestUrl.includes('/collections')) {",
+					"                    pm.environment.set('collection_id', firstItem._id);",
+					"                }",
+					"            }",
+					"        }",
+					"    } catch (e) {",
+					"        // Ignore JSON parsing errors",
+					"        console.log('Could not parse response JSON:', e.message);",
+					"    }",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000/api",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "product_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "category_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "brand_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "collection_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
