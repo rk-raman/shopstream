@@ -1,5 +1,6 @@
+import API_ENDPOINTS from "@/constants/endpoints";
 import axiosSeller from "@/lib/api/axiosSeller";
-import { API_ENDPOINTS } from "@/lib/api/endpoints";
+
 import {
   Category,
   CategoryFormData,
@@ -36,7 +37,7 @@ export const getCategories = async (params?: {
   isFeatured?: boolean;
 }): Promise<PaginatedResponse<Category>> => {
   const queryString = params ? buildQueryParams(params) : "";
-  const url = `${API_ENDPOINTS.CATEGORIES}${
+  const url = `${API_ENDPOINTS.CATEGORIES.BASE}${
     queryString ? `?${queryString}` : ""
   }`;
 
@@ -47,7 +48,7 @@ export const getCategories = async (params?: {
 // Get category tree structure
 export const getCategoryTree = async (): Promise<CategoryTree[]> => {
   const response = await axiosSeller.get<ApiResponse<CategoryTree[]>>(
-    `${API_ENDPOINTS.CATEGORIES}/tree`
+    `${API_ENDPOINTS.CATEGORIES.BASE}/tree`
   );
   return response.data.data;
 };
@@ -55,7 +56,7 @@ export const getCategoryTree = async (): Promise<CategoryTree[]> => {
 // Get root categories (level 0)
 export const getRootCategories = async (): Promise<Category[]> => {
   const response = await axiosSeller.get<ApiResponse<Category[]>>(
-    `${API_ENDPOINTS.CATEGORIES}/root`
+    `${API_ENDPOINTS.CATEGORIES.BASE}/root`
   );
   return response.data.data;
 };
@@ -65,7 +66,7 @@ export const getCategoriesByLevel = async (
   level: number
 ): Promise<Category[]> => {
   const response = await axiosSeller.get<ApiResponse<Category[]>>(
-    `${API_ENDPOINTS.CATEGORIES}/level/${level}`
+    `${API_ENDPOINTS.CATEGORIES.BASE}/level/${level}`
   );
   return response.data.data;
 };
@@ -73,7 +74,7 @@ export const getCategoriesByLevel = async (
 // Get featured categories
 export const getFeaturedCategories = async (): Promise<Category[]> => {
   const response = await axiosSeller.get<ApiResponse<Category[]>>(
-    `${API_ENDPOINTS.CATEGORIES}/featured`
+    `${API_ENDPOINTS.CATEGORIES.BASE}/featured`
   );
   return response.data.data;
 };
@@ -81,7 +82,7 @@ export const getFeaturedCategories = async (): Promise<Category[]> => {
 // Get single category by ID
 export const getCategory = async (id: string): Promise<Category> => {
   const response = await axiosSeller.get<ApiResponse<Category>>(
-    `${API_ENDPOINTS.CATEGORIES}/${id}`
+    `${API_ENDPOINTS.CATEGORIES.BASE}/${id}`
   );
   return response.data.data;
 };
@@ -89,7 +90,7 @@ export const getCategory = async (id: string): Promise<Category> => {
 // Get category by slug
 export const getCategoryBySlug = async (slug: string): Promise<Category> => {
   const response = await axiosSeller.get<ApiResponse<Category>>(
-    `${API_ENDPOINTS.CATEGORIES}/slug/${slug}`
+    `${API_ENDPOINTS.CATEGORIES.BASE}/slug/${slug}`
   );
   return response.data.data;
 };
@@ -99,7 +100,7 @@ export const getCategoryChildren = async (
   parentId: string
 ): Promise<Category[]> => {
   const response = await axiosSeller.get<ApiResponse<Category[]>>(
-    `${API_ENDPOINTS.CATEGORIES}/${parentId}/children`
+    `${API_ENDPOINTS.CATEGORIES.BASE}/${parentId}/children`
   );
   return response.data.data;
 };
@@ -109,7 +110,7 @@ export const getCategoryAncestors = async (
   categoryId: string
 ): Promise<Category[]> => {
   const response = await axiosSeller.get<ApiResponse<Category[]>>(
-    `${API_ENDPOINTS.CATEGORIES}/${categoryId}/ancestors`
+    `${API_ENDPOINTS.CATEGORIES.BASE}/${categoryId}/ancestors`
   );
   return response.data.data;
 };
@@ -119,7 +120,7 @@ export const createCategory = async (
   categoryData: CategoryFormData
 ): Promise<Category> => {
   const response = await axiosSeller.post<ApiResponse<Category>>(
-    API_ENDPOINTS.CATEGORIES,
+    API_ENDPOINTS.CATEGORIES.BASE,
     categoryData
   );
   return response.data.data;
@@ -131,7 +132,7 @@ export const updateCategory = async (
   categoryData: Partial<CategoryFormData>
 ): Promise<Category> => {
   const response = await axiosSeller.put<ApiResponse<Category>>(
-    `${API_ENDPOINTS.CATEGORIES}/${id}`,
+    `${API_ENDPOINTS.CATEGORIES.BASE}/${id}`,
     categoryData
   );
   return response.data.data;
@@ -139,14 +140,14 @@ export const updateCategory = async (
 
 // Delete category
 export const deleteCategory = async (id: string): Promise<void> => {
-  await axiosSeller.delete(`${API_ENDPOINTS.CATEGORIES}/${id}`);
+  await axiosSeller.delete(`${API_ENDPOINTS.CATEGORIES.BASE}/${id}`);
 };
 
 // Bulk delete categories
 export const bulkDeleteCategories = async (
   categoryIds: string[]
 ): Promise<void> => {
-  await axiosSeller.delete(`${API_ENDPOINTS.CATEGORIES}/bulk`, {
+  await axiosSeller.delete(`${API_ENDPOINTS.CATEGORIES.BASE}/bulk`, {
     data: { categoryIds },
   });
 };
@@ -157,7 +158,7 @@ export const updateCategoryStatus = async (
   isActive: boolean
 ): Promise<Category> => {
   const response = await axiosSeller.patch<ApiResponse<Category>>(
-    `${API_ENDPOINTS.CATEGORIES}/${id}/status`,
+    `${API_ENDPOINTS.CATEGORIES.BASE}/${id}/status`,
     {
       isActive,
     }
@@ -171,7 +172,7 @@ export const toggleCategoryFeatured = async (
   isFeatured: boolean
 ): Promise<Category> => {
   const response = await axiosSeller.patch<ApiResponse<Category>>(
-    `${API_ENDPOINTS.CATEGORIES}/${id}/featured`,
+    `${API_ENDPOINTS.CATEGORIES.BASE}/${id}/featured`,
     {
       isFeatured,
     }
@@ -185,7 +186,7 @@ export const updateCategorySortOrder = async (
   sortOrder: number
 ): Promise<Category> => {
   const response = await axiosSeller.patch<ApiResponse<Category>>(
-    `${API_ENDPOINTS.CATEGORIES}/${id}/sort-order`,
+    `${API_ENDPOINTS.CATEGORIES.BASE}/${id}/sort-order`,
     {
       sortOrder,
     }
@@ -199,7 +200,7 @@ export const moveCategoryToParent = async (
   newParentId: string | null
 ): Promise<Category> => {
   const response = await axiosSeller.patch<ApiResponse<Category>>(
-    `${API_ENDPOINTS.CATEGORIES}/${categoryId}/move`,
+    `${API_ENDPOINTS.CATEGORIES.BASE}/${categoryId}/move`,
     {
       parentId: newParentId,
     }
@@ -212,7 +213,9 @@ export const searchCategories = async (
   searchTerm: string
 ): Promise<Category[]> => {
   const response = await axiosSeller.get<ApiResponse<Category[]>>(
-    `${API_ENDPOINTS.CATEGORIES}/search?q=${encodeURIComponent(searchTerm)}`
+    `${API_ENDPOINTS.CATEGORIES.BASE}/search?q=${encodeURIComponent(
+      searchTerm
+    )}`
   );
   return response.data.data;
 };
@@ -246,7 +249,7 @@ export const getCategoryStatistics = async (): Promise<{
   categoriesByLevel: { level: number; count: number }[];
 }> => {
   const response = await axiosSeller.get<ApiResponse<any>>(
-    `${API_ENDPOINTS.CATEGORIES}/statistics`
+    `${API_ENDPOINTS.CATEGORIES.BASE}/statistics`
   );
   return response.data.data;
 };
@@ -258,7 +261,10 @@ export const validateCategoryMove = async (
 ): Promise<{ isValid: boolean; reason?: string }> => {
   const response = await axiosSeller.post<
     ApiResponse<{ isValid: boolean; reason?: string }>
-  >(`${API_ENDPOINTS.CATEGORIES}/validate-move`, { categoryId, newParentId });
+  >(`${API_ENDPOINTS.CATEGORIES.BASE}/validate-move`, {
+    categoryId,
+    newParentId,
+  });
   return response.data.data;
 };
 

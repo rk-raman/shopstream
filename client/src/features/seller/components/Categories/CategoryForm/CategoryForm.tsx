@@ -131,7 +131,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       {description && <p className="text-sm text-gray-500">{description}</p>}
 
       <div
-        className={`relative border-2 border-dashed rounded-lg p-4 transition-colors aspect-video ${
+        className={`relative border-2 border-dashed rounded-lg p-4 transition-colors  ${
           dragOver ? "border-blue-400 bg-blue-50" : "border-gray-300"
         } flex items-center justify-center`}
         onDrop={handleDrop}
@@ -251,6 +251,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
   }, [watchName, category, form]);
 
   const handleImageUpload = (file: File) => {
+    console.log(file);
     setImageFile(file);
   };
 
@@ -368,7 +369,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
       if (imageFile) {
         await uploadImageMutation.mutateAsync({
           categoryId: savedCategory._id,
-          file: imageFile,
+          imageFile: imageFile,
         });
       }
 
@@ -460,14 +461,19 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
                 <div>
                   <Label htmlFor="parentId">Parent Category</Label>
                   <Select
-                    value={form.watch("parentId")}
-                    onValueChange={(value) => form.setValue("parentId", value)}
+                    value={form.watch("parentId") || "__none__"}
+                    onValueChange={(value) =>
+                      form.setValue(
+                        "parentId",
+                        value === "__none__" ? "" : value
+                      )
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select parent category (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">
+                      <SelectItem value="__none__">
                         No Parent (Root Category)
                       </SelectItem>
                       {availableParents.map((parent) => (

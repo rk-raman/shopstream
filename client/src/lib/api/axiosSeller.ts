@@ -129,7 +129,7 @@ axiosInstance.interceptors.response.use(
     }
 
     // For other errors, just log and reject
-    console.error("Seller API Error:", error.response?.data || error.message);
+    //console.error("Seller API Error:", error.response?.data || error.message);
     return Promise.reject(error);
   }
 );

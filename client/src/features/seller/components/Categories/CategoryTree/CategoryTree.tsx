@@ -30,7 +30,7 @@ import {
   useUpdateCategoryStatus,
   useToggleCategoryFeatured,
   useMoveCategoryToParent,
-} from "../../hooks/useCategories";
+} from "@/features/seller/hooks/useCategories";
 
 interface CategoryTreeProps {
   onCategorySelect?: (category: Category) => void;
