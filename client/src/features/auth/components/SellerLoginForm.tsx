@@ -15,8 +15,8 @@ const SellerLoginForm: React.FC = () => {
   const { values, errors, isLoading, handleChange, handleSubmit } =
     useAuthForm<LoginForm>({
       initialValues: {
-        email: "",
-        password: "",
+        email: "radharamankar6@gmail.com",
+        password: "Test@123",
         role: "seller",
       },
       validate: validateLoginForm,
