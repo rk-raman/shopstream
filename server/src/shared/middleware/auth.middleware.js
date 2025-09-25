@@ -20,16 +20,16 @@ const authenticate = asyncHandler(async (req, res, next) => {
     throw new ApiError(401, "Access token is required");
   }
 
-  console.log("🚀 [AUTH] Authenticate middleware:", {
-    token,
-  });
+  // console.log("🚀 [AUTH] Authenticate middleware:", {
+  //   token,
+  // });
   try {
     // Verify token
     const decoded = verifyAccessToken(token);
 
-    console.log("🚀 [AUTH] Authenticate middleware:", {
-      decoded,
-    });
+    // console.log("🚀 [AUTH] Authenticate middleware:", {
+    //   decoded,
+    // });
 
     // Get user from token
     const user = await User.findById(decoded.userId).select("-password");

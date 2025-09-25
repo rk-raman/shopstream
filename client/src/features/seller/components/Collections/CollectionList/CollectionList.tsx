@@ -72,10 +72,14 @@ export default function CollectionList({
   } = useQuery({
     queryKey: ["collections"],
     // Server GET /collections/my/collections does not support search/limit; we filter client-side
-    queryFn: () => getMyCollections(),
+    queryFn: () =>
+      getMyCollections({
+        includeHidden: true,
+        includeUnpublished: true,
+      }),
   });
 
-  const collections = collectionsResponse?.data?.docs || [];
+  const collections = collectionsResponse?.data || [];
 
   // Delete collection mutation
   const deleteMutation = useMutation({
