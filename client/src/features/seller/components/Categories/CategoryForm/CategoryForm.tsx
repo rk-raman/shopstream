@@ -250,9 +250,40 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
     }
   }, [watchName, category, form]);
 
-  const handleImageUpload = (file: File) => {
+  const handleImageUpload = async (file: File) => {
+    // Basic validations
+    const maxSizeMB = 5;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file");
+      return;
+    }
+    if (file.size > maxSizeMB * 1024 * 1024) {
+      toast.error(`Image must be smaller than ${maxSizeMB}MB`);
+      return;
+    }
+
     console.log(file);
-    setImageFile(file);
+
+    try {
+      // If category already exists (edit mode), upload immediately
+      if (category?._id) {
+        await uploadImageMutation.mutateAsync({
+          categoryId: category._id,
+          imageFile: file,
+        });
+        // Clear any staged file since it's now uploaded
+        setImageFile(null);
+      } else {
+        // For new category (create mode), stage file to upload after save
+        setImageFile(file);
+        toast.info("Image will be uploaded after the category is created");
+      }
+    } catch (err: any) {
+      console.error("Category image upload failed:", err);
+      toast.error(
+        err?.response?.data?.message || "Failed to upload category image"
+      );
+    }
   };
 
   const addAttribute = () => {

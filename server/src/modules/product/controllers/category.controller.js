@@ -1,6 +1,5 @@
 const categoryService = require("../services/category.service");
 const ApiError = require("../../../shared/utils/apiError");
-const { successResponse } = require("../../../shared/utils/responseHandler");
 const asyncHandler = require("../../../shared/utils/asyncHandler");
 
 class CategoryController {
@@ -9,11 +8,7 @@ class CategoryController {
     const userId = req.user._id;
     const category = await categoryService.createCategory(req.body, userId);
 
-    successResponse(res, {
-      statusCode: 201,
-      message: "Category created successfully",
-      data: category,
-    });
+    return res.created(category, "Category created successfully");
   });
 
   // Get all categories with filters and pagination
@@ -49,10 +44,7 @@ class CategoryController {
 
     const result = await categoryService.getCategories(filters, options);
 
-    successResponse(res, {
-      message: "Categories fetched successfully",
-      data: result,
-    });
+    return res.success(result, "Categories fetched successfully");
   });
 
   // Get category by ID
@@ -65,10 +57,7 @@ class CategoryController {
       populate === "true"
     );
 
-    successResponse(res, {
-      message: "Category fetched successfully",
-      data: category,
-    });
+    return res.success(category, "Category fetched successfully");
   });
 
   // Get category by slug
@@ -81,10 +70,7 @@ class CategoryController {
       populate === "true"
     );
 
-    successResponse(res, {
-      message: "Category fetched successfully",
-      data: category,
-    });
+    return res.success(category, "Category fetched successfully");
   });
 
   // Update category
@@ -94,10 +80,7 @@ class CategoryController {
 
     const category = await categoryService.updateCategory(id, req.body, userId);
 
-    successResponse(res, {
-      message: "Category updated successfully",
-      data: category,
-    });
+    return res.success(category, "Category updated successfully");
   });
 
   // Delete category
@@ -107,10 +90,7 @@ class CategoryController {
 
     const result = await categoryService.deleteCategory(id, userId);
 
-    successResponse(res, {
-      message: result.message,
-      data: null,
-    });
+    return res.success(null, result.message);
   });
 
   // Get category tree
@@ -121,10 +101,7 @@ class CategoryController {
       includeInactive === "true"
     );
 
-    successResponse(res, {
-      message: "Category tree fetched successfully",
-      data: tree,
-    });
+    return res.success(tree, "Category tree fetched successfully");
   });
 
   // Get featured categories
@@ -135,10 +112,7 @@ class CategoryController {
       parseInt(limit)
     );
 
-    successResponse(res, {
-      message: "Featured categories fetched successfully",
-      data: categories,
-    });
+    return res.success(categories, "Featured categories fetched successfully");
   });
 
   // Search categories
@@ -160,10 +134,7 @@ class CategoryController {
       options
     );
 
-    successResponse(res, {
-      message: "Categories searched successfully",
-      data: categories,
-    });
+    return res.success(categories, "Categories searched successfully");
   });
 
   // Update category sort order
@@ -182,10 +153,7 @@ class CategoryController {
       userId
     );
 
-    successResponse(res, {
-      message: "Category sort order updated successfully",
-      data: category,
-    });
+    return res.success(category, "Category sort order updated successfully");
   });
 
   // Bulk update categories
@@ -211,20 +179,14 @@ class CategoryController {
       userId
     );
 
-    successResponse(res, {
-      message: result.message,
-      data: { modifiedCount: result.modifiedCount },
-    });
+    return res.success({ modifiedCount: result.modifiedCount }, result.message);
   });
 
   // Get category statistics
   getCategoryStats = asyncHandler(async (req, res) => {
     const stats = await categoryService.getCategoryStats();
 
-    successResponse(res, {
-      message: "Category statistics fetched successfully",
-      data: stats,
-    });
+    return res.success(stats, "Category statistics fetched successfully");
   });
 
   // Upload category image
@@ -259,13 +221,13 @@ class CategoryController {
       userId
     );
 
-    successResponse(res, {
-      message: "Category image uploaded successfully",
-      data: {
+    return res.success(
+      {
         category,
         image: uploadResult,
       },
-    });
+      "Category image uploaded successfully"
+    );
   });
 
   // Remove category image
@@ -289,10 +251,7 @@ class CategoryController {
       userId
     );
 
-    successResponse(res, {
-      message: "Category image removed successfully",
-      data: updatedCategory,
-    });
+    return res.success(updatedCategory, "Category image removed successfully");
   });
 
   // Get categories by level
@@ -312,10 +271,10 @@ class CategoryController {
 
     const result = await categoryService.getCategories(filters, options);
 
-    successResponse(res, {
-      message: `Level ${level} categories fetched successfully`,
-      data: result,
-    });
+    return res.success(
+      result,
+      `Level ${level} categories fetched successfully`
+    );
   });
 
   // Get root categories (level 0)
@@ -334,10 +293,7 @@ class CategoryController {
 
     const result = await categoryService.getCategories(filters, options);
 
-    successResponse(res, {
-      message: "Root categories fetched successfully",
-      data: result,
-    });
+    return res.success(result, "Root categories fetched successfully");
   });
 
   // Get category children
@@ -356,10 +312,7 @@ class CategoryController {
 
     const result = await categoryService.getCategories(filters, options);
 
-    successResponse(res, {
-      message: "Category children fetched successfully",
-      data: result,
-    });
+    return res.success(result, "Category children fetched successfully");
   });
 
   // Get category ancestors (breadcrumb)
@@ -369,10 +322,7 @@ class CategoryController {
     const category = await categoryService.getCategoryById(id, false);
     const ancestors = await category.getAncestors();
 
-    successResponse(res, {
-      message: "Category ancestors fetched successfully",
-      data: ancestors,
-    });
+    return res.success(ancestors, "Category ancestors fetched successfully");
   });
 
   // Get category descendants
@@ -382,10 +332,10 @@ class CategoryController {
     const category = await categoryService.getCategoryById(id, false);
     const descendants = await category.getDescendants();
 
-    successResponse(res, {
-      message: "Category descendants fetched successfully",
-      data: descendants,
-    });
+    return res.success(
+      descendants,
+      "Category descendants fetched successfully"
+    );
   });
 
   // Update product count for category
@@ -395,10 +345,10 @@ class CategoryController {
     const category = await categoryService.getCategoryById(id, false);
     await category.updateProductCount();
 
-    successResponse(res, {
-      message: "Category product count updated successfully",
-      data: { productCount: category.productCount },
-    });
+    return res.success(
+      { productCount: category.productCount },
+      "Category product count updated successfully"
+    );
   });
 }
 

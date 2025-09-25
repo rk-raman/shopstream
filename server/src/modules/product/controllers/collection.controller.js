@@ -1,7 +1,6 @@
 const collectionService = require("../services/collection.service");
 const uploadService = require("../../upload/services/upload.service");
 const asyncHandler = require("../../../shared/middleware/asyncHandler");
-const { successResponse } = require("../../../shared/utils/responseUtils");
 
 /**
  * Create a new collection
@@ -14,11 +13,7 @@ const createCollection = asyncHandler(async (req, res) => {
     req.user.id
   );
 
-  successResponse(res, {
-    message: "Collection created successfully",
-    data: collection,
-    statusCode: 201,
-  });
+  return res.created(collection, "Collection created successfully");
 });
 
 /**
@@ -60,10 +55,7 @@ const getCollections = asyncHandler(async (req, res) => {
 
   const result = await collectionService.getCollections(filters, pagination);
 
-  successResponse(res, {
-    message: "Collections retrieved successfully",
-    data: result,
-  });
+  return res.success(result, "Collections retrieved successfully");
 });
 
 /**
@@ -83,10 +75,7 @@ const getCollectionById = asyncHandler(async (req, res) => {
     options
   );
 
-  successResponse(res, {
-    message: "Collection retrieved successfully",
-    data: collection,
-  });
+  return res.success(collection, "Collection retrieved successfully");
 });
 
 /**
@@ -105,10 +94,7 @@ const getCollectionByHandle = asyncHandler(async (req, res) => {
     options
   );
 
-  successResponse(res, {
-    message: "Collection retrieved successfully",
-    data: collection,
-  });
+  return res.success(collection, "Collection retrieved successfully");
 });
 
 /**
@@ -123,10 +109,7 @@ const updateCollection = asyncHandler(async (req, res) => {
     req.user.id
   );
 
-  successResponse(res, {
-    message: "Collection updated successfully",
-    data: collection,
-  });
+  return res.success(collection, "Collection updated successfully");
 });
 
 /**
@@ -140,9 +123,7 @@ const deleteCollection = asyncHandler(async (req, res) => {
     req.user.id
   );
 
-  successResponse(res, {
-    message: result.message,
-  });
+  return res.success(null, result.message);
 });
 
 /**
@@ -165,10 +146,7 @@ const getCollectionProducts = asyncHandler(async (req, res) => {
     options
   );
 
-  successResponse(res, {
-    message: "Collection products retrieved successfully",
-    data: products,
-  });
+  return res.success(products, "Collection products retrieved successfully");
 });
 
 /**
@@ -185,10 +163,7 @@ const addProductsToCollection = asyncHandler(async (req, res) => {
     req.user.id
   );
 
-  successResponse(res, {
-    message: "Products added to collection successfully",
-    data: collection,
-  });
+  return res.success(collection, "Products added to collection successfully");
 });
 
 /**
@@ -205,10 +180,10 @@ const removeProductsFromCollection = asyncHandler(async (req, res) => {
     req.user.id
   );
 
-  successResponse(res, {
-    message: "Products removed from collection successfully",
-    data: collection,
-  });
+  return res.success(
+    collection,
+    "Products removed from collection successfully"
+  );
 });
 
 /**
@@ -229,10 +204,7 @@ const searchCollections = asyncHandler(async (req, res) => {
     options
   );
 
-  successResponse(res, {
-    message: "Collections search completed successfully",
-    data: collections,
-  });
+  return res.success(collections, "Collections search completed successfully");
 });
 
 /**
@@ -248,10 +220,7 @@ const bulkUpdateCollections = asyncHandler(async (req, res) => {
     req.user.id
   );
 
-  successResponse(res, {
-    message: "Bulk update completed",
-    data: result,
-  });
+  return res.success(result, "Bulk update completed");
 });
 
 /**
@@ -268,10 +237,7 @@ const updateCollectionVisibility = asyncHandler(async (req, res) => {
     req.user.id
   );
 
-  successResponse(res, {
-    message: "Collection visibility updated successfully",
-    data: collection,
-  });
+  return res.success(collection, "Collection visibility updated successfully");
 });
 
 /**
@@ -292,10 +258,7 @@ const getCollectionsBySeller = asyncHandler(async (req, res) => {
     options
   );
 
-  successResponse(res, {
-    message: "Seller collections retrieved successfully",
-    data: collections,
-  });
+  return res.success(collections, "Seller collections retrieved successfully");
 });
 
 /**
@@ -314,10 +277,10 @@ const getPublishedCollections = asyncHandler(async (req, res) => {
 
   const collections = await collectionService.getPublishedCollections(options);
 
-  successResponse(res, {
-    message: "Published collections retrieved successfully",
-    data: collections,
-  });
+  return res.success(
+    collections,
+    "Published collections retrieved successfully"
+  );
 });
 
 /**
@@ -336,10 +299,7 @@ const getCollectionStats = asyncHandler(async (req, res) => {
 
   const stats = await collectionService.getCollectionStats(targetSellerId);
 
-  successResponse(res, {
-    message: "Collection statistics retrieved successfully",
-    data: stats,
-  });
+  return res.success(stats, "Collection statistics retrieved successfully");
 });
 
 /**
@@ -383,13 +343,10 @@ const uploadCollectionImage = asyncHandler(async (req, res) => {
     req.user.id
   );
 
-  successResponse(res, {
-    message: "Collection image uploaded successfully",
-    data: {
-      collection: updatedCollection,
-      image: uploadResult,
-    },
-  });
+  return res.success(
+    { collection: updatedCollection, image: uploadResult },
+    "Collection image uploaded successfully"
+  );
 });
 
 /**
@@ -420,10 +377,10 @@ const removeCollectionImage = asyncHandler(async (req, res) => {
     req.user.id
   );
 
-  successResponse(res, {
-    message: "Collection image removed successfully",
-    data: updatedCollection,
-  });
+  return res.success(
+    updatedCollection,
+    "Collection image removed successfully"
+  );
 });
 
 /**
@@ -444,10 +401,7 @@ const getMyCollections = asyncHandler(async (req, res) => {
     options
   );
 
-  successResponse(res, {
-    message: "Your collections retrieved successfully",
-    data: collections,
-  });
+  return res.success(collections, "Your collections retrieved successfully");
 });
 
 /**
@@ -482,10 +436,10 @@ const duplicateCollection = asyncHandler(async (req, res) => {
     req.user.id
   );
 
-  successResponse(res, {
-    message: "Collection duplicated successfully",
-    data: duplicatedCollection,
-  });
+  return res.success(
+    duplicatedCollection,
+    "Collection duplicated successfully"
+  );
 });
 
 module.exports = {

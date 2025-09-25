@@ -224,20 +224,18 @@ export const searchCategories = async (
 export const uploadCategoryImage = async (
   categoryId: string,
   imageFile: File
-): Promise<{ imageUrl: string }> => {
+): Promise<{ category: Category; image: any }> => {
   const formData = new FormData();
-  formData.append("categoryImage", imageFile);
+  // Server expects field name 'image' per uploadMiddleware.single("image")
+  formData.append("image", imageFile);
 
-  const endpoint = API_ENDPOINTS.UPLOAD.uploadCategoryImage(categoryId);
-  const response = await axiosSeller.post<ApiResponse<{ imageUrl: string }>>(
-    endpoint.url,
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
+  const response = await axiosSeller.post<
+    ApiResponse<{ category: Category; image: any }>
+  >(API_ENDPOINTS.CATEGORIES.UPLOAD_IMAGE(categoryId), formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return response.data.data;
 };
 
