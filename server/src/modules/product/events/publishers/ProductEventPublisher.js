@@ -462,6 +462,97 @@ class ProductEventPublisher {
       console.error("Error publishing categories bulk updated event:", error);
     }
   }
+
+  // Collection events (to support collection service)
+  async publishCollectionCreated(data) {
+    try {
+      this.eventEmitter.emit("collection.created", {
+        ...data,
+        timestamp: new Date(),
+        eventType: "collection.created",
+      });
+    } catch (error) {
+      console.error("Error publishing collection created event:", error);
+    }
+  }
+
+  async publishCollectionUpdated(data) {
+    try {
+      this.eventEmitter.emit("collection.updated", {
+        ...data,
+        timestamp: new Date(),
+        eventType: "collection.updated",
+      });
+    } catch (error) {
+      console.error("Error publishing collection updated event:", error);
+    }
+  }
+
+  async publishCollectionDeleted(data) {
+    try {
+      this.eventEmitter.emit("collection.deleted", {
+        ...data,
+        timestamp: new Date(),
+        eventType: "collection.deleted",
+      });
+    } catch (error) {
+      console.error("Error publishing collection deleted event:", error);
+    }
+  }
+
+  async publishCollectionProductsAdded(data) {
+    try {
+      this.eventEmitter.emit("collection.products.added", {
+        ...data,
+        timestamp: new Date(),
+        eventType: "collection.products.added",
+      });
+    } catch (error) {
+      console.error("Error publishing collection products added event:", error);
+    }
+  }
+
+  async publishCollectionProductsRemoved(data) {
+    try {
+      this.eventEmitter.emit("collection.products.removed", {
+        ...data,
+        timestamp: new Date(),
+        eventType: "collection.products.removed",
+      });
+    } catch (error) {
+      console.error(
+        "Error publishing collection products removed event:",
+        error
+      );
+    }
+  }
+
+  async publishCollectionsBulkUpdated(data) {
+    try {
+      this.eventEmitter.emit("collections.bulk.updated", {
+        ...data,
+        timestamp: new Date(),
+        eventType: "collections.bulk.updated",
+      });
+    } catch (error) {
+      console.error("Error publishing collections bulk updated event:", error);
+    }
+  }
+
+  async publishCollectionVisibilityUpdated(data) {
+    try {
+      this.eventEmitter.emit("collection.visibility.updated", {
+        ...data,
+        timestamp: new Date(),
+        eventType: "collection.visibility.updated",
+      });
+    } catch (error) {
+      console.error(
+        "Error publishing collection visibility updated event:",
+        error
+      );
+    }
+  }
 }
 
 module.exports = ProductEventPublisher;

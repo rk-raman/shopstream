@@ -3,6 +3,8 @@ const Product = require("../models/Product.model");
 const ApiError = require("../../../shared/utils/apiError");
 const ProductEventPublisher = require("../events/publishers/ProductEventPublisher");
 const mongoose = require("mongoose");
+const productEventPublisher = new ProductEventPublisher();
+
 class CollectionService {
   /**
    * Create a new collection
@@ -56,7 +58,7 @@ class CollectionService {
       await collection.save();
 
       // Publish event
-      await ProductEventPublisher.publishCollectionCreated({
+      await productEventPublisher.publishCollectionCreated({
         collectionId: collection._id,
         sellerId,
         collectionData: {
@@ -294,7 +296,7 @@ class CollectionService {
       await collection.save();
 
       // Publish event
-      await ProductEventPublisher.publishCollectionUpdated({
+      await productEventPublisher.publishCollectionUpdated({
         collectionId: collection._id,
         sellerId,
         updateData,
@@ -335,7 +337,7 @@ class CollectionService {
       await Collection.findByIdAndDelete(collectionId);
 
       // Publish event
-      await ProductEventPublisher.publishCollectionDeleted({
+      await productEventPublisher.publishCollectionDeleted({
         collectionId,
         sellerId,
         collectionData: {
@@ -394,7 +396,7 @@ class CollectionService {
       await collection.addMultipleProducts(productIds);
 
       // Publish event
-      await ProductEventPublisher.publishCollectionProductsAdded({
+      await productEventPublisher.publishCollectionProductsAdded({
         collectionId: collection._id,
         sellerId,
         productIds,
@@ -441,7 +443,7 @@ class CollectionService {
       await collection.removeMultipleProducts(productIds);
 
       // Publish event
-      await ProductEventPublisher.publishCollectionProductsRemoved({
+      await productEventPublisher.publishCollectionProductsRemoved({
         collectionId: collection._id,
         sellerId,
         productIds,
@@ -530,7 +532,7 @@ class CollectionService {
       }
 
       // Publish event
-      await ProductEventPublisher.publishCollectionsBulkUpdated({
+      await productEventPublisher.publishCollectionsBulkUpdated({
         sellerId,
         updatedCount: results.updated,
         errorCount: results.errors.length,
@@ -569,7 +571,7 @@ class CollectionService {
       await collection.save();
 
       // Publish event
-      await ProductEventPublisher.publishCollectionVisibilityUpdated({
+      await productEventPublisher.publishCollectionVisibilityUpdated({
         collectionId: collection._id,
         sellerId,
         isVisible,

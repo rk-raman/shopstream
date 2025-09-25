@@ -50,7 +50,7 @@ router.get(
 router.post(
   "/",
   authenticate,
-  authorize(["customer", "admin"]),
+  authorize("seller", "admin"),,
   validateCreateOrder,
   orderController.createOrder
 );
@@ -59,7 +59,7 @@ router.post(
 router.get(
   "/my-orders",
   authenticate,
-  authorize(["customer", "admin"]),
+  authorize("seller", "admin"),,
   validateOrderQuery,
   orderController.getMyOrders
 );
@@ -76,7 +76,7 @@ router.get(
 router.patch(
   "/:orderId/cancel",
   authenticate,
-  authorize(["customer", "admin"]),
+  authorize("seller", "admin"),,
   validateCancelOrder,
   orderController.cancelOrder
 );
@@ -85,7 +85,7 @@ router.patch(
 router.post(
   "/:orderId/return",
   authenticate,
-  authorize(["customer", "admin"]),
+  authorize("seller", "admin"),,
   validateRequestReturn,
   orderController.requestReturn
 );

@@ -40,7 +40,6 @@ import { Collection } from "@/types/global";
 import {
   getMyCollections,
   deleteCollection,
-  bulkDeleteCollections,
   updateCollectionVisibility,
 } from "@/features/seller/services/collectionService";
 
@@ -71,8 +70,9 @@ export default function CollectionList({
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["collections", searchTerm],
-    queryFn: () => getMyCollections({ search: searchTerm, limit: 50 }),
+    queryKey: ["collections"],
+    // Server GET /collections/my/collections does not support search/limit; we filter client-side
+    queryFn: () => getMyCollections(),
   });
 
   const collections = collectionsResponse?.data?.docs || [];
@@ -91,9 +91,11 @@ export default function CollectionList({
     },
   });
 
-  // Bulk delete mutation
+  // Bulk delete mutation implemented client-side (no bulk delete API on server)
   const bulkDeleteMutation = useMutation({
-    mutationFn: bulkDeleteCollections,
+    mutationFn: async (ids: string[]) => {
+      await Promise.all(ids.map((id) => deleteCollection(id)));
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["collections"] });
       toast.success(
@@ -380,10 +382,14 @@ export default function CollectionList({
                 </CardHeader>
 
                 <CardContent>
-                  {collection.image && (
+                  {(collection.image as any) && (
                     <div className="mb-3">
                       <img
-                        src={collection.image}
+                        src={
+                          typeof (collection as any).image === "string"
+                            ? ((collection as any).image as string)
+                            : (collection as any).image?.url
+                        }
                         alt={collection.name}
                         className="w-full h-32 object-cover rounded-md"
                       />

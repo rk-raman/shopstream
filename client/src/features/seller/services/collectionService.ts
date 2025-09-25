@@ -401,9 +401,9 @@ export const uploadCollectionImage = async (
   file: File
 ): Promise<ApiResponse<{ collection: Collection; image: any }>> => {
   try {
-    const endpoint = API_ENDPOINTS.UPLOAD.uploadFile();
+    const endpoint = API_ENDPOINTS.COLLECTIONS.uploadCollectionImage(id);
     const formData = new FormData();
-    formData.append("image", file);
+    formData.append("file", file);
 
     const response = await axiosSeller.post(endpoint.url, formData, {
       headers: {

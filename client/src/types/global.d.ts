@@ -71,9 +71,12 @@ export interface Collection {
   conditions?: CollectionCondition[];
   products: string[] | Product[];
   productCount: number;
-  image?: string;
-  seoTitle?: string;
-  seoDescription?: string;
+  image?: string | { public_id?: string | null; url?: string | null };
+  seo?: {
+    title?: string;
+    description?: string;
+    keywords?: string[];
+  };
   isVisible: boolean;
   sortOrder:
     | "manual"
@@ -85,6 +88,9 @@ export interface Collection {
     | "alphabetical-asc"
     | "alphabetical-desc";
   seller: string;
+  isPublished?: boolean;
+  viewCount?: number;
+  publishedAt?: string;
   createdAt: string;
   updatedAt: string;
 }

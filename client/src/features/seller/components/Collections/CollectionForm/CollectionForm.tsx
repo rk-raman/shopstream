@@ -8,10 +8,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -29,24 +27,16 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Upload,
-  X,
-  Plus,
-  Trash2,
-  Search,
-  Package,
-  Settings,
-  Eye,
-} from "lucide-react";
+import { X, Plus, Trash2, Search } from "lucide-react";
 import { toast } from "sonner";
-import { Collection, CollectionFormData, Product } from "@/types/global";
+import { Collection, CollectionFormData } from "@/types/global";
 import {
   createCollection,
   updateCollection,
-  uploadCollectionImage,
 } from "@/features/seller/services/collectionService";
 import { getMyProducts } from "@/features/seller/services/productService";
+import FileUploader from "@/components/shared/FileUploader";
+import type { FileUploaderValue } from "@/components/shared/FileUploader";
 
 const collectionSchema = z.object({
   name: z.string().min(1, "Collection name is required"),
@@ -81,10 +71,19 @@ export default function CollectionForm({
 }: CollectionFormProps) {
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [productSearch, setProductSearch] = useState("");
-  const [collectionImage, setCollectionImage] = useState<string | null>(
-    collection?.image || null
+  const [uploadedImages, setUploadedImages] = useState<FileUploaderValue>(
+    () => {
+      const img: any = (collection as any)?.image;
+      if (!img) return [];
+      if (typeof img === "string") {
+        return [{ public_id: "", url: img }];
+      }
+      if (img?.url) {
+        return [{ public_id: img.public_id || "", url: img.url }];
+      }
+      return [];
+    }
   );
-  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const queryClient = useQueryClient();
   const isEditing = !!collection;
@@ -98,8 +97,8 @@ export default function CollectionForm({
       type: collection?.type || "manual",
       isVisible: collection?.isVisible ?? true,
       sortOrder: collection?.sortOrder || "manual",
-      seoTitle: collection?.seoTitle || "",
-      seoDescription: collection?.seoDescription || "",
+      seoTitle: collection?.seo?.title || "",
+      seoDescription: collection?.seo?.description || "",
     },
   });
 
@@ -137,59 +136,38 @@ export default function CollectionForm({
   // Create/Update mutation
   const saveMutation = useMutation({
     mutationFn: async (data: CollectionFormData) => {
-      // Build base payload (without image until we have an ID for upload)
+      // Build base payload (do not send image yet; upload separately)
       const basePayload: any = {
-        ...data,
-        image: collectionImage,
+        name: data.name,
+        description: data.description,
+        handle: data.handle,
+        type: data.type,
+        isVisible: data.isVisible,
+        sortOrder: data.sortOrder,
+        seo: {
+          title: data.seoTitle || "",
+          description: data.seoDescription || "",
+        },
         products:
           form.watch("type") === "manual" ? selectedProducts : undefined,
       };
 
-      if (isEditing && collection) {
-        // If editing: optionally upload new image first, then update collection
-        let imageUrl = collectionImage;
-        if (imageFile) {
-          const uploadRes = await uploadCollectionImage(
-            collection._id,
-            imageFile
-          );
-          const uploaded = uploadRes.data?.upload;
-          imageUrl =
-            uploaded?.url ||
-            uploaded?.secureUrl ||
-            uploaded?.secure_url ||
-            imageUrl;
-        }
+      // Include image from FileUploader (first item if present)
+      const imagePayload =
+        uploadedImages && uploadedImages.length > 0
+          ? { image: uploadedImages[0] as any }
+          : {};
 
+      if (isEditing && collection) {
         return updateCollection(collection._id, {
           ...basePayload,
-          image: imageUrl,
+          ...imagePayload,
         });
       } else {
-        // If creating: create first to get ID, then upload image (if provided), then patch image
-        const createRes = await createCollection({
+        return createCollection({
           ...basePayload,
-          image: undefined,
+          ...imagePayload,
         });
-        const created = createRes.data;
-        let imageUrl: string | null = null;
-
-        if (imageFile) {
-          const uploadRes = await uploadCollectionImage(created._id, imageFile);
-          const uploaded = uploadRes.data?.upload;
-          imageUrl =
-            uploaded?.url ||
-            uploaded?.secureUrl ||
-            uploaded?.secure_url ||
-            null;
-
-          if (imageUrl) {
-            await updateCollection(created._id, { image: imageUrl });
-          }
-        }
-
-        // Return the latest collection payload to caller
-        return imageUrl ? { data: { ...created, image: imageUrl } } : createRes;
       }
     },
     onSuccess: (response) => {
@@ -206,23 +184,6 @@ export default function CollectionForm({
       );
     },
   });
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setCollectionImage(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeImage = () => {
-    setCollectionImage(null);
-    setImageFile(null);
-  };
 
   const toggleProductSelection = (productId: string) => {
     setSelectedProducts((prev) =>
@@ -439,50 +400,14 @@ export default function CollectionForm({
                   <CardTitle>Collection image</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {collectionImage ? (
-                    <div className="relative">
-                      <img
-                        src={collectionImage}
-                        alt="Collection"
-                        className="w-full h-48 object-cover rounded-lg"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        className="absolute top-2 right-2"
-                        onClick={removeImage}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
-                      <div className="text-center">
-                        <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
-                        <div className="mt-4">
-                          <Label
-                            htmlFor="image-upload"
-                            className="cursor-pointer"
-                          >
-                            <span className="mt-2 block text-sm font-medium text-foreground">
-                              Upload collection image
-                            </span>
-                          </Label>
-                          <input
-                            id="image-upload"
-                            type="file"
-                            className="hidden"
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                          />
-                        </div>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          PNG, JPG, GIF up to 10MB
-                        </p>
-                      </div>
-                    </div>
-                  )}
+                  <FileUploader
+                    path="collections/images"
+                    label="Collection image"
+                    description="Upload an image to represent this collection (recommended: 800x450px)"
+                    multiple={false}
+                    defaultValue={uploadedImages}
+                    onChange={setUploadedImages}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>

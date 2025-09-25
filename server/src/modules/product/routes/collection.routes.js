@@ -94,7 +94,7 @@ router.get(
 // Create new collection (seller/admin)
 router.post(
   "/",
-  authorize(["seller", "admin"]),
+  authorize("seller", "admin"),
   validateJoiMultiple(collectionSchemas.createCollectionSchema),
   collectionController.createCollection
 );
@@ -102,7 +102,7 @@ router.post(
 // Update collection (seller/admin)
 router.put(
   "/:id",
-  authorize(["seller", "admin"]),
+  authorize("seller", "admin"),
   validateJoiMultiple(collectionSchemas.updateCollectionSchema),
   collectionController.updateCollection
 );
@@ -110,7 +110,7 @@ router.put(
 // Delete collection (seller/admin)
 router.delete(
   "/:id",
-  authorize(["seller", "admin"]),
+  authorize("seller", "admin"),
   validateJoiMultiple(collectionSchemas.deleteCollectionSchema),
   collectionController.deleteCollection
 );
@@ -118,7 +118,7 @@ router.delete(
 // Duplicate collection (seller/admin)
 router.post(
   "/:id/duplicate",
-  authorize(["seller", "admin"]),
+  authorize("seller", "admin"),
   validateJoiMultiple(collectionSchemas.duplicateCollectionSchema),
   collectionController.duplicateCollection
 );
@@ -126,7 +126,7 @@ router.post(
 // Update collection visibility (seller/admin)
 router.patch(
   "/:id/visibility",
-  authorize(["seller", "admin"]),
+  authorize("seller", "admin"),
   validateJoiMultiple(collectionSchemas.updateCollectionVisibilitySchema),
   collectionController.updateCollectionVisibility
 );
@@ -134,7 +134,7 @@ router.patch(
 // Add products to collection (seller/admin)
 router.post(
   "/:id/products",
-  authorize(["seller", "admin"]),
+  authorize("seller", "admin"),
   validateJoiMultiple(collectionSchemas.addProductsToCollectionSchema),
   collectionController.addProductsToCollection
 );
@@ -142,7 +142,7 @@ router.post(
 // Remove products from collection (seller/admin)
 router.delete(
   "/:id/products",
-  authorize(["seller", "admin"]),
+  authorize("seller", "admin"),
   validateJoiMultiple(collectionSchemas.removeProductsFromCollectionSchema),
   collectionController.removeProductsFromCollection
 );
@@ -150,7 +150,7 @@ router.delete(
 // Bulk update collections (seller/admin)
 router.patch(
   "/bulk/update",
-  authorize(["seller", "admin"]),
+  authorize("seller", "admin"),
   validateJoiMultiple(collectionSchemas.bulkUpdateCollectionsSchema),
   collectionController.bulkUpdateCollections
 );
@@ -158,7 +158,7 @@ router.patch(
 // Upload collection image (seller/admin)
 router.post(
   "/:id/image",
-  authorize(["seller", "admin"]),
+  authorize("seller", "admin"),
   uploadMiddleware.single("image"),
   validateJoiMultiple(collectionSchemas.uploadCollectionImageSchema),
   collectionController.uploadCollectionImage
@@ -167,7 +167,7 @@ router.post(
 // Remove collection image (seller/admin)
 router.delete(
   "/:id/image",
-  authorize(["seller", "admin"]),
+  authorize("seller", "admin"),
   validateJoiMultiple(collectionSchemas.getCollectionByIdSchema),
   collectionController.removeCollectionImage
 );
