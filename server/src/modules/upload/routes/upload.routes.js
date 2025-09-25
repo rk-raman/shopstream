@@ -61,9 +61,38 @@ router.post(
 // Generic file upload route
 router.post(
   "/custom",
-  uploadMiddleware.single("file"),
-  validate(uploadValidators.validateUploadFile),
+  ...uploadMiddleware.custom("file", "single"),
+  validate(uploadValidators.validateCustomUpload),
   uploadController.customUpload
+);
+
+// Param-based generic upload route: uploads into the folder from URL params
+// Example: POST /api/v1/uploads/folders/categories/123/image
+// Will set category = "categories/123/image"
+router.post(
+  "/folders/:categoryPath(*)",
+  (req, res, next) => {
+    req.body = req.body || {};
+    req.body.category = req.params.categoryPath;
+    next();
+  },
+  ...uploadMiddleware.custom("file", "single"),
+  validate(uploadValidators.validateCustomUpload),
+  uploadController.customUpload
+);
+
+// Param-based generic MULTIPLE upload route
+// Example: POST /api/v1/uploads/folders/brands/abc/images/multiple
+router.post(
+  "/folders/:categoryPath(*)/multiple",
+  (req, res, next) => {
+    req.body = req.body || {};
+    req.body.category = req.params.categoryPath;
+    next();
+  },
+  ...uploadMiddleware.custom("files", "multiple", { maxCount: 20 }),
+  validate(uploadValidators.validateBulkUpload),
+  uploadController.bulkUpload
 );
 
 // Bulk file upload route

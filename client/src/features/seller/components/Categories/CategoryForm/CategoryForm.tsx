@@ -27,6 +27,7 @@ import {
 } from "@/features/seller/hooks/useCategories";
 import { Category } from "@/types/global";
 import { toast } from "sonner";
+import FileUploader from "@/components/shared/FileUploader";
 
 const categorySchema = z.object({
   name: z
@@ -551,12 +552,27 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
               <CardTitle>Category Image</CardTitle>
             </CardHeader>
             <CardContent>
-              <ImageUpload
+              <FileUploader
+                categoryPath={`categories/image`}
                 label="Category Image"
-                currentImage={category?.image}
-                onUpload={handleImageUpload}
-                isUploading={uploadImageMutation.isPending}
                 description="Upload an image to represent this category (recommended: 800x450px)"
+                multiple={false}
+                accept="image/*"
+                defaultValue={category?.image ? [category.image] : []}
+                onChange={async (items) => {
+                  try {
+                    await updateCategoryMutation.mutateAsync({
+                      id: category?._id || "",
+                      data: { image: items[0] ?? null },
+                    });
+                    toast.success("Category image updated");
+                  } catch (e: any) {
+                    toast.error(
+                      e?.response?.data?.message ||
+                        "Failed to save category image"
+                    );
+                  }
+                }}
               />
             </CardContent>
           </Card>
