@@ -1,8 +1,8 @@
 const Collection = require("../models/Collection.model");
 const Product = require("../models/Product.model");
-const ApiError = require("../../../shared/utils/ApiError");
-const ProductEventPublisher = require("../events/ProductEventPublisher");
-
+const ApiError = require("../../../shared/utils/apiError");
+const ProductEventPublisher = require("../events/publishers/ProductEventPublisher");
+const mongoose = require("mongoose");
 class CollectionService {
   /**
    * Create a new collection

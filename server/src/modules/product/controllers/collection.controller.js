@@ -1,6 +1,6 @@
 const collectionService = require("../services/collection.service");
 const uploadService = require("../../upload/services/upload.service");
-const asyncHandler = require("../../../shared/middleware/asyncHandler");
+const asyncHandler = require("../../../shared/utils/asyncHandler");
 
 /**
  * Create a new collection

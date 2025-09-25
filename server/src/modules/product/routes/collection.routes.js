@@ -7,61 +7,64 @@ const {
   authorize,
 } = require("../../../shared/middleware/auth.middleware");
 const uploadMiddleware = require("../../upload/middleware/upload.middleware");
+const {
+  validateJoiMultiple,
+} = require("../../../shared/middleware/validation.middleware");
 
 // Controllers
 const collectionController = require("../controllers/collection.controller");
 
-// Validators
-const collectionValidators = require("../validators/collection.validators");
+// Schemas
+const collectionSchemas = require("../validators/collection.schemas");
 
 // ==================== PUBLIC ROUTES ====================
 
 // Get published collections (public)
 router.get(
   "/published",
-  collectionValidators.validateGetPublishedCollections,
+  validateJoiMultiple(collectionSchemas.getPublishedCollectionsSchema),
   collectionController.getPublishedCollections
 );
 
 // Search collections (public)
 router.get(
   "/search",
-  collectionValidators.validateSearchCollections,
+  validateJoiMultiple(collectionSchemas.searchCollectionsSchema),
   collectionController.searchCollections
 );
 
 // Get collections with filters (public)
 router.get(
   "/",
-  collectionValidators.validateGetCollections,
+  validateJoiMultiple(collectionSchemas.getCollectionsSchema),
   collectionController.getCollections
 );
 
 // Get collections by seller (public)
 router.get(
   "/seller/:sellerId",
-  collectionValidators.validateGetCollectionsBySeller,
+  validateJoiMultiple(collectionSchemas.getCollectionsBySellerSchema),
   collectionController.getCollectionsBySeller
 );
 
 // Get collection by handle (public)
 router.get(
   "/handle/:handle",
-  collectionValidators.validateGetCollectionByHandle,
+  validateJoiMultiple(collectionSchemas.getCollectionByHandleSchema),
   collectionController.getCollectionByHandle
 );
 
 // Get collection by ID (public)
 router.get(
   "/:id",
-  collectionValidators.validateGetCollectionById,
+  validateJoiMultiple(collectionSchemas.getCollectionByIdSchema),
   collectionController.getCollectionById
 );
 
 // Get collection products (public)
 router.get(
   "/:id/products",
-  collectionValidators.validateGetCollectionProducts,
+  validateJoiMultiple(collectionSchemas.getCollectionProductsSchema),
   collectionController.getCollectionProducts
 );
 
@@ -75,14 +78,14 @@ router.use(authenticate);
 // Get my collections (authenticated seller)
 router.get(
   "/my/collections",
-  collectionValidators.validateGetMyCollections,
+  validateJoiMultiple(collectionSchemas.getMyCollectionsSchema),
   collectionController.getMyCollections
 );
 
 // Get collection statistics (authenticated user)
 router.get(
   "/stats/overview",
-  collectionValidators.validateGetCollectionStats,
+  validateJoiMultiple(collectionSchemas.getCollectionStatsSchema),
   collectionController.getCollectionStats
 );
 
@@ -92,7 +95,7 @@ router.get(
 router.post(
   "/",
   authorize(["seller", "admin"]),
-  collectionValidators.validateCreateCollection,
+  validateJoiMultiple(collectionSchemas.createCollectionSchema),
   collectionController.createCollection
 );
 
@@ -100,7 +103,7 @@ router.post(
 router.put(
   "/:id",
   authorize(["seller", "admin"]),
-  collectionValidators.validateUpdateCollection,
+  validateJoiMultiple(collectionSchemas.updateCollectionSchema),
   collectionController.updateCollection
 );
 
@@ -108,7 +111,7 @@ router.put(
 router.delete(
   "/:id",
   authorize(["seller", "admin"]),
-  collectionValidators.validateDeleteCollection,
+  validateJoiMultiple(collectionSchemas.deleteCollectionSchema),
   collectionController.deleteCollection
 );
 
@@ -116,7 +119,7 @@ router.delete(
 router.post(
   "/:id/duplicate",
   authorize(["seller", "admin"]),
-  collectionValidators.validateDuplicateCollection,
+  validateJoiMultiple(collectionSchemas.duplicateCollectionSchema),
   collectionController.duplicateCollection
 );
 
@@ -124,7 +127,7 @@ router.post(
 router.patch(
   "/:id/visibility",
   authorize(["seller", "admin"]),
-  collectionValidators.validateUpdateCollectionVisibility,
+  validateJoiMultiple(collectionSchemas.updateCollectionVisibilitySchema),
   collectionController.updateCollectionVisibility
 );
 
@@ -132,7 +135,7 @@ router.patch(
 router.post(
   "/:id/products",
   authorize(["seller", "admin"]),
-  collectionValidators.validateAddProductsToCollection,
+  validateJoiMultiple(collectionSchemas.addProductsToCollectionSchema),
   collectionController.addProductsToCollection
 );
 
@@ -140,7 +143,7 @@ router.post(
 router.delete(
   "/:id/products",
   authorize(["seller", "admin"]),
-  collectionValidators.validateRemoveProductsFromCollection,
+  validateJoiMultiple(collectionSchemas.removeProductsFromCollectionSchema),
   collectionController.removeProductsFromCollection
 );
 
@@ -148,7 +151,7 @@ router.delete(
 router.patch(
   "/bulk/update",
   authorize(["seller", "admin"]),
-  collectionValidators.validateBulkUpdateCollections,
+  validateJoiMultiple(collectionSchemas.bulkUpdateCollectionsSchema),
   collectionController.bulkUpdateCollections
 );
 
@@ -157,7 +160,7 @@ router.post(
   "/:id/image",
   authorize(["seller", "admin"]),
   uploadMiddleware.single("image"),
-  collectionValidators.validateUploadCollectionImage,
+  validateJoiMultiple(collectionSchemas.uploadCollectionImageSchema),
   collectionController.uploadCollectionImage
 );
 
@@ -165,7 +168,7 @@ router.post(
 router.delete(
   "/:id/image",
   authorize(["seller", "admin"]),
-  collectionValidators.validateGetCollectionById,
+  validateJoiMultiple(collectionSchemas.getCollectionByIdSchema),
   collectionController.removeCollectionImage
 );
 
