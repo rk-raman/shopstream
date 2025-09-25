@@ -104,28 +104,43 @@ const createCategorySchema = {
     }),
 
     // SEO fields
-    metaTitle: Joi.string().max(60).trim().optional().allow("").messages({
-      "string.max": "Meta title cannot exceed 60 characters",
-    }),
-
-    metaDescription: Joi.string()
-      .max(160)
-      .trim()
-      .optional()
-      .allow("")
-      .messages({
-        "string.max": "Meta description cannot exceed 160 characters",
+    seo: Joi.object({
+      metaTitle: Joi.string().max(60).trim().optional().allow("").messages({
+        "string.max": "Meta title cannot exceed 60 characters",
       }),
-
-    metaKeywords: Joi.array()
-      .items(Joi.string().trim().min(1).max(50))
-      .max(20)
-      .optional()
-      .messages({
-        "array.max": "Cannot have more than 20 meta keywords",
-        "string.min": "Meta keyword must be at least 1 character long",
-        "string.max": "Meta keyword cannot exceed 50 characters",
-      }),
+      metaDescription: Joi.string()
+        .max(160)
+        .trim()
+        .optional()
+        .allow("")
+        .messages({
+          "string.max": "Meta description cannot exceed 160 characters",
+        }),
+      metaKeywords: Joi.alternatives()
+        .try(
+          Joi.array().items(Joi.string().trim().min(1).max(50)).max(20),
+          Joi.string()
+            .trim()
+            .allow("")
+            .custom((value, helpers) => {
+              if (value === "") return [];
+              const parts = value
+                .split(",")
+                .map((s) => s.trim())
+                .filter((s) => s.length > 0);
+              if (parts.length > 20) {
+                return helpers.error("array.max", { limit: 20 });
+              }
+              return parts;
+            })
+        )
+        .optional()
+        .messages({
+          "array.max": "Cannot have more than 20 meta keywords",
+          "string.min": "Meta keyword must be at least 1 character long",
+          "string.max": "Meta keyword cannot exceed 50 characters",
+        }),
+    }).optional(),
 
     // Status fields
     isActive: Joi.boolean().default(true),
@@ -222,28 +237,43 @@ const updateCategorySchema = {
     }),
 
     // SEO fields
-    metaTitle: Joi.string().max(60).trim().optional().allow("").messages({
-      "string.max": "Meta title cannot exceed 60 characters",
-    }),
-
-    metaDescription: Joi.string()
-      .max(160)
-      .trim()
-      .optional()
-      .allow("")
-      .messages({
-        "string.max": "Meta description cannot exceed 160 characters",
+    seo: Joi.object({
+      metaTitle: Joi.string().max(60).trim().optional().allow("").messages({
+        "string.max": "Meta title cannot exceed 60 characters",
       }),
-
-    metaKeywords: Joi.array()
-      .items(Joi.string().trim().min(1).max(50))
-      .max(20)
-      .optional()
-      .messages({
-        "array.max": "Cannot have more than 20 meta keywords",
-        "string.min": "Meta keyword must be at least 1 character long",
-        "string.max": "Meta keyword cannot exceed 50 characters",
-      }),
+      metaDescription: Joi.string()
+        .max(160)
+        .trim()
+        .optional()
+        .allow("")
+        .messages({
+          "string.max": "Meta description cannot exceed 160 characters",
+        }),
+      metaKeywords: Joi.alternatives()
+        .try(
+          Joi.array().items(Joi.string().trim().min(1).max(50)).max(20),
+          Joi.string()
+            .trim()
+            .allow("")
+            .custom((value, helpers) => {
+              if (value === "") return [];
+              const parts = value
+                .split(",")
+                .map((s) => s.trim())
+                .filter((s) => s.length > 0);
+              if (parts.length > 20) {
+                return helpers.error("array.max", { limit: 20 });
+              }
+              return parts;
+            })
+        )
+        .optional()
+        .messages({
+          "array.max": "Cannot have more than 20 meta keywords",
+          "string.min": "Meta keyword must be at least 1 character long",
+          "string.max": "Meta keyword cannot exceed 50 characters",
+        }),
+    }).optional(),
 
     // Status fields
     isActive: Joi.boolean().optional(),

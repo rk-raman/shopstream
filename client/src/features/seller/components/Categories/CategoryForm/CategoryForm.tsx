@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,6 +28,11 @@ import {
 import { Category } from "@/types/global";
 import { toast } from "sonner";
 import FileUploader from "@/components/shared/FileUploader";
+import type { FileUploaderValue } from "@/components/shared/FileUploader";
+import {
+  uploadSingleToFolder,
+  extractSingleUploadUrl,
+} from "@/lib/uploads/uploadClient";
 
 const categorySchema = z.object({
   name: z
@@ -96,7 +101,11 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
   onSuccess,
   onCancel,
 }) => {
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [uploadedImages, setUploadedImages] = useState<FileUploaderValue>(
+    category?.image?.public_id && category?.image?.url
+      ? [{ public_id: category.image.public_id, url: category.image.url }]
+      : []
+  );
   const [attributes, setAttributes] = useState<any[]>([]);
 
   const { data: categoryTree } = useCategoryTree();
@@ -158,42 +167,6 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
       form.setValue("slug", slug);
     }
   }, [watchName, category, form]);
-
-  const handleImageUpload = async (file: File) => {
-    // Basic validations
-    const maxSizeMB = 5;
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select a valid image file");
-      return;
-    }
-    if (file.size > maxSizeMB * 1024 * 1024) {
-      toast.error(`Image must be smaller than ${maxSizeMB}MB`);
-      return;
-    }
-
-    console.log(file);
-
-    try {
-      // If category already exists (edit mode), upload immediately
-      if (category?._id) {
-        await uploadImageMutation.mutateAsync({
-          categoryId: category._id,
-          imageFile: file,
-        });
-        // Clear any staged file since it's now uploaded
-        setImageFile(null);
-      } else {
-        // For new category (create mode), stage file to upload after save
-        setImageFile(file);
-        toast.info("Image will be uploaded after the category is created");
-      }
-    } catch (err: any) {
-      console.error("Category image upload failed:", err);
-      toast.error(
-        err?.response?.data?.message || "Failed to upload category image"
-      );
-    }
-  };
 
   const addAttribute = () => {
     const newAttribute = {
@@ -294,6 +267,11 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
         attributes: attributes.filter((attr) => attr.name.trim()),
       };
 
+      // Include image from FileUploader (first item)
+      if (uploadedImages.length > 0) {
+        categoryData.image = uploadedImages[0];
+      }
+
       let savedCategory: Category;
 
       if (category) {
@@ -305,13 +283,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
         savedCategory = await createCategoryMutation.mutateAsync(categoryData);
       }
 
-      // Upload image if provided
-      if (imageFile) {
-        await uploadImageMutation.mutateAsync({
-          categoryId: savedCategory._id,
-          imageFile: imageFile,
-        });
-      }
+      // Image is already embedded via FileUploader; no extra upload required
 
       toast.success(
         category
@@ -461,26 +433,12 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
             </CardHeader>
             <CardContent>
               <FileUploader
-                categoryPath={`categories/image`}
+                path="categories/images"
                 label="Category Image"
                 description="Upload an image to represent this category (recommended: 800x450px)"
                 multiple={false}
-                accept="image/*"
-                defaultValue={category?.image ? [category.image] : []}
-                onChange={async (items) => {
-                  try {
-                    await updateCategoryMutation.mutateAsync({
-                      id: category?._id || "",
-                      data: { image: items[0] ?? null },
-                    });
-                    toast.success("Category image updated");
-                  } catch (e: any) {
-                    toast.error(
-                      e?.response?.data?.message ||
-                        "Failed to save category image"
-                    );
-                  }
-                }}
+                defaultValue={uploadedImages}
+                onChange={setUploadedImages}
               />
             </CardContent>
           </Card>

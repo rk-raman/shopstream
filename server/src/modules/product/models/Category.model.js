@@ -53,16 +53,23 @@ const categorySchema = new mongoose.Schema(
       default: "📦", // Default emoji icon
     },
 
-    // SEO
-    metaTitle: {
-      type: String,
-      maxlength: [60, "Meta title cannot exceed 60 characters"],
+    // SEO (nested)
+    seo: {
+      metaTitle: {
+        type: String,
+        maxlength: [60, "Meta title cannot exceed 60 characters"],
+        default: "",
+      },
+      metaDescription: {
+        type: String,
+        maxlength: [160, "Meta description cannot exceed 160 characters"],
+        default: "",
+      },
+      metaKeywords: {
+        type: [String],
+        default: [],
+      },
     },
-    metaDescription: {
-      type: String,
-      maxlength: [160, "Meta description cannot exceed 160 characters"],
-    },
-    metaKeywords: [String],
 
     // Status
     isActive: {
@@ -167,6 +174,32 @@ categorySchema.virtual("products", {
 // Virtual for full path
 categorySchema.virtual("fullPath").get(function () {
   return this.path || this.slug;
+});
+
+// Backward compatibility: migrate legacy flat SEO fields into nested seo object on save
+categorySchema.pre("save", function (next) {
+  // @ts-ignore legacy properties may exist on old docs
+  const doc = this;
+  if (!doc.seo) doc.seo = {};
+  if (doc.metaTitle && !doc.seo.metaTitle) {
+    doc.seo.metaTitle = doc.metaTitle;
+    // @ts-ignore clean legacy
+    doc.metaTitle = undefined;
+  }
+  if (doc.metaDescription && !doc.seo.metaDescription) {
+    doc.seo.metaDescription = doc.metaDescription;
+    // @ts-ignore clean legacy
+    doc.metaDescription = undefined;
+  }
+  if (
+    Array.isArray(doc.metaKeywords) &&
+    (!doc.seo.metaKeywords || doc.seo.metaKeywords.length === 0)
+  ) {
+    doc.seo.metaKeywords = doc.metaKeywords;
+    // @ts-ignore clean legacy
+    doc.metaKeywords = undefined;
+  }
+  next();
 });
 
 // Pre-save middleware

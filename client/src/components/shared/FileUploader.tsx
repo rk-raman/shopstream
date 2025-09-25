@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useMemo, useRef } from "react";
+import React, { useCallback, useMemo, useRef, useEffect } from "react";
 import { useUpload } from "@/lib/uploads/useUpload";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -9,7 +9,10 @@ import { X } from "lucide-react";
 export type FileUploaderValue = Array<{ public_id: string; url: string }>;
 
 export interface FileUploaderProps {
-  path: string; // e.g., "categories/<id>/image" or any folder path
+  /** Preferred upload path, e.g., "categories/<id>/image" */
+  path?: string;
+  /** @deprecated Use `path` instead */
+  categoryPath?: string;
   label?: string;
   description?: string;
   multiple?: boolean;
@@ -20,11 +23,14 @@ export interface FileUploaderProps {
   value?: FileUploaderValue;
   defaultValue?: FileUploaderValue;
   onChange?: (value: FileUploaderValue) => void;
+  // Notify parent when any file is uploading (true) or all settled (false)
+  onUploadingChange?: (uploading: boolean) => void;
   className?: string;
 }
 
 export default function FileUploader({
   path,
+  categoryPath,
   label = "Upload files",
   description,
   multiple = false,
@@ -34,11 +40,13 @@ export default function FileUploader({
   value,
   defaultValue = [],
   onChange,
+  onUploadingChange,
   className,
 }: FileUploaderProps) {
   const initial = useMemo(() => value ?? defaultValue, [value, defaultValue]);
+  const resolvedPath = path ?? categoryPath ?? "general";
   const { assets, onFilesSelected, deleteRemote, cleanup } = useUpload({
-    path,
+    path: resolvedPath,
     multiple,
     initial,
     onChange,
@@ -84,7 +92,15 @@ export default function FileUploader({
     e.preventDefault();
   }, []);
 
-  React.useEffect(() => () => cleanup(), [cleanup]);
+  useEffect(() => () => cleanup(), [cleanup]);
+
+  useEffect(() => {
+    if (!onUploadingChange) return;
+    const uploading = assets.some(
+      (a) => a.status === "uploading" || a.status === "idle"
+    );
+    onUploadingChange(uploading);
+  }, [assets, onUploadingChange]);
 
   return (
     <div className={className}>

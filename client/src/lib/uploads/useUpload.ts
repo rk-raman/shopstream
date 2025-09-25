@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState, useEffect } from "react";
 import {
   deleteUploadedFile,
   extractSingleUploadUrl,
@@ -50,17 +50,9 @@ export function useUpload({
 
   const revokeQueue = useRef<string[]>([]);
 
-  const emitChange = useCallback(
-    (next: UploadedAsset[]) => {
-      if (onChange) {
-        const out = next
-          .filter((a) => a.status === "uploaded" && a.public_id && a.url)
-          .map((a) => ({ public_id: a.public_id!, url: a.url! }));
-        onChange(out);
-      }
-    },
-    [onChange]
-  );
+  const emitChange = useCallback((next: UploadedAsset[]) => {
+    setAssets(next);
+  }, []);
 
   const addLocalFiles = useCallback(
     (files: FileList | File[]) => {
@@ -79,10 +71,9 @@ export function useUpload({
       );
       const next = multiple ? [...assets, ...newItems] : newItems.slice(0, 1);
       setAssets(next);
-      emitChange(next);
       return next;
     },
-    [assets, emitChange, multiple]
+    [assets, multiple]
   );
 
   const uploadOne = useCallback(
@@ -120,17 +111,11 @@ export function useUpload({
           ...updated,
           status: "uploaded",
           progress: 100,
-          public_id: upload?.public_id,
+          public_id: upload?.public_id ?? upload?.publicId,
           url: url,
         };
         setAssets((cur) => {
           const next = cur.map((a) => (a.id === item.id ? updated : a));
-          if (onChange) {
-            const out = next
-              .filter((a) => a.status === "uploaded" && a.public_id && a.url)
-              .map((a) => ({ public_id: a.public_id!, url: a.url! }));
-            onChange(out);
-          }
           return next;
         });
       } catch (e: any) {
@@ -146,7 +131,7 @@ export function useUpload({
       }
       return updated;
     },
-    [path, onChange]
+    [path]
   );
 
   const uploadAll = useCallback(async () => {
@@ -173,9 +158,8 @@ export function useUpload({
     (id: string) => {
       const next = assets.filter((a) => a.id !== id);
       setAssets(next);
-      emitChange(next);
     },
-    [assets, emitChange]
+    [assets]
   );
 
   const deleteRemote = useCallback(
@@ -196,8 +180,7 @@ export function useUpload({
 
   const clear = useCallback(() => {
     setAssets([]);
-    emitChange([]);
-  }, [emitChange]);
+  }, []);
 
   // Cleanup previews
   const cleanup = useCallback(() => {
@@ -227,6 +210,15 @@ export function useUpload({
       uploadOne,
     ]
   );
+
+  // Emit onChange as a side-effect after assets update to avoid setState during render issues
+  useEffect(() => {
+    if (!onChange) return;
+    const out = assets
+      .filter((a) => a.status === "uploaded" && a.public_id && a.url)
+      .map((a) => ({ public_id: a.public_id!, url: a.url! }));
+    onChange(out);
+  }, [assets, onChange]);
 
   return api;
 }
