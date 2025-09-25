@@ -1,432 +1,660 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
+  Award,
   Plus,
-  Settings,
-  BarChart3,
-  Building2,
+  Search,
+  Edit,
+  Trash2,
+  Upload,
+  X,
+  CheckCircle,
+  AlertCircle,
+  Building,
+  TrendingUp,
   Users,
-  Star,
-  Shield,
+  Package,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { BrandList } from "@/features/seller/components/Brands/BrandList/BrandList";
-import { useBrandStatistics } from "@/features/seller/hooks/useBrands";
-import { Brand } from "@/types/global";
+  getBrands,
+  createBrand,
+  updateBrand,
+  deleteBrand,
+  uploadBrandLogo,
+} from "@/services/brandService";
+import { Brand, BrandFormData } from "@/types/global";
 
-interface BrandFormModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  brand?: Brand;
+interface BrandState {
+  brands: Brand[];
+  filteredBrands: Brand[];
+  loading: boolean;
+  error: string | null;
+  searchTerm: string;
+  showForm: boolean;
+  editingBrand: Brand | null;
+  submitting: boolean;
 }
 
-const BrandFormModal: React.FC<BrandFormModalProps> = ({
-  isOpen,
-  onClose,
-  brand,
-}) => {
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{brand ? "Edit Brand" : "Create Brand"}</DialogTitle>
-        </DialogHeader>
-        <div className="p-6">
-          {/* Brand form will be implemented here */}
-          <p className="text-gray-500">
-            Brand form component will be implemented here...
-          </p>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
+interface BrandFormState {
+  formData: BrandFormData;
+  logoFile: File | null;
+  logoPreview: string | null;
+}
 
-const BrandStatistics: React.FC = () => {
-  const { data: stats, isLoading } = useBrandStatistics();
+export default function BrandsPage() {
+  const [state, setState] = useState<BrandState>({
+    brands: [],
+    filteredBrands: [],
+    loading: true,
+    error: null,
+    searchTerm: "",
+    showForm: false,
+    editingBrand: null,
+    submitting: false,
+  });
 
-  if (isLoading) {
+  const [formState, setFormState] = useState<BrandFormState>({
+    formData: {
+      name: "",
+      description: "",
+      website: "",
+      email: "",
+      phone: "",
+      logo: "",
+      banner: "",
+      socialMedia: {
+        facebook: "",
+        twitter: "",
+        instagram: "",
+        linkedin: "",
+      },
+      seo: {
+        metaTitle: "",
+        metaDescription: "",
+        metaKeywords: [],
+      },
+      status: "active",
+      isVerified: false,
+    },
+    logoFile: null,
+    logoPreview: null,
+  });
+
+  useEffect(() => {
+    loadBrands();
+  }, []);
+
+  useEffect(() => {
+    if (!state.searchTerm) {
+      setState((prev) => ({ ...prev, filteredBrands: prev.brands }));
+    } else {
+      const filtered = state.brands.filter(
+        (brand) =>
+          brand.name.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
+          brand.description
+            ?.toLowerCase()
+            .includes(state.searchTerm.toLowerCase())
+      );
+      setState((prev) => ({ ...prev, filteredBrands: filtered }));
+    }
+  }, [state.searchTerm, state.brands]);
+
+  const loadBrands = async () => {
+    try {
+      const response = await getBrands();
+      if (response.success) {
+        setState((prev) => ({
+          ...prev,
+          brands: response.data,
+          loading: false,
+        }));
+      } else {
+        setState((prev) => ({
+          ...prev,
+          error: response.error || "Failed to load brands",
+          loading: false,
+        }));
+      }
+    } catch (error) {
+      setState((prev) => ({
+        ...prev,
+        error: "Failed to load brands",
+        loading: false,
+      }));
+    }
+  };
+
+  const handleFormFieldChange = (field: string, value: any) => {
+    setFormState((prev) => ({
+      ...prev,
+      formData: {
+        ...prev.formData,
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleNestedFormFieldChange = (
+    parent: string,
+    field: string,
+    value: any
+  ) => {
+    setFormState((prev) => ({
+      ...prev,
+      formData: {
+        ...prev.formData,
+        [parent]: {
+          ...prev.formData[parent as keyof BrandFormData],
+          [field]: value,
+        },
+      },
+    }));
+  };
+
+  const handleLogoUpload = (file: File) => {
+    setFormState((prev) => ({
+      ...prev,
+      logoFile: file,
+      logoPreview: URL.createObjectURL(file),
+    }));
+  };
+
+  const resetForm = () => {
+    setFormState({
+      formData: {
+        name: "",
+        description: "",
+        website: "",
+        email: "",
+        phone: "",
+        logo: "",
+        banner: "",
+        socialMedia: {
+          facebook: "",
+          twitter: "",
+          instagram: "",
+          linkedin: "",
+        },
+        seo: {
+          metaTitle: "",
+          metaDescription: "",
+          metaKeywords: [],
+        },
+        status: "active",
+        isVerified: false,
+      },
+      logoFile: null,
+      logoPreview: null,
+    });
+    setState((prev) => ({
+      ...prev,
+      showForm: false,
+      editingBrand: null,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setState((prev) => ({ ...prev, submitting: true, error: null }));
+
+    try {
+      let logoUrl = formState.formData.logo;
+      if (formState.logoFile) {
+        const uploadRes = await uploadBrandLogo(formState.logoFile);
+        if (uploadRes.success) {
+          logoUrl = uploadRes.data;
+        }
+      }
+
+      const brandData = {
+        ...formState.formData,
+        logo: logoUrl,
+      };
+
+      let response;
+      if (state.editingBrand) {
+        response = await updateBrand(state.editingBrand._id, brandData);
+      } else {
+        response = await createBrand(brandData);
+      }
+
+      if (response.success) {
+        await loadBrands();
+        resetForm();
+      } else {
+        setState((prev) => ({
+          ...prev,
+          error: response.error || "Failed to save brand",
+        }));
+      }
+    } catch (error) {
+      setState((prev) => ({
+        ...prev,
+        error: "Failed to save brand",
+      }));
+    } finally {
+      setState((prev) => ({ ...prev, submitting: false }));
+    }
+  };
+
+  const handleEdit = (brand: Brand) => {
+    setFormState({
+      formData: {
+        name: brand.name,
+        description: brand.description || "",
+        website: brand.website || "",
+        email: brand.email || "",
+        phone: brand.phone || "",
+        logo: brand.logo || "",
+        banner: brand.banner || "",
+        socialMedia: brand.socialMedia || {
+          facebook: "",
+          twitter: "",
+          instagram: "",
+          linkedin: "",
+        },
+        seo: brand.seo || {
+          metaTitle: "",
+          metaDescription: "",
+          metaKeywords: [],
+        },
+        status: brand.status,
+        isVerified: brand.isVerified || false,
+      },
+      logoFile: null,
+      logoPreview: brand.logo || null,
+    });
+    setState((prev) => ({
+      ...prev,
+      editingBrand: brand,
+      showForm: true,
+    }));
+  };
+
+  const handleDelete = async (brandId: string) => {
+    if (!confirm("Are you sure you want to delete this brand?")) return;
+
+    try {
+      const response = await deleteBrand(brandId);
+      if (response.success) {
+        await loadBrands();
+      } else {
+        setState((prev) => ({
+          ...prev,
+          error: response.error || "Failed to delete brand",
+        }));
+      }
+    } catch (error) {
+      setState((prev) => ({
+        ...prev,
+        error: "Failed to delete brand",
+      }));
+    }
+  };
+
+  if (state.loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i}>
-            <CardContent className="p-6">
-              <div className="h-8 bg-gray-200 rounded animate-pulse mb-2" />
-              <div className="h-4 bg-gray-200 rounded animate-pulse" />
-            </CardContent>
-          </Card>
-        ))}
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Brands</p>
-              <p className="text-2xl font-bold">{stats?.totalBrands || 0}</p>
-            </div>
-            <Building2 className="h-8 w-8 text-blue-600" />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Active Brands</p>
-              <p className="text-2xl font-bold">{stats?.activeBrands || 0}</p>
-            </div>
-            <Users className="h-8 w-8 text-green-600" />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">
-                Featured Brands
-              </p>
-              <p className="text-2xl font-bold">{stats?.featuredBrands || 0}</p>
-            </div>
-            <Star className="h-8 w-8 text-yellow-600" />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">
-                Verified Brands
-              </p>
-              <p className="text-2xl font-bold">{stats?.verifiedBrands || 0}</p>
-            </div>
-            <Shield className="h-8 w-8 text-purple-600" />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+  const verifiedBrands = state.brands.filter((brand) => brand.isVerified);
+  const activeBrands = state.brands.filter(
+    (brand) => brand.status === "active"
   );
-};
-
-const BrandsPage: React.FC = () => {
-  const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
-  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [editingBrand, setEditingBrand] = useState<Brand | undefined>();
-
-  const handleBrandSelect = (brand: Brand) => {
-    setSelectedBrand(brand);
-  };
-
-  const handleBrandEdit = (brand: Brand) => {
-    setEditingBrand(brand);
-    setIsFormModalOpen(true);
-  };
-
-  const handleBrandAdd = () => {
-    setEditingBrand(undefined);
-    setIsFormModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsFormModalOpen(false);
-    setEditingBrand(undefined);
-  };
 
   return (
-    <div className="space-y-6">
+    <div className="p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Brands</h1>
-          <p className="text-gray-600 mt-1">
-            Manage your product brands and build customer trust
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">Brands</h1>
+          <p className="text-gray-600">Manage your product brands</p>
         </div>
+        <button
+          onClick={() => setState((prev) => ({ ...prev, showForm: true }))}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          Add Brand
+        </button>
+      </div>
 
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm">
-            <Settings className="h-4 w-4 mr-2" />
-            Settings
-          </Button>
-
-          <Button onClick={handleBrandAdd}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Brand
-          </Button>
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total Brands</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {state.brands.length}
+              </p>
+            </div>
+            <Building className="w-8 h-8 text-blue-600" />
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Verified Brands</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {verifiedBrands.length}
+              </p>
+            </div>
+            <Award className="w-8 h-8 text-green-600" />
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Active Brands</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {activeBrands.length}
+              </p>
+            </div>
+            <CheckCircle className="w-8 h-8 text-purple-600" />
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total Products</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {state.brands.reduce(
+                  (sum, brand) => sum + (brand.productCount || 0),
+                  0
+                )}
+              </p>
+            </div>
+            <Package className="w-8 h-8 text-orange-600" />
+          </div>
         </div>
       </div>
 
-      {/* Statistics */}
-      <BrandStatistics />
-
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Brand List */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
-                Brand Management
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <BrandList
-                onBrandSelect={handleBrandSelect}
-                onBrandEdit={handleBrandEdit}
-                selectedBrandId={selectedBrand?._id}
-                showActions={true}
-                showProductCount={true}
-                defaultView="grid"
-              />
-            </CardContent>
-          </Card>
+      {/* Search */}
+      <div className="mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <input
+            type="text"
+            placeholder="Search brands..."
+            value={state.searchTerm}
+            onChange={(e) =>
+              setState((prev) => ({ ...prev, searchTerm: e.target.value }))
+            }
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
         </div>
+      </div>
 
-        {/* Brand Details */}
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Brand Details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {selectedBrand ? (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    {selectedBrand.logo?.url ? (
-                      <img
-                        src={selectedBrand.logo.url}
-                        alt={selectedBrand.name}
-                        className="h-16 w-16 rounded-lg object-cover border"
-                      />
-                    ) : (
-                      <div className="h-16 w-16 rounded-lg bg-gray-200 flex items-center justify-center border">
-                        <Building2 className="h-8 w-8 text-gray-400" />
-                      </div>
-                    )}
+      {/* Error Message */}
+      {state.error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <p className="text-red-800">{state.error}</p>
+        </div>
+      )}
 
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-lg">
-                          {selectedBrand.name}
-                        </h3>
-                        {selectedBrand.isVerified && (
-                          <Shield className="h-4 w-4 text-blue-600" />
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-500">
-                        @{selectedBrand.slug}
-                      </p>
-                    </div>
-                  </div>
-
-                  {selectedBrand.description && (
-                    <div>
-                      <h4 className="font-medium mb-2">Description</h4>
-                      <p className="text-sm text-gray-600">
-                        {selectedBrand.description}
-                      </p>
+      {/* Brands Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {state.filteredBrands.map((brand) => (
+          <div
+            key={brand._id}
+            className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
+          >
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  {brand.logo ? (
+                    <img
+                      src={brand.logo}
+                      alt={brand.name}
+                      className="w-12 h-12 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+                      <Building className="w-6 h-6 text-gray-500" />
                     </div>
                   )}
-
-                  {selectedBrand.company && (
-                    <div>
-                      <h4 className="font-medium mb-2">Company Information</h4>
-                      <div className="space-y-2 text-sm">
-                        {selectedBrand.company.name && (
-                          <div>
-                            <span className="font-medium">Name:</span>
-                            <span className="ml-2">
-                              {selectedBrand.company.name}
-                            </span>
-                          </div>
-                        )}
-                        {selectedBrand.company.website && (
-                          <div>
-                            <span className="font-medium">Website:</span>
-                            <a
-                              href={selectedBrand.company.website}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="ml-2 text-blue-600 hover:underline"
-                            >
-                              {selectedBrand.company.website}
-                            </a>
-                          </div>
-                        )}
-                        {selectedBrand.company.email && (
-                          <div>
-                            <span className="font-medium">Email:</span>
-                            <span className="ml-2">
-                              {selectedBrand.company.email}
-                            </span>
-                          </div>
-                        )}
-                        {selectedBrand.company.phone && (
-                          <div>
-                            <span className="font-medium">Phone:</span>
-                            <span className="ml-2">
-                              {selectedBrand.company.phone}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium">Products:</span>
-                      <span className="ml-2">
-                        {selectedBrand.productCount || 0}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="font-medium">Followers:</span>
-                      <span className="ml-2">
-                        {selectedBrand.followerCount || 0}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="font-medium">Views:</span>
-                      <span className="ml-2">
-                        {selectedBrand.viewCount || 0}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="font-medium">Rating:</span>
-                      <span className="ml-2">
-                        {selectedBrand.averageRating || 0}/5
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium">Status:</span>
-                      <span
-                        className={`ml-2 ${
-                          selectedBrand.isActive
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }`}
-                      >
-                        {selectedBrand.isActive ? "Active" : "Inactive"}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="font-medium">Featured:</span>
-                      <span
-                        className={`ml-2 ${
-                          selectedBrand.isFeatured
-                            ? "text-yellow-600"
-                            : "text-gray-600"
-                        }`}
-                      >
-                        {selectedBrand.isFeatured ? "Yes" : "No"}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="font-medium">Verified:</span>
-                      <span
-                        className={`ml-2 ${
-                          selectedBrand.isVerified
-                            ? "text-blue-600"
-                            : "text-gray-600"
-                        }`}
-                      >
-                        {selectedBrand.isVerified ? "Yes" : "No"}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="font-medium">Categories:</span>
-                      <span className="ml-2">
-                        {selectedBrand.categories?.length || 0}
-                      </span>
-                    </div>
-                  </div>
-
-                  {selectedBrand.socialMedia &&
-                    Object.keys(selectedBrand.socialMedia).length > 0 && (
-                      <div>
-                        <h4 className="font-medium mb-2">Social Media</h4>
-                        <div className="space-y-2 text-sm">
-                          {Object.entries(selectedBrand.socialMedia).map(
-                            ([platform, url]) =>
-                              url && (
-                                <div key={platform}>
-                                  <span className="font-medium capitalize">
-                                    {platform}:
-                                  </span>
-                                  <a
-                                    href={url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="ml-2 text-blue-600 hover:underline"
-                                  >
-                                    {url}
-                                  </a>
-                                </div>
-                              )
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                  <div className="flex gap-2 pt-4">
-                    <Button
-                      size="sm"
-                      onClick={() => handleBrandEdit(selectedBrand)}
-                    >
-                      Edit Brand
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        window.open(`/brands/${selectedBrand.slug}`, "_blank")
-                      }
-                    >
-                      View Public
-                    </Button>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                      {brand.name}
+                      {brand.isVerified && (
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                      )}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {brand.productCount || 0} products
+                    </p>
                   </div>
                 </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Building2 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p>Select a brand to view details</p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleEdit(brand)}
+                    className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(brand._id)}
+                    className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
+              </div>
+
+              {brand.description && (
+                <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                  {brand.description}
+                </p>
               )}
-            </CardContent>
-          </Card>
-        </div>
+
+              <div className="flex items-center justify-between">
+                <span
+                  className={`px-2 py-1 rounded-full text-xs ${
+                    brand.status === "active"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+                >
+                  {brand.status}
+                </span>
+                {brand.website && (
+                  <a
+                    href={brand.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 text-sm"
+                  >
+                    Visit Website
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
+
+      {state.filteredBrands.length === 0 && (
+        <div className="text-center py-12">
+          <Building className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+          <p className="text-gray-500">No brands found</p>
+        </div>
+      )}
 
       {/* Brand Form Modal */}
-      <BrandFormModal
-        isOpen={isFormModalOpen}
-        onClose={handleCloseModal}
-        brand={editingBrand}
-      />
+      {state.showForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold">
+                {state.editingBrand ? "Edit Brand" : "Add New Brand"}
+              </h2>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              {/* Basic Information */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Brand Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formState.formData.name}
+                    onChange={(e) =>
+                      handleFormFieldChange("name", e.target.value)
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter brand name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={formState.formData.description}
+                    onChange={(e) =>
+                      handleFormFieldChange("description", e.target.value)
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Brand description"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Website
+                    </label>
+                    <input
+                      type="url"
+                      value={formState.formData.website}
+                      onChange={(e) =>
+                        handleFormFieldChange("website", e.target.value)
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="https://example.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Status
+                    </label>
+                    <select
+                      value={formState.formData.status}
+                      onChange={(e) =>
+                        handleFormFieldChange("status", e.target.value)
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Logo Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Brand Logo
+                </label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      e.target.files?.[0] && handleLogoUpload(e.target.files[0])
+                    }
+                    className="hidden"
+                    id="brand-logo"
+                  />
+                  <label
+                    htmlFor="brand-logo"
+                    className="cursor-pointer block text-center"
+                  >
+                    {formState.logoPreview ? (
+                      <img
+                        src={formState.logoPreview}
+                        alt="Preview"
+                        className="w-24 h-24 object-cover rounded mx-auto mb-2"
+                      />
+                    ) : (
+                      <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                    )}
+                    <p className="text-gray-600">Click to upload logo</p>
+                  </label>
+                </div>
+              </div>
+
+              {/* Contact Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Contact Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={formState.formData.email}
+                      onChange={(e) =>
+                        handleFormFieldChange("email", e.target.value)
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="contact@brand.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Phone
+                    </label>
+                    <input
+                      type="tel"
+                      value={formState.formData.phone}
+                      onChange={(e) =>
+                        handleFormFieldChange("phone", e.target.value)
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="+1 (555) 123-4567"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Form Actions */}
+              <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={state.submitting}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {state.submitting
+                    ? "Saving..."
+                    : state.editingBrand
+                    ? "Update"
+                    : "Create"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
-};
-
-export default BrandsPage;
+}
