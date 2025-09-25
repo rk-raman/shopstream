@@ -5,7 +5,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
@@ -32,8 +31,7 @@ import {
   Eye,
   EyeOff,
   FolderOpen,
-  Grid,
-  List as ListIcon,
+  ArrowUpDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Collection } from "@/types/global";
@@ -43,20 +41,24 @@ import {
   updateCollectionVisibility,
 } from "@/features/seller/services/collectionService";
 
-interface CollectionListProps {
+type SortField = "name" | "type" | "productCount" | "updatedAt" | "isVisible";
+type SortDirection = "asc" | "desc";
+
+interface CollectionTableViewProps {
   onCreateNew: () => void;
   onEdit: (collection: Collection) => void;
   onView: (collection: Collection) => void;
 }
 
-export default function CollectionList({
+export default function CollectionTableView({
   onCreateNew,
   onEdit,
   onView,
-}: CollectionListProps) {
+}: CollectionTableViewProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [sortField, setSortField] = useState<SortField>("updatedAt");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [collectionToDelete, setCollectionToDelete] =
     useState<Collection | null>(null);
@@ -126,18 +128,53 @@ export default function CollectionList({
     },
   });
 
-  // Filter collections based on search
-  const filteredCollections = useMemo(() => {
-    return collections.filter(
+  // Filter and sort collections
+  const filteredAndSortedCollections = useMemo(() => {
+    let filtered = collections.filter(
       (collection) =>
         collection.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         collection.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [collections, searchTerm]);
+
+    // Sort collections
+    filtered.sort((a, b) => {
+      let aValue: any = a[sortField];
+      let bValue: any = b[sortField];
+
+      // Handle different data types
+      if (sortField === "updatedAt") {
+        aValue = new Date(aValue).getTime();
+        bValue = new Date(bValue).getTime();
+      } else if (sortField === "isVisible") {
+        aValue = aValue ? 1 : 0;
+        bValue = bValue ? 1 : 0;
+      } else if (typeof aValue === "string") {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+      }
+
+      if (sortDirection === "asc") {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+      }
+    });
+
+    return filtered;
+  }, [collections, searchTerm, sortField, sortDirection]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedCollections(filteredCollections.map((c) => c._id));
+      setSelectedCollections(filteredAndSortedCollections.map((c) => c._id));
     } else {
       setSelectedCollections([]);
     }
@@ -178,6 +215,34 @@ export default function CollectionList({
       isVisible: !collection.isVisible,
     });
   };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const SortButton = ({
+    field,
+    children,
+  }: {
+    field: SortField;
+    children: React.ReactNode;
+  }) => (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="h-auto p-0 font-medium hover:bg-transparent"
+      onClick={() => handleSort(field)}
+    >
+      <span className="flex items-center gap-1">
+        {children}
+        <ArrowUpDown className="h-3 w-3" />
+      </span>
+    </Button>
+  );
 
   if (isLoading) {
     return (
@@ -246,24 +311,10 @@ export default function CollectionList({
             </Button>
           )}
         </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
-          >
-            {viewMode === "grid" ? (
-              <ListIcon className="h-4 w-4" />
-            ) : (
-              <Grid className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
       </div>
 
-      {/* Collections Grid/List */}
-      {filteredCollections.length === 0 ? (
+      {/* Table */}
+      {filteredAndSortedCollections.length === 0 ? (
         <div className="text-center py-12">
           <FolderOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium mb-2">No collections found</h3>
@@ -278,37 +329,47 @@ export default function CollectionList({
           </Button>
         </div>
       ) : (
-        <>
-          {/* Select All */}
-          <div className="flex items-center gap-2 pb-2 border-b">
-            <Checkbox
-              checked={
-                selectedCollections.length === filteredCollections.length
-              }
-              onCheckedChange={handleSelectAll}
-            />
-            <span className="text-sm text-muted-foreground">
-              {selectedCollections.length > 0
-                ? `${selectedCollections.length} selected`
-                : "Select all"}
-            </span>
-          </div>
-
-          <div
-            className={
-              viewMode === "grid"
-                ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-                : "space-y-4"
-            }
-          >
-            {filteredCollections.map((collection) => (
-              <Card
-                key={collection._id}
-                className="group hover:shadow-md transition-shadow"
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
+        <div className="border rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="border-b bg-muted/50">
+                <tr>
+                  <th className="w-12 px-4 py-3 text-left">
+                    <Checkbox
+                      checked={
+                        selectedCollections.length ===
+                          filteredAndSortedCollections.length &&
+                        filteredAndSortedCollections.length > 0
+                      }
+                      onCheckedChange={handleSelectAll}
+                    />
+                  </th>
+                  <th className="w-16 px-4 py-3"></th>
+                  <th className="px-4 py-3 text-left">
+                    <SortButton field="name">Name</SortButton>
+                  </th>
+                  <th className="px-4 py-3 text-left">
+                    <SortButton field="type">Type</SortButton>
+                  </th>
+                  <th className="px-4 py-3 text-left">
+                    <SortButton field="isVisible">Status</SortButton>
+                  </th>
+                  <th className="px-4 py-3 text-right">
+                    <SortButton field="productCount">Products</SortButton>
+                  </th>
+                  <th className="px-4 py-3 text-left">
+                    <SortButton field="updatedAt">Updated</SortButton>
+                  </th>
+                  <th className="w-12 px-4 py-3"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredAndSortedCollections.map((collection) => (
+                  <tr
+                    key={collection._id}
+                    className="group hover:bg-muted/50 border-b last:border-b-0"
+                  >
+                    <td className="px-4 py-3">
                       <Checkbox
                         checked={selectedCollections.includes(collection._id)}
                         onCheckedChange={(checked) =>
@@ -318,158 +379,122 @@ export default function CollectionList({
                           )
                         }
                       />
-                      <div className="flex-1">
-                        <CardTitle className="text-lg">
-                          {collection.name}
-                        </CardTitle>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge
-                            variant={
-                              collection.type === "manual"
-                                ? "default"
-                                : "secondary"
-                            }
-                          >
-                            {collection.type}
-                          </Badge>
-                          <Badge
-                            variant={
-                              collection.isVisible ? "default" : "secondary"
-                            }
-                          >
-                            {collection.isVisible ? "Visible" : "Hidden"}
-                          </Badge>
+                    </td>
+                    <td className="px-4 py-3">
+                      {collection.image?.url ? (
+                        <div className="w-10 h-10 rounded-md overflow-hidden bg-muted">
+                          <img
+                            src={collection.image.url}
+                            alt={collection.name}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
+                      ) : (
+                        <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center">
+                          <FolderOpen className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div>
+                        <div className="font-medium">{collection.name}</div>
+                        {collection.description && (
+                          <div className="text-sm text-muted-foreground line-clamp-1 max-w-xs">
+                            {collection.description}
+                          </div>
+                        )}
                       </div>
-                    </div>
-
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onView(collection)}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          View
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onEdit(collection)}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => toggleVisibility(collection)}
-                        >
-                          {collection.isVisible ? (
-                            <>
-                              <EyeOff className="h-4 w-4 mr-2" />
-                              Hide
-                            </>
-                          ) : (
-                            <>
-                              <Eye className="h-4 w-4 mr-2" />
-                              Show
-                            </>
-                          )}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleDelete(collection)}
-                          className="text-red-600"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </CardHeader>
-
-                <CardContent>
-                  {(collection.image as any) && (
-                    <div className="mb-3">
-                      <img
-                        src={
-                          typeof (collection as any).image === "string"
-                            ? ((collection as any).image as string)
-                            : (collection as any).image?.url
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge
+                        variant={
+                          collection.type === "manual" ? "default" : "secondary"
                         }
-                        alt={collection.name}
-                        className="w-full h-32 object-cover rounded-md"
-                      />
-                    </div>
-                  )}
-
-                  {collection.description && (
-                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                      {collection.description}
-                    </p>
-                  )}
-
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <span>{collection.productCount} products</span>
-                    <span>
-                      Updated{" "}
-                      {new Date(collection.updatedAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                      >
+                        {collection.type}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge
+                        variant={collection.isVisible ? "default" : "secondary"}
+                        className={
+                          collection.isVisible
+                            ? "bg-green-100 text-green-800 hover:bg-green-100"
+                            : ""
+                        }
+                      >
+                        {collection.isVisible ? "Visible" : "Hidden"}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-right font-medium">
+                      {collection.productCount}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {formatDate(collection.updatedAt)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => onView(collection)}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            View
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onEdit(collection)}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => toggleVisibility(collection)}
+                          >
+                            {collection.isVisible ? (
+                              <>
+                                <EyeOff className="h-4 w-4 mr-2" />
+                                Hide
+                              </>
+                            ) : (
+                              <>
+                                <Eye className="h-4 w-4 mr-2" />
+                                Show
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleDelete(collection)}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </>
+        </div>
       )}
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Collection</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{collectionToDelete?.name}"? This
-              action cannot be undone. Products in this collection will not be
-              deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-red-600 hover:bg-red-700"
-              disabled={deleteMutation.isPending}
-            >
-              {deleteMutation.isPending ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Bulk Delete Confirmation Dialog */}
-      <AlertDialog
-        open={bulkDeleteDialogOpen}
-        onOpenChange={setBulkDeleteDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Collections</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete {selectedCollections.length}{" "}
-              collections? This action cannot be undone. Products in these
-              collections will not be deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmBulkDelete}
-              className="bg-red-600 hover:bg-red-700"
-              disabled={bulkDeleteMutation.isPending}
-            >
-              {bulkDeleteMutation.isPending ? "Deleting..." : "Delete All"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Results Summary */}
+      {filteredAndSortedCollections.length > 0 && (
+        <div className="text-sm text-muted-foreground">
+          Showing {filteredAndSortedCollections.length} of {collections?.length}{" "}
+          collections
+          {selectedCollections.length > 0 && (
+            <span> • {selectedCollections.length} selected</span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
