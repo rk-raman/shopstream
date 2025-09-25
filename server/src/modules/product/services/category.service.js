@@ -2,6 +2,7 @@ const Category = require("../models/Category.model");
 const Product = require("../models/Product.model");
 const ApiError = require("../../../shared/utils/apiError");
 const ProductEventPublisher = require("../events/publishers/ProductEventPublisher");
+const productEventPublisher = new ProductEventPublisher();
 
 // Create new category
 const createCategory = async (categoryData, userId) => {
@@ -51,7 +52,7 @@ const createCategory = async (categoryData, userId) => {
     }
 
     // Publish event
-    await ProductEventPublisher.publishCategoryCreated({
+    await productEventPublisher.publishCategoryCreated({
       categoryId: category._id,
       userId: userId,
       categoryData: {
@@ -273,7 +274,7 @@ const updateCategory = async (categoryId, updateData, userId) => {
     ]);
 
     // Publish event
-    await ProductEventPublisher.publishCategoryUpdated({
+    await productEventPublisher.publishCategoryUpdated({
       categoryId: category._id,
       userId: userId,
       originalData,
@@ -337,7 +338,7 @@ const deleteCategory = async (categoryId, userId) => {
     await Category.findByIdAndDelete(categoryId);
 
     // Publish event
-    await ProductEventPublisher.publishCategoryDeleted({
+    await productEventPublisher.publishCategoryDeleted({
       categoryId: categoryId,
       userId: userId,
       categoryData,
@@ -440,7 +441,7 @@ const updateCategorySortOrder = async (categoryId, sortOrder, userId) => {
     await category.save();
 
     // Publish event
-    await ProductEventPublisher.publishCategoryUpdated({
+    await productEventPublisher.publishCategoryUpdated({
       categoryId: category._id,
       userId: userId,
       originalData: { sortOrder: originalSortOrder },
@@ -471,7 +472,7 @@ const bulkUpdateCategories = async (categoryIds, updateData, userId) => {
     );
 
     // Publish bulk update event
-    await ProductEventPublisher.publishCategoryBulkUpdated({
+    await productEventPublisher.publishCategoryBulkUpdated({
       categoryIds,
       userId: userId,
       updateData,

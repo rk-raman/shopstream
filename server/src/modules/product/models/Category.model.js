@@ -120,10 +120,17 @@ const categorySchema = new mongoose.Schema(
 
     // Commission settings
     commission: {
-      type: Number,
-      min: 0,
-      max: 100,
-      default: 0,
+      rate: {
+        type: Number,
+        min: 0,
+        max: 100,
+        default: 0,
+      },
+      type: {
+        type: String,
+        enum: ["percentage", "fixed"],
+        default: "percentage",
+      },
     },
   },
   {

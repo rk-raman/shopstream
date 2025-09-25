@@ -412,6 +412,56 @@ class ProductEventPublisher {
       console.error("Error publishing product cart added event:", error);
     }
   }
+
+  // Category events (lightweight publisher to support category service)
+  async publishCategoryCreated(data) {
+    try {
+      // Emit a generic event name; can be wired to dedicated subscribers
+      this.eventEmitter.emit("category.created", {
+        ...data,
+        timestamp: new Date(),
+        eventType: "category.created",
+      });
+    } catch (error) {
+      console.error("Error publishing category created event:", error);
+    }
+  }
+
+  async publishCategoryUpdated(data) {
+    try {
+      this.eventEmitter.emit("category.updated", {
+        ...data,
+        timestamp: new Date(),
+        eventType: "category.updated",
+      });
+    } catch (error) {
+      console.error("Error publishing category updated event:", error);
+    }
+  }
+
+  async publishCategoryDeleted(data) {
+    try {
+      this.eventEmitter.emit("category.deleted", {
+        ...data,
+        timestamp: new Date(),
+        eventType: "category.deleted",
+      });
+    } catch (error) {
+      console.error("Error publishing category deleted event:", error);
+    }
+  }
+
+  async publishCategoryBulkUpdated(data) {
+    try {
+      this.eventEmitter.emit("categories.bulk.updated", {
+        ...data,
+        timestamp: new Date(),
+        eventType: "categories.bulk.updated",
+      });
+    } catch (error) {
+      console.error("Error publishing categories bulk updated event:", error);
+    }
+  }
 }
 
 module.exports = ProductEventPublisher;

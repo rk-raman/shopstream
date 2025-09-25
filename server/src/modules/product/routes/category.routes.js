@@ -99,14 +99,14 @@ router.use(authenticate);
 // Get category statistics (admin only)
 router.get(
   "/admin/stats",
-  authorize(["admin"]),
+  authorize("admin"),
   categoryController.getCategoryStats
 );
 
 // Update product count for category (admin only)
 router.patch(
   "/:id/product-count",
-  authorize(["admin"]),
+  authorize("admin"),
   categoryValidators.validateGetCategoryById,
   categoryController.updateCategoryProductCount
 );
@@ -116,7 +116,7 @@ router.patch(
 // Create new category (seller/admin)
 router.post(
   "/",
-  authorize(["seller", "admin"]),
+  authorize("seller", "admin"),
   categoryValidators.validateCreateCategory,
   categoryController.createCategory
 );
@@ -124,7 +124,7 @@ router.post(
 // Update category (seller/admin)
 router.put(
   "/:id",
-  authorize(["seller", "admin"]),
+  authorize("seller", "admin"),
   categoryValidators.validateUpdateCategory,
   categoryController.updateCategory
 );
@@ -132,7 +132,7 @@ router.put(
 // Delete category (seller/admin)
 router.delete(
   "/:id",
-  authorize(["seller", "admin"]),
+  authorize("seller", "admin"),
   categoryValidators.validateDeleteCategory,
   categoryController.deleteCategory
 );
@@ -140,7 +140,7 @@ router.delete(
 // Update category sort order (seller/admin)
 router.patch(
   "/:id/sort-order",
-  authorize(["seller", "admin"]),
+  authorize("seller", "admin"),
   categoryValidators.validateUpdateCategorySortOrder,
   categoryController.updateCategorySortOrder
 );
@@ -148,7 +148,7 @@ router.patch(
 // Bulk update categories (seller/admin)
 router.patch(
   "/bulk/update",
-  authorize(["seller", "admin"]),
+  authorize("seller", "admin"),
   categoryValidators.validateBulkUpdateCategories,
   categoryController.bulkUpdateCategories
 );
@@ -156,7 +156,7 @@ router.patch(
 // Upload category image (seller/admin)
 router.post(
   "/:id/image",
-  authorize(["seller", "admin"]),
+  authorize("seller", "admin"),
   uploadMiddleware.single("image"),
   categoryValidators.validateUploadCategoryImage,
   categoryController.uploadCategoryImage
@@ -165,7 +165,7 @@ router.post(
 // Remove category image (seller/admin)
 router.delete(
   "/:id/image",
-  authorize(["seller", "admin"]),
+  authorize("seller", "admin"),
   categoryValidators.validateGetCategoryById,
   categoryController.removeCategoryImage
 );

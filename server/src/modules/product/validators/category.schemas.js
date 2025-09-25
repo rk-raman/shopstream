@@ -143,11 +143,29 @@ const createCategorySchema = {
     }),
 
     // Commission
-    commission: Joi.number().min(0).max(100).precision(2).default(0).messages({
-      "number.min": "Commission cannot be negative",
-      "number.max": "Commission cannot exceed 100%",
-      "number.base": "Commission must be a valid number",
-    }),
+    commission: Joi.object({
+      rate: Joi.number()
+        .min(0)
+        .max(100)
+        .precision(2)
+        .empty("")
+        .default(0)
+        .messages({
+          "number.min": "Commission rate cannot be negative",
+          "number.max": "Commission rate cannot exceed 100%",
+          "number.base": "Commission rate must be a valid number",
+        }),
+      type: Joi.string()
+        .valid("percentage", "fixed")
+        .default("percentage")
+        .messages({
+          "any.only": "Commission type must be either 'percentage' or 'fixed'",
+        }),
+    })
+      .default({ rate: 0, type: "percentage" })
+      .messages({
+        "object.base": "Commission must be an object with rate and type",
+      }),
   }),
 };
 
@@ -243,11 +261,26 @@ const updateCategorySchema = {
     }),
 
     // Commission
-    commission: Joi.number().min(0).max(100).precision(2).optional().messages({
-      "number.min": "Commission cannot be negative",
-      "number.max": "Commission cannot exceed 100%",
-      "number.base": "Commission must be a valid number",
-    }),
+    commission: Joi.object({
+      rate: Joi.number()
+        .min(0)
+        .max(100)
+        .precision(2)
+        .empty("")
+        .optional()
+        .messages({
+          "number.min": "Commission rate cannot be negative",
+          "number.max": "Commission rate cannot exceed 100%",
+          "number.base": "Commission rate must be a valid number",
+        }),
+      type: Joi.string().valid("percentage", "fixed").optional().messages({
+        "any.only": "Commission type must be either 'percentage' or 'fixed'",
+      }),
+    })
+      .optional()
+      .messages({
+        "object.base": "Commission must be an object with rate and type",
+      }),
   })
     .min(1)
     .messages({
@@ -425,15 +458,15 @@ const bulkUpdateCategoriesSchema = {
     updateData: Joi.object({
       isActive: Joi.boolean().optional(),
       isFeatured: Joi.boolean().optional(),
-      commission: Joi.number()
-        .min(0)
-        .max(100)
-        .precision(2)
-        .optional()
-        .messages({
-          "number.min": "Commission cannot be negative",
-          "number.max": "Commission cannot exceed 100%",
+      commission: Joi.object({
+        rate: Joi.number().min(0).max(100).precision(2).optional().messages({
+          "number.min": "Commission rate cannot be negative",
+          "number.max": "Commission rate cannot exceed 100%",
         }),
+        type: Joi.string().valid("percentage", "fixed").optional().messages({
+          "any.only": "Commission type must be either 'percentage' or 'fixed'",
+        }),
+      }).optional(),
       sortOrder: Joi.number().integer().min(0).optional().messages({
         "number.integer": "Sort order must be a whole number",
         "number.min": "Sort order cannot be negative",
