@@ -260,7 +260,7 @@ export const API_ENDPOINTS = {
   // Upload endpoints
   UPLOAD: {
     uploadProductImages: (): ApiEndpoint => ({
-      url: "/upload/product-images",
+      url: "/upload/products/images",
       method: "POST",
     }),
     uploadAvatar: (): ApiEndpoint => ({
@@ -268,7 +268,27 @@ export const API_ENDPOINTS = {
       method: "POST",
     }),
     uploadBanner: (): ApiEndpoint => ({
-      url: "/upload/banner",
+      url: "/upload/banners",
+      method: "POST",
+    }),
+    uploadBrandLogo: (brandId: string): ApiEndpoint => ({
+      url: `/upload/brands/${brandId}/logo`,
+      method: "POST",
+    }),
+    uploadBrandBanner: (brandId: string): ApiEndpoint => ({
+      url: `/upload/brands/${brandId}/banner`,
+      method: "POST",
+    }),
+    uploadBrandImages: (brandId: string): ApiEndpoint => ({
+      url: `/upload/brands/${brandId}/images`,
+      method: "POST",
+    }),
+    uploadCollectionImage: (collectionId: string): ApiEndpoint => ({
+      url: `/upload/collections/${collectionId}/image`,
+      method: "POST",
+    }),
+    uploadCategoryImage: (categoryId: string): ApiEndpoint => ({
+      url: `/upload/categories/${categoryId}/image`,
       method: "POST",
     }),
   },

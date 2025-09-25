@@ -117,6 +117,36 @@ router.get("/admin/stats", uploadController.getUploadStats);
 
 router.get("/admin/health", uploadController.getProviderHealth);
 
+// Brand upload routes
+router.post(
+  "/brands/:brandId/logo",
+  uploadMiddleware.single("logo"),
+  validate(uploadValidators.validateUploadAvatar),
+  uploadController.uploadBrandLogo
+);
+
+router.post(
+  "/brands/:brandId/banner",
+  uploadMiddleware.single("banner"),
+  validate(uploadValidators.validateUploadBanner),
+  uploadController.uploadBrandBanner
+);
+
+router.post(
+  "/brands/:brandId/images",
+  uploadMiddleware.multiple("images", 10),
+  validate(uploadValidators.validateUploadProductImages),
+  uploadController.uploadBrandImages
+);
+
+// Collection upload route
+router.post(
+  "/collections/:collectionId/image",
+  uploadMiddleware.single("image"),
+  validate(uploadValidators.validateUploadCategoryImage),
+  uploadController.uploadCollectionImage
+);
+
 /**
  * Error handling middleware
  */

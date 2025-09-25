@@ -233,13 +233,13 @@ export const updateProductStatus = async (
 // Upload product images
 export const uploadProductImages = async (
   files: File[]
-): Promise<ApiResponse<{ urls: string[] }>> => {
+): Promise<ApiResponse<string[]>> => {
   try {
-    const endpoint = API_ENDPOINTS.PRODUCTS.uploadProductImages();
+    const endpoint = API_ENDPOINTS.UPLOAD.uploadProductImages();
     const formData = new FormData();
 
-    files.forEach((file, index) => {
-      formData.append(`images`, file);
+    files.forEach((file) => {
+      formData.append("productImages", file);
     });
 
     const response = await axiosSeller.post(endpoint.url, formData, {
@@ -247,7 +247,24 @@ export const uploadProductImages = async (
         "Content-Type": "multipart/form-data",
       },
     });
-    return response.data;
+
+    // Server returns { data: { uploads: [...] } }
+    const uploads = response.data?.data?.uploads || [];
+
+    // Each upload may be a settled result if using Promise.allSettled on server
+    const urls: string[] = uploads
+      .filter(
+        (u: any) =>
+          u?.status === "fulfilled" || u?.url || u?.secureUrl || u?.secure_url
+      )
+      .map((u: any) => {
+        const v = u?.value || u; // value if settled
+        return v?.url || v?.secureUrl || v?.secure_url || "";
+      })
+      .filter((u: string) => !!u);
+
+    // Return as ApiResponse<string[]>
+    return { ...response.data, data: urls };
   } catch (error: any) {
     throw new Error(error.response?.data?.message || "Failed to upload images");
   }

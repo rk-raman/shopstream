@@ -81,7 +81,6 @@ const brandSchema = z.object({
   linkedin: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   youtube: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   tiktok: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-
   // Settings
   isActive: z.boolean().default(true),
   isFeatured: z.boolean().default(false),
@@ -348,7 +347,7 @@ export const BrandForm: React.FC<BrandFormProps> = ({
       if (logoFile) {
         await uploadLogoMutation.mutateAsync({
           brandId: savedBrand._id,
-          file: logoFile,
+          logoFile: logoFile,
         });
       }
 
@@ -356,7 +355,7 @@ export const BrandForm: React.FC<BrandFormProps> = ({
       if (bannerFile) {
         await uploadBannerMutation.mutateAsync({
           brandId: savedBrand._id,
-          file: bannerFile,
+          bannerFile: bannerFile,
         });
       }
 

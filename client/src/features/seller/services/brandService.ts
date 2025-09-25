@@ -217,8 +217,9 @@ export const uploadBrandLogo = async (
   const formData = new FormData();
   formData.append("logo", logoFile);
 
+  const endpoint = API_ENDPOINTS.UPLOAD.uploadBrandLogo(brandId);
   const response = await axiosSeller.post<ApiResponse<{ logoUrl: string }>>(
-    `${API_ENDPOINTS.BRANDS}/${brandId}/logo`,
+    endpoint.url,
     formData,
     {
       headers: {
@@ -237,8 +238,9 @@ export const uploadBrandBanner = async (
   const formData = new FormData();
   formData.append("banner", bannerFile);
 
+  const endpoint = API_ENDPOINTS.UPLOAD.uploadBrandBanner(brandId);
   const response = await axiosSeller.post<ApiResponse<{ bannerUrl: string }>>(
-    `${API_ENDPOINTS.BRANDS}/${brandId}/banner`,
+    endpoint.url,
     formData,
     {
       headers: {
@@ -255,12 +257,13 @@ export const uploadBrandImages = async (
   imageFiles: File[]
 ): Promise<{ imageUrls: string[] }> => {
   const formData = new FormData();
-  imageFiles.forEach((file, index) => {
-    formData.append(`images`, file);
+  imageFiles.forEach((file) => {
+    formData.append("images", file);
   });
 
+  const endpoint = API_ENDPOINTS.UPLOAD.uploadBrandImages(brandId);
   const response = await axiosSeller.post<ApiResponse<{ imageUrls: string[] }>>(
-    `${API_ENDPOINTS.BRANDS}/${brandId}/images`,
+    endpoint.url,
     formData,
     {
       headers: {

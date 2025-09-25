@@ -223,10 +223,11 @@ export const uploadCategoryImage = async (
   imageFile: File
 ): Promise<{ imageUrl: string }> => {
   const formData = new FormData();
-  formData.append("image", imageFile);
+  formData.append("categoryImage", imageFile);
 
+  const endpoint = API_ENDPOINTS.UPLOAD.uploadCategoryImage(categoryId);
   const response = await axiosSeller.post<ApiResponse<{ imageUrl: string }>>(
-    `${API_ENDPOINTS.CATEGORIES}/${categoryId}/image`,
+    endpoint.url,
     formData,
     {
       headers: {

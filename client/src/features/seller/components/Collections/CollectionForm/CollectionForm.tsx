@@ -137,25 +137,59 @@ export default function CollectionForm({
   // Create/Update mutation
   const saveMutation = useMutation({
     mutationFn: async (data: CollectionFormData) => {
-      let imageUrl = collectionImage;
-
-      // Upload image if new file selected
-      if (imageFile) {
-        const uploadResponse = await uploadCollectionImage(imageFile);
-        imageUrl = uploadResponse.data.url;
-      }
-
-      const collectionData = {
+      // Build base payload (without image until we have an ID for upload)
+      const basePayload: any = {
         ...data,
-        image: imageUrl,
+        image: collectionImage,
         products:
           form.watch("type") === "manual" ? selectedProducts : undefined,
       };
 
-      if (isEditing) {
-        return updateCollection(collection._id, collectionData);
+      if (isEditing && collection) {
+        // If editing: optionally upload new image first, then update collection
+        let imageUrl = collectionImage;
+        if (imageFile) {
+          const uploadRes = await uploadCollectionImage(
+            collection._id,
+            imageFile
+          );
+          const uploaded = uploadRes.data?.upload;
+          imageUrl =
+            uploaded?.url ||
+            uploaded?.secureUrl ||
+            uploaded?.secure_url ||
+            imageUrl;
+        }
+
+        return updateCollection(collection._id, {
+          ...basePayload,
+          image: imageUrl,
+        });
       } else {
-        return createCollection(collectionData);
+        // If creating: create first to get ID, then upload image (if provided), then patch image
+        const createRes = await createCollection({
+          ...basePayload,
+          image: undefined,
+        });
+        const created = createRes.data;
+        let imageUrl: string | null = null;
+
+        if (imageFile) {
+          const uploadRes = await uploadCollectionImage(created._id, imageFile);
+          const uploaded = uploadRes.data?.upload;
+          imageUrl =
+            uploaded?.url ||
+            uploaded?.secureUrl ||
+            uploaded?.secure_url ||
+            null;
+
+          if (imageUrl) {
+            await updateCollection(created._id, { image: imageUrl });
+          }
+        }
+
+        // Return the latest collection payload to caller
+        return imageUrl ? { data: { ...created, image: imageUrl } } : createRes;
       }
     },
     onSuccess: (response) => {

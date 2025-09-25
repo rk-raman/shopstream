@@ -401,7 +401,7 @@ export const uploadCollectionImage = async (
   file: File
 ): Promise<ApiResponse<{ collection: Collection; image: any }>> => {
   try {
-    const endpoint = API_ENDPOINTS.COLLECTIONS.uploadCollectionImage(id);
+    const endpoint = API_ENDPOINTS.UPLOAD.uploadFile();
     const formData = new FormData();
     formData.append("image", file);
 

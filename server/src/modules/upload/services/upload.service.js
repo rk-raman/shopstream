@@ -254,6 +254,136 @@ class UploadService {
   }
 
   /**
+   * Upload brand logo (seller/admin)
+   * @param {Buffer} file - File buffer
+   * @param {string} userId - Uploader (seller/admin) id
+   * @param {string} brandId - Brand id
+   * @param {Object} options - Additional options
+   */
+  async uploadBrandLogo(file, userId, brandId, options = {}) {
+    const {
+      transformation = {
+        width: 400,
+        height: 400,
+        crop: "fill",
+        gravity: "auto",
+      },
+      metadata = {},
+      fileName,
+    } = options;
+
+    const uploadOptions = {
+      userType: "seller",
+      category: `brands/${brandId}/logo`,
+      userId,
+      fileName,
+      transformation,
+      metadata: {
+        ...metadata,
+        context: "brand_logo",
+        brandId,
+      },
+    };
+
+    return await this.uploadSingle(file, uploadOptions);
+  }
+
+  /**
+   * Upload brand banner (seller/admin)
+   */
+  async uploadBrandBanner(file, userId, brandId, options = {}) {
+    const {
+      transformation = {
+        width: 1600,
+        height: 400,
+        crop: "fill",
+        gravity: "auto",
+      },
+      metadata = {},
+      fileName,
+    } = options;
+
+    const uploadOptions = {
+      userType: "seller",
+      category: `brands/${brandId}/banner`,
+      userId,
+      fileName,
+      transformation,
+      metadata: {
+        ...metadata,
+        context: "brand_banner",
+        brandId,
+      },
+    };
+
+    return await this.uploadSingle(file, uploadOptions);
+  }
+
+  /**
+   * Upload brand gallery images (seller/admin)
+   */
+  async uploadBrandImages(files, userId, brandId, options = {}) {
+    const {
+      transformation = {
+        width: 1200,
+        height: 1200,
+        crop: "fit",
+        gravity: "auto",
+      },
+      metadata = {},
+    } = options;
+
+    const common = {
+      userType: "seller",
+      category: `brands/${brandId}/images`,
+      userId,
+      transformation,
+      metadata: {
+        ...metadata,
+        context: "brand_images",
+        brandId,
+      },
+    };
+
+    if (Array.isArray(files)) {
+      return await this.uploadMultiple(files, common);
+    } else {
+      return await this.uploadSingle(files, common);
+    }
+  }
+
+  /**
+   * Upload collection image (seller/admin)
+   */
+  async uploadCollectionImage(file, userId, collectionId, options = {}) {
+    const {
+      transformation = {
+        width: 1200,
+        height: 800,
+        crop: "fill",
+        gravity: "auto",
+      },
+      metadata = {},
+      fileName,
+    } = options;
+
+    const uploadOptions = {
+      userType: "seller",
+      category: `collections/${collectionId}/image`,
+      userId,
+      fileName,
+      transformation,
+      metadata: {
+        ...metadata,
+        context: "collection_image",
+        collectionId,
+      },
+    };
+
+    return await this.uploadSingle(file, uploadOptions);
+  }
+
+  /**
    * Delete a file
    * @param {string} publicId - Public ID of the file
    * @param {Object} options - Delete options

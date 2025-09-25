@@ -316,6 +316,136 @@ class UploadController {
 
     return res.success({ uploads: results }, "Files uploaded successfully");
   });
+
+  /**
+   * Upload brand logo
+   */
+  uploadBrandLogo = asyncHandler(async (req, res) => {
+    const { brandId } = req.params;
+    const userId = req.user?.id;
+
+    if (!brandId) {
+      throw new ApiError(400, "Brand ID is required");
+    }
+    if (!req.fileBuffer) {
+      throw new ApiError(400, "No file uploaded");
+    }
+
+    const result = await this.uploadService.uploadBrandLogo(
+      req.fileBuffer,
+      userId,
+      brandId,
+      {
+        fileName: req.fileInfo?.originalName,
+        metadata: {
+          originalName: req.fileInfo?.originalName,
+          mimeType: req.fileInfo?.mimeType,
+          size: req.fileInfo?.size,
+        },
+      }
+    );
+
+    return res.success({ upload: result }, "Brand logo uploaded successfully");
+  });
+
+  /**
+   * Upload brand banner
+   */
+  uploadBrandBanner = asyncHandler(async (req, res) => {
+    const { brandId } = req.params;
+    const userId = req.user?.id;
+
+    if (!brandId) {
+      throw new ApiError(400, "Brand ID is required");
+    }
+    if (!req.fileBuffer) {
+      throw new ApiError(400, "No file uploaded");
+    }
+
+    const result = await this.uploadService.uploadBrandBanner(
+      req.fileBuffer,
+      userId,
+      brandId,
+      {
+        fileName: req.fileInfo?.originalName,
+        metadata: {
+          originalName: req.fileInfo?.originalName,
+          mimeType: req.fileInfo?.mimeType,
+          size: req.fileInfo?.size,
+        },
+      }
+    );
+
+    return res.success(
+      { upload: result },
+      "Brand banner uploaded successfully"
+    );
+  });
+
+  /**
+   * Upload brand gallery images
+   */
+  uploadBrandImages = asyncHandler(async (req, res) => {
+    const { brandId } = req.params;
+    const userId = req.user?.id;
+
+    if (!brandId) {
+      throw new ApiError(400, "Brand ID is required");
+    }
+    if (!req.fileBuffers || req.fileBuffers.length === 0) {
+      throw new ApiError(400, "No files uploaded");
+    }
+
+    const results = await this.uploadService.uploadBrandImages(
+      req.fileBuffers,
+      userId,
+      brandId,
+      {
+        metadata: {
+          filesInfo: req.filesInfo,
+        },
+      }
+    );
+
+    return res.success(
+      { uploads: results },
+      "Brand images uploaded successfully"
+    );
+  });
+
+  /**
+   * Upload collection image
+   */
+  uploadCollectionImage = asyncHandler(async (req, res) => {
+    const { collectionId } = req.params;
+    const userId = req.user?.id;
+
+    if (!collectionId) {
+      throw new ApiError(400, "Collection ID is required");
+    }
+    if (!req.fileBuffer) {
+      throw new ApiError(400, "No file uploaded");
+    }
+
+    const result = await this.uploadService.uploadCollectionImage(
+      req.fileBuffer,
+      userId,
+      collectionId,
+      {
+        fileName: req.fileInfo?.originalName,
+        metadata: {
+          originalName: req.fileInfo?.originalName,
+          mimeType: req.fileInfo?.mimeType,
+          size: req.fileInfo?.size,
+        },
+      }
+    );
+
+    return res.success(
+      { upload: result },
+      "Collection image uploaded successfully"
+    );
+  });
 }
 
 module.exports = new UploadController();
