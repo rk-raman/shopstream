@@ -25,14 +25,14 @@ export interface UploadedAsset {
 }
 
 export interface UseUploadOptions {
-  categoryPath: string; // e.g. "categories/<id>/image" or any folder path
+  path: string; // e.g. "categories/<id>/image" or any folder path
   multiple?: boolean;
   initial?: Array<{ public_id: string; url: string }>; // preloaded assets
   onChange?: (assets: Array<{ public_id: string; url: string }>) => void;
 }
 
 export function useUpload({
-  categoryPath,
+  path,
   multiple = false,
   initial = [],
   onChange,
@@ -52,7 +52,6 @@ export function useUpload({
 
   const emitChange = useCallback(
     (next: UploadedAsset[]) => {
-      setAssets(next);
       if (onChange) {
         const out = next
           .filter((a) => a.status === "uploaded" && a.public_id && a.url)
@@ -79,6 +78,7 @@ export function useUpload({
         ...newItems.map((n) => n.previewUrl!).filter(Boolean)
       );
       const next = multiple ? [...assets, ...newItems] : newItems.slice(0, 1);
+      setAssets(next);
       emitChange(next);
       return next;
     },
@@ -93,18 +93,24 @@ export function useUpload({
         status: "uploading",
         progress: 1,
       };
-      setAssets((cur) => cur.map((a) => (a.id === item.id ? updated : a)));
+      setAssets((cur) => {
+        const next = cur.map((a) => (a.id === item.id ? updated : a));
+        return next;
+      });
       try {
         const resp: UploadResponse = await uploadSingleToFolder(
-          categoryPath,
+          path,
           item.file,
           {
             onUploadProgress: (ev) => {
               if (!ev.total) return;
               const p = Math.round((ev.loaded / ev.total) * 100);
-              setAssets((cur) =>
-                cur.map((a) => (a.id === item.id ? { ...a, progress: p } : a))
-              );
+              setAssets((cur) => {
+                const next = cur.map((a) =>
+                  a.id === item.id ? { ...a, progress: p } : a
+                );
+                return next;
+              });
             },
           }
         );
@@ -117,22 +123,30 @@ export function useUpload({
           public_id: upload?.public_id,
           url: url,
         };
-        setAssets((cur) => cur.map((a) => (a.id === item.id ? updated : a)));
-        // trigger change
-        emitChange(
-          ((prev) => prev) as any // placeholder to use latest set
-        );
+        setAssets((cur) => {
+          const next = cur.map((a) => (a.id === item.id ? updated : a));
+          if (onChange) {
+            const out = next
+              .filter((a) => a.status === "uploaded" && a.public_id && a.url)
+              .map((a) => ({ public_id: a.public_id!, url: a.url! }));
+            onChange(out);
+          }
+          return next;
+        });
       } catch (e: any) {
         updated = {
           ...updated,
           status: "error",
           error: e?.response?.data?.message || e?.message || "Upload failed",
         };
-        setAssets((cur) => cur.map((a) => (a.id === item.id ? updated : a)));
+        setAssets((cur) => {
+          const next = cur.map((a) => (a.id === item.id ? updated : a));
+          return next;
+        });
       }
       return updated;
     },
-    [categoryPath, emitChange]
+    [path, onChange]
   );
 
   const uploadAll = useCallback(async () => {
@@ -158,6 +172,7 @@ export function useUpload({
   const removeLocal = useCallback(
     (id: string) => {
       const next = assets.filter((a) => a.id !== id);
+      setAssets(next);
       emitChange(next);
     },
     [assets, emitChange]
@@ -179,7 +194,10 @@ export function useUpload({
     [assets, removeLocal]
   );
 
-  const clear = useCallback(() => emitChange([]), [emitChange]);
+  const clear = useCallback(() => {
+    setAssets([]);
+    emitChange([]);
+  }, [emitChange]);
 
   // Cleanup previews
   const cleanup = useCallback(() => {

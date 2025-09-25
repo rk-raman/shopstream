@@ -34,19 +34,26 @@ class CloudinaryProvider extends BaseUploadProvider {
         transformation = {},
         resourceType = "image",
         quality = "auto",
-        format = "auto",
+        format,
       } = options;
 
       // Generate unique public ID if not provided
       const finalPublicId = publicId || `${folder}/${fileName || uuidv4()}`;
+
+      // Sanitize transformation: Cloudinary rejects format: "auto" on upload
+      const safeTransformation = { ...transformation };
+      if (safeTransformation && safeTransformation.format === "auto") {
+        delete safeTransformation.format; // delivery-time f_auto should be applied via URLs, not at upload
+      }
 
       const uploadOptions = {
         public_id: finalPublicId,
         folder: folder,
         resource_type: resourceType,
         quality: quality,
-        format: format,
-        transformation: transformation,
+        // only set format if an explicit non-auto format is provided
+        ...(format && format !== "auto" ? { format } : {}),
+        transformation: safeTransformation,
         overwrite: false,
         unique_filename: !publicId,
         use_filename: !!fileName,

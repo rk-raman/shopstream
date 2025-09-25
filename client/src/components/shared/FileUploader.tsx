@@ -9,7 +9,7 @@ import { X } from "lucide-react";
 export type FileUploaderValue = Array<{ public_id: string; url: string }>;
 
 export interface FileUploaderProps {
-  categoryPath: string; // e.g., "categories/<id>/image" or any folder path
+  path: string; // e.g., "categories/<id>/image" or any folder path
   label?: string;
   description?: string;
   multiple?: boolean;
@@ -24,7 +24,7 @@ export interface FileUploaderProps {
 }
 
 export default function FileUploader({
-  categoryPath,
+  path,
   label = "Upload files",
   description,
   multiple = false,
@@ -38,11 +38,13 @@ export default function FileUploader({
 }: FileUploaderProps) {
   const initial = useMemo(() => value ?? defaultValue, [value, defaultValue]);
   const { assets, onFilesSelected, deleteRemote, cleanup } = useUpload({
-    categoryPath,
+    path,
     multiple,
     initial,
     onChange,
   });
+
+  console.log("assets", assets);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 

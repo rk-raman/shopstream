@@ -1,6 +1,6 @@
 const multer = require("multer");
 const uploadService = require("../services/upload.service");
-const { ApiError } = require("../../../shared/utils/apiError");
+const ApiError = require("../../../shared/utils/apiError");
 const config = require("../../../config");
 
 /**

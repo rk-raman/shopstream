@@ -16,14 +16,14 @@ router.use(authenticate);
 router.post(
   "/avatar",
   uploadMiddleware.single("avatar"),
-  validate(uploadValidators.validateUploadAvatar),
+  uploadValidators.validateUploadAvatar,
   uploadController.uploadAvatar
 );
 
 router.post(
   "/avatar/:userId",
   uploadMiddleware.single("avatar"),
-  validate(uploadValidators.validateUploadAvatar),
+  uploadValidators.validateUploadAvatar,
   uploadController.uploadAvatar
 );
 
@@ -31,14 +31,14 @@ router.post(
 router.post(
   "/products/images",
   uploadMiddleware.multiple("productImages", 10),
-  validate(uploadValidators.validateUploadProductImages),
+  uploadValidators.validateUploadProductImages,
   uploadController.uploadProductImages
 );
 
 router.post(
   "/products/:productId/images",
   uploadMiddleware.multiple("productImages", 10),
-  validate(uploadValidators.validateUploadProductImages),
+  uploadValidators.validateUploadProductImages,
   uploadController.uploadProductImages
 );
 
@@ -46,7 +46,7 @@ router.post(
 router.post(
   "/banners",
   uploadMiddleware.single("banner"),
-  validate(uploadValidators.validateUploadBanner),
+  uploadValidators.validateUploadBanner,
   uploadController.uploadBanner
 );
 
@@ -54,7 +54,7 @@ router.post(
 router.post(
   "/categories/:categoryId/image",
   uploadMiddleware.single("categoryImage"),
-  validate(uploadValidators.validateUploadCategoryImage),
+  uploadValidators.validateUploadCategoryImage,
   uploadController.uploadCategoryImage
 );
 
@@ -62,7 +62,7 @@ router.post(
 router.post(
   "/custom",
   ...uploadMiddleware.custom("file", "single"),
-  validate(uploadValidators.validateCustomUpload),
+  uploadValidators.validateCustomUpload,
   uploadController.customUpload
 );
 
@@ -77,7 +77,7 @@ router.post(
     next();
   },
   ...uploadMiddleware.custom("file", "single"),
-  validate(uploadValidators.validateCustomUpload),
+  uploadValidators.validateCustomUpload,
   uploadController.customUpload
 );
 
@@ -91,7 +91,7 @@ router.post(
     next();
   },
   ...uploadMiddleware.custom("files", "multiple", { maxCount: 20 }),
-  validate(uploadValidators.validateBulkUpload),
+  uploadValidators.validateBulkUpload,
   uploadController.bulkUpload
 );
 
@@ -99,20 +99,20 @@ router.post(
 router.post(
   "/bulk",
   uploadMiddleware.multiple("files", 20),
-  validate(uploadValidators.validateBulkUpload),
+  uploadValidators.validateBulkUpload,
   uploadController.bulkUpload
 );
 
 // File management routes
 router.delete(
   "/files/:publicId",
-  validate(uploadValidators.validateDeleteFile),
+  uploadValidators.validateDeleteFile,
   uploadController.deleteFile
 );
 
 router.delete(
   "/files",
-  validate(uploadValidators.validateDeleteMultiple),
+  uploadValidators.validateDeleteMultiple,
   uploadController.deleteMultiple
 );
 
@@ -121,21 +121,21 @@ router.get("/files/:publicId/info", uploadController.getFileInfo);
 // Signed URL generation
 router.post(
   "/signed-url",
-  validate(uploadValidators.validateGenerateSignedUrl),
+  uploadValidators.validateGenerateSignedUrl,
   uploadController.generateSignedUrl
 );
 
 // Image transformation routes
 router.post(
   "/transform/:publicId",
-  validate(uploadValidators.validateTransformImage),
+  uploadValidators.validateTransformImage,
   uploadController.transformImage
 );
 
 // Provider management routes (admin only)
 router.post(
   "/provider/switch",
-  validate(uploadValidators.validateSwitchProvider),
+  uploadValidators.validateSwitchProvider,
   uploadController.switchProvider
 );
 
@@ -150,21 +150,21 @@ router.get("/admin/health", uploadController.getProviderHealth);
 router.post(
   "/brands/:brandId/logo",
   uploadMiddleware.single("logo"),
-  validate(uploadValidators.validateUploadAvatar),
+  uploadValidators.validateUploadAvatar,
   uploadController.uploadBrandLogo
 );
 
 router.post(
   "/brands/:brandId/banner",
   uploadMiddleware.single("banner"),
-  validate(uploadValidators.validateUploadBanner),
+  uploadValidators.validateUploadBanner,
   uploadController.uploadBrandBanner
 );
 
 router.post(
   "/brands/:brandId/images",
   uploadMiddleware.multiple("images", 10),
-  validate(uploadValidators.validateUploadProductImages),
+  uploadValidators.validateUploadProductImages,
   uploadController.uploadBrandImages
 );
 
@@ -172,7 +172,7 @@ router.post(
 router.post(
   "/collections/:collectionId/image",
   uploadMiddleware.single("image"),
-  validate(uploadValidators.validateUploadCategoryImage),
+  uploadValidators.validateUploadCategoryImage,
   uploadController.uploadCollectionImage
 );
 
