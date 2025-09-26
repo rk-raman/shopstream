@@ -43,7 +43,7 @@ import {
   useToggleBrandFeatured,
   useToggleBrandVerified,
   useBulkDeleteBrands,
-} from "../../hooks/useBrands";
+} from "../../../hooks/useBrands";
 import { useDebounce } from "@/hooks/useDebounce";
 
 interface BrandListProps {

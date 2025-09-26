@@ -31,12 +31,12 @@ import {
 import {
   useCreateBrand,
   useUpdateBrand,
-  useUploadBrandLogo,
-  useUploadBrandBanner,
 } from "@/features/seller/hooks/useBrands";
 import { useCategories } from "@/features/seller/hooks/useCategories";
 import { Brand } from "@/types/global";
 import { toast } from "sonner";
+import FileUploader from "@/components/shared/FileUploader";
+import type { FileUploaderValue } from "@/components/shared/FileUploader";
 
 const brandSchema = z.object({
   name: z
@@ -51,16 +51,35 @@ const brandSchema = z.object({
       "Slug must contain only lowercase letters, numbers, and hyphens"
     ),
   description: z.string().optional(),
-  tagline: z
+  shortDescription: z
     .string()
-    .max(200, "Tagline must be less than 200 characters")
+    .max(200, "Short description must be less than 200 characters")
     .optional(),
-  website: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  email: z.string().email("Must be a valid email").optional().or(z.literal("")),
-  phone: z.string().optional(),
 
-  // Company information
-  companyName: z.string().optional(),
+  // Status
+  isActive: z.boolean().default(true),
+  isFeatured: z.boolean().default(false),
+
+  // Categories & tags
+  categories: z.array(z.string()).optional(),
+  tags: z.array(z.string()).optional(),
+
+  // Commission
+  commission: z
+    .number({ invalid_type_error: "Commission must be a number" })
+    .min(0, "Commission cannot be negative")
+    .max(100, "Commission cannot exceed 100")
+    .optional(),
+
+  // Company information (matches companyInfo in model)
+  companyFoundedYear: z
+    .union([z.string(), z.number()])
+    .optional()
+    .transform((v) => (v === "" || v === undefined ? undefined : Number(v)))
+    .refine((v) => v === undefined || (!Number.isNaN(v) && v > 0), {
+      message: "Enter a valid year",
+    }),
+  companyHeadquarters: z.string().optional(),
   companyWebsite: z
     .string()
     .url("Must be a valid URL")
@@ -72,7 +91,11 @@ const brandSchema = z.object({
     .optional()
     .or(z.literal("")),
   companyPhone: z.string().optional(),
-  companyAddress: z.string().optional(),
+  addressStreet: z.string().optional(),
+  addressCity: z.string().optional(),
+  addressState: z.string().optional(),
+  addressCountry: z.string().optional(),
+  addressZipCode: z.string().optional(),
 
   // Social media
   facebook: z.string().url("Must be a valid URL").optional().or(z.literal("")),
@@ -81,17 +104,23 @@ const brandSchema = z.object({
   linkedin: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   youtube: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   tiktok: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  // Settings
-  isActive: z.boolean().default(true),
-  isFeatured: z.boolean().default(false),
 
-  // Categories
-  categories: z.array(z.string()).optional(),
+  // SEO
+  metaTitle: z
+    .string()
+    .max(60, "Meta title cannot exceed 60 characters")
+    .optional(),
+  metaDescription: z
+    .string()
+    .max(160, "Meta description cannot exceed 160 characters")
+    .optional(),
+  metaKeywords: z.string().optional(), // comma separated input -> split into array on submit
 
-  // Brand guidelines
-  primaryColor: z.string().optional(),
-  secondaryColor: z.string().optional(),
-  brandGuidelines: z.string().optional(),
+  // Guidelines
+  logoUsage: z.string().optional(),
+  colorPalette: z.string().optional(), // comma separated input -> split into array
+  typography: z.string().optional(),
+  toneOfVoice: z.string().optional(),
 });
 
 type BrandFormData = z.infer<typeof brandSchema>;
@@ -102,113 +131,18 @@ interface BrandFormProps {
   onCancel?: () => void;
 }
 
-interface ImageUploadProps {
-  label: string;
-  currentImage?: { url: string; public_id: string };
-  onUpload: (file: File) => void;
-  isUploading: boolean;
-  aspectRatio?: string;
-  description?: string;
-}
-
-const ImageUpload: React.FC<ImageUploadProps> = ({
-  label,
-  currentImage,
-  onUpload,
-  isUploading,
-  aspectRatio = "aspect-square",
-  description,
-}) => {
-  const [dragOver, setDragOver] = useState(false);
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-
-    const files = Array.from(e.dataTransfer.files);
-    const imageFile = files.find((file) => file.type.startsWith("image/"));
-
-    if (imageFile) {
-      onUpload(imageFile);
-    }
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      onUpload(file);
-    }
-  };
-
-  return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
-      {description && <p className="text-sm text-gray-500">{description}</p>}
-
-      <div
-        className={`relative border-2 border-dashed rounded-lg p-4 transition-colors ${
-          dragOver ? "border-blue-400 bg-blue-50" : "border-gray-300"
-        } ${aspectRatio} flex items-center justify-center`}
-        onDrop={handleDrop}
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragOver(true);
-        }}
-        onDragLeave={() => setDragOver(false)}
-      >
-        {currentImage ? (
-          <div className="relative w-full h-full">
-            <img
-              src={currentImage.url}
-              alt={label}
-              className="w-full h-full object-cover rounded"
-            />
-            {isUploading && (
-              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="text-center">
-            {isUploading ? (
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400 mx-auto mb-2"></div>
-            ) : (
-              <Camera className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-            )}
-            <p className="text-sm text-gray-500">
-              {isUploading
-                ? "Uploading..."
-                : "Drop image here or click to upload"}
-            </p>
-          </div>
-        )}
-
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleFileSelect}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          disabled={isUploading}
-        />
-      </div>
-    </div>
-  );
-};
-
 export const BrandForm: React.FC<BrandFormProps> = ({
   brand,
   onSuccess,
   onCancel,
 }) => {
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [logoImages, setLogoImages] = useState<FileUploaderValue>([]);
+  const [bannerImages, setBannerImages] = useState<FileUploaderValue>([]);
+  const [galleryImages, setGalleryImages] = useState<FileUploaderValue>([]);
 
   const { data: categories } = useCategories();
   const createBrandMutation = useCreateBrand();
   const updateBrandMutation = useUpdateBrand();
-  const uploadLogoMutation = useUploadBrandLogo();
-  const uploadBannerMutation = useUploadBrandBanner();
 
   const form = useForm<BrandFormData>({
     resolver: zodResolver(brandSchema),
@@ -216,66 +150,108 @@ export const BrandForm: React.FC<BrandFormProps> = ({
       name: "",
       slug: "",
       description: "",
-      tagline: "",
-      website: "",
-      email: "",
-      phone: "",
-      companyName: "",
+      shortDescription: "",
+      isActive: true,
+      isFeatured: false,
+      categories: [],
+      tags: [],
+      commission: 0,
+      companyFoundedYear: undefined,
+      companyHeadquarters: "",
       companyWebsite: "",
       companyEmail: "",
       companyPhone: "",
-      companyAddress: "",
+      addressStreet: "",
+      addressCity: "",
+      addressState: "",
+      addressCountry: "",
+      addressZipCode: "",
       facebook: "",
       twitter: "",
       instagram: "",
       linkedin: "",
       youtube: "",
       tiktok: "",
-      isActive: true,
-      isFeatured: false,
-      categories: [],
-      primaryColor: "#000000",
-      secondaryColor: "#ffffff",
-      brandGuidelines: "",
+      metaTitle: "",
+      metaDescription: "",
+      metaKeywords: "",
+      logoUsage: "",
+      colorPalette: "",
+      typography: "",
+      toneOfVoice: "",
     },
   });
 
-  // Populate form when editing
+  // Populate form when editing and set FileUploader defaults
   useEffect(() => {
     if (brand) {
       form.reset({
-        name: brand.name || "",
-        slug: brand.slug || "",
-        description: brand.description || "",
-        tagline: brand.tagline || "",
-        website: brand.website || "",
-        email: brand.email || "",
-        phone: brand.phone || "",
-        companyName: brand.company?.name || "",
-        companyWebsite: brand.company?.website || "",
-        companyEmail: brand.company?.email || "",
-        companyPhone: brand.company?.phone || "",
-        companyAddress: brand.company?.address || "",
-        facebook: brand.socialMedia?.facebook || "",
-        twitter: brand.socialMedia?.twitter || "",
-        instagram: brand.socialMedia?.instagram || "",
-        linkedin: brand.socialMedia?.linkedin || "",
-        youtube: brand.socialMedia?.youtube || "",
-        tiktok: brand.socialMedia?.tiktok || "",
-        isActive: brand.isActive ?? true,
-        isFeatured: brand.isFeatured ?? false,
+        name: (brand as any).name || "",
+        slug: (brand as any).slug || "",
+        description: (brand as any).description || "",
+        shortDescription: (brand as any).shortDescription || "",
+        isActive: (brand as any).isActive ?? true,
+        isFeatured: (brand as any).isFeatured ?? false,
         categories:
-          brand.categories?.map((cat) =>
-            typeof cat === "string" ? cat : cat._id
+          (brand as any).categories?.map((c: any) =>
+            typeof c === "string" ? c : c?._id
           ) || [],
-        primaryColor: brand.brandGuidelines?.primaryColor || "#000000",
-        secondaryColor: brand.brandGuidelines?.secondaryColor || "#ffffff",
-        brandGuidelines: brand.brandGuidelines?.description || "",
+        tags: (brand as any).tags || [],
+        commission: (brand as any).commission ?? 0,
+        companyFoundedYear: (brand as any).companyInfo?.foundedYear,
+        companyHeadquarters: (brand as any).companyInfo?.headquarters || "",
+        companyWebsite: (brand as any).companyInfo?.website || "",
+        companyEmail: (brand as any).companyInfo?.email || "",
+        companyPhone: (brand as any).companyInfo?.phone || "",
+        addressStreet: (brand as any).companyInfo?.address?.street || "",
+        addressCity: (brand as any).companyInfo?.address?.city || "",
+        addressState: (brand as any).companyInfo?.address?.state || "",
+        addressCountry: (brand as any).companyInfo?.address?.country || "",
+        addressZipCode: (brand as any).companyInfo?.address?.zipCode || "",
+        facebook: (brand as any).socialMedia?.facebook || "",
+        twitter: (brand as any).socialMedia?.twitter || "",
+        instagram: (brand as any).socialMedia?.instagram || "",
+        linkedin: (brand as any).socialMedia?.linkedin || "",
+        youtube: (brand as any).socialMedia?.youtube || "",
+        tiktok: (brand as any).socialMedia?.tiktok || "",
+        metaTitle: (brand as any).metaTitle || "",
+        metaDescription: (brand as any).metaDescription || "",
+        metaKeywords: ((brand as any).metaKeywords || []).join(", "),
+        logoUsage: (brand as any).guidelines?.logoUsage || "",
+        colorPalette: ((brand as any).guidelines?.colorPalette || []).join(
+          ", "
+        ),
+        typography: (brand as any).guidelines?.typography || "",
+        toneOfVoice: (brand as any).guidelines?.toneOfVoice || "",
       });
+
+      // Initialize uploaders
+      const logo = (brand as any).logo;
+      const banner = (brand as any).banner;
+      const images = (brand as any).images || [];
+      setLogoImages(
+        logo?.url ? [{ public_id: logo.public_id || "", url: logo.url }] : []
+      );
+      setBannerImages(
+        banner?.url
+          ? [{ public_id: banner.public_id || "", url: banner.url }]
+          : []
+      );
+      setGalleryImages(
+        Array.isArray(images)
+          ? images
+              .filter((i: any) => i && (i.url || typeof i === "string"))
+              .map((i: any) =>
+                typeof i === "string"
+                  ? { public_id: "", url: i }
+                  : { public_id: i.public_id || "", url: i.url }
+              )
+          : []
+      );
     }
   }, [brand, form]);
 
-  // Auto-generate slug from name
+  // Auto-generate slug from name when creating
   const watchName = form.watch("name");
   useEffect(() => {
     if (watchName && !brand) {
@@ -289,74 +265,86 @@ export const BrandForm: React.FC<BrandFormProps> = ({
     }
   }, [watchName, brand, form]);
 
-  const handleLogoUpload = (file: File) => {
-    setLogoFile(file);
-  };
-
-  const handleBannerUpload = (file: File) => {
-    setBannerFile(file);
-  };
-
   const onSubmit = async (data: BrandFormData) => {
     try {
-      let brandData: any = {
+      // Build payload matching Brand.model.js
+      const payload: any = {
         name: data.name,
         slug: data.slug,
         description: data.description,
-        tagline: data.tagline,
-        website: data.website,
-        email: data.email,
-        phone: data.phone,
+        shortDescription: data.shortDescription,
         isActive: data.isActive,
         isFeatured: data.isFeatured,
-        categories: data.categories,
-        company: {
-          name: data.companyName,
-          website: data.companyWebsite,
-          email: data.companyEmail,
+        categories: data.categories || [],
+        tags: data.tags || [],
+        commission:
+          typeof data.commission === "number" ? data.commission : undefined,
+        companyInfo: {
+          foundedYear: data.companyFoundedYear,
+          headquarters: data.companyHeadquarters,
+          website: data.companyWebsite || undefined,
+          email: data.companyEmail || undefined,
           phone: data.companyPhone,
-          address: data.companyAddress,
+          address: {
+            street: data.addressStreet,
+            city: data.addressCity,
+            state: data.addressState,
+            country: data.addressCountry,
+            zipCode: data.addressZipCode,
+          },
         },
         socialMedia: {
-          facebook: data.facebook,
-          twitter: data.twitter,
-          instagram: data.instagram,
-          linkedin: data.linkedin,
-          youtube: data.youtube,
-          tiktok: data.tiktok,
+          facebook: data.facebook || undefined,
+          twitter: data.twitter || undefined,
+          instagram: data.instagram || undefined,
+          linkedin: data.linkedin || undefined,
+          youtube: data.youtube || undefined,
+          tiktok: data.tiktok || undefined,
         },
-        brandGuidelines: {
-          primaryColor: data.primaryColor,
-          secondaryColor: data.secondaryColor,
-          description: data.brandGuidelines,
+        metaTitle: data.metaTitle || undefined,
+        metaDescription: data.metaDescription || undefined,
+        metaKeywords: data.metaKeywords
+          ? data.metaKeywords
+              .split(",")
+              .map((k) => k.trim())
+              .filter(Boolean)
+          : undefined,
+        guidelines: {
+          logoUsage: data.logoUsage,
+          colorPalette: data.colorPalette
+            ? data.colorPalette
+                .split(",")
+                .map((c) => c.trim())
+                .filter(Boolean)
+            : undefined,
+          typography: data.typography,
+          toneOfVoice: data.toneOfVoice,
         },
       };
 
-      let savedBrand: Brand;
+      // Include images like CollectionForm: send objects with url/public_id
+      if (logoImages && logoImages.length > 0) {
+        payload.logo = logoImages[0];
+      }
+      if (bannerImages && bannerImages.length > 0) {
+        payload.banner = bannerImages[0];
+      }
+      if (galleryImages && galleryImages.length > 0) {
+        payload.images = galleryImages.map((g: any) => ({
+          url: g.url,
+          public_id: g.public_id,
+          caption: (g as any).caption,
+        }));
+      }
 
+      let saved: Brand;
       if (brand) {
-        savedBrand = await updateBrandMutation.mutateAsync({
-          id: brand._id,
-          data: brandData,
+        saved = await updateBrandMutation.mutateAsync({
+          id: (brand as any)._id,
+          data: payload,
         });
       } else {
-        savedBrand = await createBrandMutation.mutateAsync(brandData);
-      }
-
-      // Upload logo if provided
-      if (logoFile) {
-        await uploadLogoMutation.mutateAsync({
-          brandId: savedBrand._id,
-          logoFile: logoFile,
-        });
-      }
-
-      // Upload banner if provided
-      if (bannerFile) {
-        await uploadBannerMutation.mutateAsync({
-          brandId: savedBrand._id,
-          bannerFile: bannerFile,
-        });
+        saved = await createBrandMutation.mutateAsync(payload);
       }
 
       toast.success(
@@ -375,11 +363,12 @@ export const BrandForm: React.FC<BrandFormProps> = ({
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="basic">Basic Info</TabsTrigger>
           <TabsTrigger value="media">Media</TabsTrigger>
           <TabsTrigger value="company">Company</TabsTrigger>
-          <TabsTrigger value="social">Social & Guidelines</TabsTrigger>
+          <TabsTrigger value="social">Social</TabsTrigger>
+          <TabsTrigger value="seo">SEO & Guidelines</TabsTrigger>
         </TabsList>
 
         <TabsContent value="basic" className="space-y-4">
@@ -419,17 +408,12 @@ export const BrandForm: React.FC<BrandFormProps> = ({
               </div>
 
               <div>
-                <Label htmlFor="tagline">Tagline</Label>
+                <Label htmlFor="shortDescription">Short Description</Label>
                 <Input
-                  id="tagline"
-                  {...form.register("tagline")}
-                  placeholder="Your brand's catchy tagline"
+                  id="shortDescription"
+                  {...form.register("shortDescription")}
+                  placeholder="Short summary (<= 200 chars)"
                 />
-                {form.formState.errors.tagline && (
-                  <p className="text-sm text-red-600 mt-1">
-                    {form.formState.errors.tagline.message}
-                  </p>
-                )}
               </div>
 
               <div>
@@ -444,41 +428,76 @@ export const BrandForm: React.FC<BrandFormProps> = ({
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="website">Website</Label>
+                  <Label htmlFor="commission">Commission (%)</Label>
                   <Input
-                    id="website"
-                    {...form.register("website")}
-                    placeholder="https://yourbrand.com"
+                    id="commission"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    {...form.register("commission", { valueAsNumber: true })}
+                    placeholder="0"
                   />
-                  {form.formState.errors.website && (
-                    <p className="text-sm text-red-600 mt-1">
-                      {form.formState.errors.website.message}
-                    </p>
-                  )}
                 </div>
 
                 <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    {...form.register("email")}
-                    placeholder="contact@yourbrand.com"
-                  />
-                  {form.formState.errors.email && (
-                    <p className="text-sm text-red-600 mt-1">
-                      {form.formState.errors.email.message}
-                    </p>
+                  <Label>Categories</Label>
+                  <Select
+                    onValueChange={(val) =>
+                      form.setValue(
+                        "categories",
+                        Array.from(
+                          new Set([
+                            ...(form.getValues("categories") || []),
+                            val,
+                          ])
+                        )
+                      )
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a category to add" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(categories?.data || []).map((cat: any) => (
+                        <SelectItem key={cat._id} value={cat._id}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {/* Selected categories preview */}
+                  {(form.watch("categories") || []).length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {(form.watch("categories") || []).map((id) => (
+                        <span
+                          key={id}
+                          className="px-2 py-1 text-xs rounded border"
+                        >
+                          {categories?.data?.find((c: any) => c._id === id)
+                            ?.name || id}
+                        </span>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="phone">Phone</Label>
+                <Label htmlFor="tags">Tags (comma separated)</Label>
                 <Input
-                  id="phone"
-                  {...form.register("phone")}
-                  placeholder="+1 (555) 123-4567"
+                  id="tags"
+                  placeholder="e.g. electronics, premium, lifestyle"
+                  value={(form.watch("tags") || []).join(", ")}
+                  onChange={(e) =>
+                    form.setValue(
+                      "tags",
+                      e.target.value
+                        .split(",")
+                        .map((t) => t.trim())
+                        .filter(Boolean)
+                    )
+                  }
                 />
               </div>
 
@@ -516,22 +535,39 @@ export const BrandForm: React.FC<BrandFormProps> = ({
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <ImageUpload
-                  label="Brand Logo"
-                  currentImage={brand?.logo}
-                  onUpload={handleLogoUpload}
-                  isUploading={uploadLogoMutation.isPending}
-                  aspectRatio="aspect-square"
-                  description="Square logo (recommended: 400x400px)"
-                />
+                <div>
+                  <Label>Brand Logo</Label>
+                  <FileUploader
+                    path="brands/logo"
+                    label="Logo"
+                    description="Square logo (recommended: 400x400px)"
+                    multiple={false}
+                    defaultValue={logoImages}
+                    onChange={setLogoImages}
+                  />
+                </div>
+                <div>
+                  <Label>Brand Banner</Label>
+                  <FileUploader
+                    path="brands/banner"
+                    label="Banner"
+                    description="Banner image (recommended: 1200x400px)"
+                    multiple={false}
+                    defaultValue={bannerImages}
+                    onChange={setBannerImages}
+                  />
+                </div>
+              </div>
 
-                <ImageUpload
-                  label="Brand Banner"
-                  currentImage={brand?.banner}
-                  onUpload={handleBannerUpload}
-                  isUploading={uploadBannerMutation.isPending}
-                  aspectRatio="aspect-[3/1]"
-                  description="Banner image (recommended: 1200x400px)"
+              <div>
+                <Label>Gallery Images</Label>
+                <FileUploader
+                  path="brands/images"
+                  label="Gallery"
+                  description="Upload additional brand images"
+                  multiple
+                  defaultValue={galleryImages}
+                  onChange={setGalleryImages}
                 />
               </div>
             </CardContent>
@@ -546,14 +582,25 @@ export const BrandForm: React.FC<BrandFormProps> = ({
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="companyName">Company Name</Label>
+                  <Label htmlFor="companyFoundedYear">Founded Year</Label>
                   <Input
-                    id="companyName"
-                    {...form.register("companyName")}
-                    placeholder="Your Company Inc."
+                    id="companyFoundedYear"
+                    type="number"
+                    {...form.register("companyFoundedYear")}
+                    placeholder="e.g. 1998"
                   />
                 </div>
+                <div>
+                  <Label htmlFor="companyHeadquarters">Headquarters</Label>
+                  <Input
+                    id="companyHeadquarters"
+                    {...form.register("companyHeadquarters")}
+                    placeholder="City, Country"
+                  />
+                </div>
+              </div>
 
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="companyWebsite">Company Website</Label>
                   <Input
@@ -567,9 +614,6 @@ export const BrandForm: React.FC<BrandFormProps> = ({
                     </p>
                   )}
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="companyEmail">Company Email</Label>
                   <Input
@@ -584,7 +628,6 @@ export const BrandForm: React.FC<BrandFormProps> = ({
                     </p>
                   )}
                 </div>
-
                 <div>
                   <Label htmlFor="companyPhone">Company Phone</Label>
                   <Input
@@ -595,14 +638,36 @@ export const BrandForm: React.FC<BrandFormProps> = ({
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="companyAddress">Company Address</Label>
-                <Textarea
-                  id="companyAddress"
-                  {...form.register("companyAddress")}
-                  placeholder="123 Business St, City, State 12345"
-                  rows={3}
-                />
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="addressStreet">Street</Label>
+                  <Input
+                    id="addressStreet"
+                    {...form.register("addressStreet")}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="addressCity">City</Label>
+                  <Input id="addressCity" {...form.register("addressCity")} />
+                </div>
+                <div>
+                  <Label htmlFor="addressState">State</Label>
+                  <Input id="addressState" {...form.register("addressState")} />
+                </div>
+                <div>
+                  <Label htmlFor="addressCountry">Country</Label>
+                  <Input
+                    id="addressCountry"
+                    {...form.register("addressCountry")}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="addressZipCode">Zip/Postal Code</Label>
+                  <Input
+                    id="addressZipCode"
+                    {...form.register("addressZipCode")}
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -623,7 +688,6 @@ export const BrandForm: React.FC<BrandFormProps> = ({
                     placeholder="https://facebook.com/yourbrand"
                   />
                 </div>
-
                 <div>
                   <Label htmlFor="twitter">Twitter</Label>
                   <Input
@@ -632,7 +696,6 @@ export const BrandForm: React.FC<BrandFormProps> = ({
                     placeholder="https://twitter.com/yourbrand"
                   />
                 </div>
-
                 <div>
                   <Label htmlFor="instagram">Instagram</Label>
                   <Input
@@ -641,7 +704,6 @@ export const BrandForm: React.FC<BrandFormProps> = ({
                     placeholder="https://instagram.com/yourbrand"
                   />
                 </div>
-
                 <div>
                   <Label htmlFor="linkedin">LinkedIn</Label>
                   <Input
@@ -650,7 +712,6 @@ export const BrandForm: React.FC<BrandFormProps> = ({
                     placeholder="https://linkedin.com/company/yourbrand"
                   />
                 </div>
-
                 <div>
                   <Label htmlFor="youtube">YouTube</Label>
                   <Input
@@ -659,7 +720,6 @@ export const BrandForm: React.FC<BrandFormProps> = ({
                     placeholder="https://youtube.com/c/yourbrand"
                   />
                 </div>
-
                 <div>
                   <Label htmlFor="tiktok">TikTok</Label>
                   <Input
@@ -671,6 +731,43 @@ export const BrandForm: React.FC<BrandFormProps> = ({
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="seo" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>SEO</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="metaTitle">Meta Title</Label>
+                <Input
+                  id="metaTitle"
+                  {...form.register("metaTitle")}
+                  placeholder="Brand SEO title"
+                />
+              </div>
+              <div>
+                <Label htmlFor="metaDescription">Meta Description</Label>
+                <Textarea
+                  id="metaDescription"
+                  {...form.register("metaDescription")}
+                  placeholder="Brand SEO description"
+                  rows={3}
+                />
+              </div>
+              <div>
+                <Label htmlFor="metaKeywords">
+                  Meta Keywords (comma separated)
+                </Label>
+                <Input
+                  id="metaKeywords"
+                  {...form.register("metaKeywords")}
+                  placeholder="electronics, premium, lifestyle"
+                />
+              </div>
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader>
@@ -679,34 +776,42 @@ export const BrandForm: React.FC<BrandFormProps> = ({
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="primaryColor">Primary Color</Label>
-                  <Input
-                    id="primaryColor"
-                    type="color"
-                    {...form.register("primaryColor")}
-                    className="h-10"
+                  <Label htmlFor="logoUsage">Logo Usage</Label>
+                  <Textarea
+                    id="logoUsage"
+                    {...form.register("logoUsage")}
+                    placeholder="Guidelines for using the logo"
+                    rows={3}
                   />
                 </div>
-
                 <div>
-                  <Label htmlFor="secondaryColor">Secondary Color</Label>
+                  <Label htmlFor="colorPalette">
+                    Color Palette (comma separated)
+                  </Label>
                   <Input
-                    id="secondaryColor"
-                    type="color"
-                    {...form.register("secondaryColor")}
-                    className="h-10"
+                    id="colorPalette"
+                    {...form.register("colorPalette")}
+                    placeholder="#000000, #FFFFFF, #2E86DE"
                   />
                 </div>
               </div>
-
-              <div>
-                <Label htmlFor="brandGuidelines">Brand Guidelines</Label>
-                <Textarea
-                  id="brandGuidelines"
-                  {...form.register("brandGuidelines")}
-                  placeholder="Describe your brand guidelines, tone of voice, usage rules..."
-                  rows={4}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="typography">Typography</Label>
+                  <Input
+                    id="typography"
+                    {...form.register("typography")}
+                    placeholder="Primary/secondary fonts"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="toneOfVoice">Tone of Voice</Label>
+                  <Input
+                    id="toneOfVoice"
+                    {...form.register("toneOfVoice")}
+                    placeholder="Formal, friendly, playful..."
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
