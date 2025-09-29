@@ -1,21 +1,6 @@
-import axios from "axios";
+import axiosSeller from "@/lib/api/axiosSeller";
 import { API_ENDPOINTS } from "../constants/endpoints";
 import { Brand, ApiResponse } from "../types/global";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
-
-// Create axios instance with seller token
-const createAxiosInstance = () => {
-  const token = localStorage.getItem("sellerToken");
-  return axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-  });
-};
 
 export interface BrandFormData {
   name: string;
@@ -94,7 +79,7 @@ const buildQueryParams = (params: Record<string, any>): string => {
 export const getBrands = async (
   filters: BrandFilters = {}
 ): Promise<ApiResponse<{ brands: Brand[]; pagination: any }>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const queryString = buildQueryParams(filters);
   const url = `${API_ENDPOINTS.BRANDS.BASE}${
     queryString ? `?${queryString}` : ""
@@ -105,28 +90,28 @@ export const getBrands = async (
 
 // Get single brand by ID
 export const getBrand = async (id: string): Promise<ApiResponse<Brand>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.get(API_ENDPOINTS.BRANDS.GET_BY_ID(id));
   return response.data;
 };
 
 // Get featured brands
 export const getFeaturedBrands = async (): Promise<ApiResponse<Brand[]>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.get(API_ENDPOINTS.BRANDS.GET_FEATURED);
   return response.data;
 };
 
 // Get verified brands
 export const getVerifiedBrands = async (): Promise<ApiResponse<Brand[]>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.get(API_ENDPOINTS.BRANDS.GET_VERIFIED);
   return response.data;
 };
 
 // Get brands by alphabet
 export const getBrandsByAlphabet = async (): Promise<ApiResponse<any[]>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.get(API_ENDPOINTS.BRANDS.GET_BY_ALPHABET);
   return response.data;
 };
@@ -135,7 +120,7 @@ export const getBrandsByAlphabet = async (): Promise<ApiResponse<any[]>> => {
 export const createBrand = async (
   brandData: BrandFormData
 ): Promise<ApiResponse<Brand>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.post(API_ENDPOINTS.BRANDS.CREATE, brandData);
   return response.data;
 };
@@ -145,14 +130,14 @@ export const updateBrand = async (
   id: string,
   brandData: Partial<BrandFormData>
 ): Promise<ApiResponse<Brand>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.put(API_ENDPOINTS.BRANDS.UPDATE(id), brandData);
   return response.data;
 };
 
 // Delete brand
 export const deleteBrand = async (id: string): Promise<ApiResponse<void>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.delete(API_ENDPOINTS.BRANDS.DELETE(id));
   return response.data;
 };
@@ -161,7 +146,7 @@ export const deleteBrand = async (id: string): Promise<ApiResponse<void>> => {
 export const bulkDeleteBrands = async (
   brandIds: string[]
 ): Promise<ApiResponse<void>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.post(API_ENDPOINTS.BRANDS.BULK_DELETE, {
     brandIds,
   });
@@ -173,7 +158,7 @@ export const bulkUpdateBrands = async (
   brandIds: string[],
   updateData: Partial<BrandFormData>
 ): Promise<ApiResponse<void>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.post(API_ENDPOINTS.BRANDS.BULK_UPDATE, {
     brandIds,
     updateData,
@@ -186,7 +171,7 @@ export const searchBrands = async (
   query: string,
   filters: BrandFilters = {}
 ): Promise<ApiResponse<{ brands: Brand[]; pagination: any }>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const queryString = buildQueryParams({ ...filters, q: query });
   const url = `${API_ENDPOINTS.BRANDS.SEARCH}?${queryString}`;
   const response = await api.get(url);
@@ -198,7 +183,7 @@ export const uploadBrandLogo = async (
   id: string,
   file: File
 ): Promise<ApiResponse<{ url: string }>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const formData = new FormData();
   formData.append("logo", file);
 
@@ -219,7 +204,7 @@ export const uploadBrandBanner = async (
   id: string,
   file: File
 ): Promise<ApiResponse<{ url: string }>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const formData = new FormData();
   formData.append("banner", file);
 
@@ -240,7 +225,7 @@ export const getBrandProducts = async (
   id: string,
   filters: any = {}
 ): Promise<ApiResponse<any>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const queryString = buildQueryParams(filters);
   const url = `${API_ENDPOINTS.BRANDS.GET_BY_ID(id)}/products${
     queryString ? `?${queryString}` : ""

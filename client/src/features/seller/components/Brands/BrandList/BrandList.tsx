@@ -112,9 +112,9 @@ export const BrandList: React.FC<BrandListProps> = ({
   const toggleBrandVerified = useToggleBrandVerified();
   const bulkDeleteBrands = useBulkDeleteBrands();
 
-  const brands = brandsData?.docs || [];
-  const totalPages = brandsData?.totalPages || 1;
-  const totalBrands = brandsData?.totalDocs || 0;
+  const brands = brandsData?.data?.docs || [];
+  const totalPages = brandsData?.data?.totalPages || 1;
+  const totalBrands = brandsData?.data?.totalDocs || 0;
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {

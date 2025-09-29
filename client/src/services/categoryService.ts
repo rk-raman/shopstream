@@ -1,21 +1,6 @@
-import axios from "axios";
+import axiosSeller from "@/lib/api/axiosSeller";
 import { API_ENDPOINTS } from "../constants/endpoints";
 import { Category, ApiResponse } from "../types/global";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
-
-// Create axios instance with seller token
-const createAxiosInstance = () => {
-  const token = localStorage.getItem("sellerToken");
-  return axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-  });
-};
 
 export interface CategoryFormData {
   name: string;
@@ -78,7 +63,7 @@ const buildQueryParams = (params: Record<string, any>): string => {
 export const getCategories = async (
   filters: CategoryFilters = {}
 ): Promise<ApiResponse<{ categories: Category[]; pagination: any }>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const queryString = buildQueryParams(filters);
   const url = `${API_ENDPOINTS.CATEGORIES.BASE}${
     queryString ? `?${queryString}` : ""
@@ -91,7 +76,7 @@ export const getCategories = async (
 export const getCategoryTree = async (): Promise<
   ApiResponse<CategoryTree[]>
 > => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.get(API_ENDPOINTS.CATEGORIES.GET_TREE);
   return response.data;
 };
@@ -100,7 +85,7 @@ export const getCategoryTree = async (): Promise<
 export const getCategory = async (
   id: string
 ): Promise<ApiResponse<Category>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.get(API_ENDPOINTS.CATEGORIES.GET_BY_ID(id));
   return response.data;
 };
@@ -109,7 +94,7 @@ export const getCategory = async (
 export const getFeaturedCategories = async (): Promise<
   ApiResponse<Category[]>
 > => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.get(API_ENDPOINTS.CATEGORIES.GET_FEATURED);
   return response.data;
 };
@@ -118,7 +103,7 @@ export const getFeaturedCategories = async (): Promise<
 export const createCategory = async (
   categoryData: CategoryFormData
 ): Promise<ApiResponse<Category>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.post(
     API_ENDPOINTS.CATEGORIES.CREATE,
     categoryData
@@ -131,7 +116,7 @@ export const updateCategory = async (
   id: string,
   categoryData: Partial<CategoryFormData>
 ): Promise<ApiResponse<Category>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.put(
     API_ENDPOINTS.CATEGORIES.UPDATE(id),
     categoryData
@@ -143,7 +128,7 @@ export const updateCategory = async (
 export const deleteCategory = async (
   id: string
 ): Promise<ApiResponse<void>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.delete(API_ENDPOINTS.CATEGORIES.DELETE(id));
   return response.data;
 };
@@ -152,7 +137,7 @@ export const deleteCategory = async (
 export const bulkDeleteCategories = async (
   categoryIds: string[]
 ): Promise<ApiResponse<void>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.post(API_ENDPOINTS.CATEGORIES.BULK_DELETE, {
     categoryIds,
   });
@@ -164,7 +149,7 @@ export const bulkUpdateCategories = async (
   categoryIds: string[],
   updateData: Partial<CategoryFormData>
 ): Promise<ApiResponse<void>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.post(API_ENDPOINTS.CATEGORIES.BULK_UPDATE, {
     categoryIds,
     updateData,
@@ -177,7 +162,7 @@ export const searchCategories = async (
   query: string,
   filters: CategoryFilters = {}
 ): Promise<ApiResponse<{ categories: Category[]; pagination: any }>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const queryString = buildQueryParams({ ...filters, q: query });
   const url = `${API_ENDPOINTS.CATEGORIES.SEARCH}?${queryString}`;
   const response = await api.get(url);
@@ -189,7 +174,7 @@ export const uploadCategoryImage = async (
   id: string,
   file: File
 ): Promise<ApiResponse<{ url: string }>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const formData = new FormData();
   formData.append("image", file);
 
@@ -207,7 +192,7 @@ export const uploadCategoryImage = async (
 
 // Get root categories (level 0)
 export const getRootCategories = async (): Promise<ApiResponse<Category[]>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.get(
     `${API_ENDPOINTS.CATEGORIES.BASE}?level=0&isActive=true`
   );
@@ -218,7 +203,7 @@ export const getRootCategories = async (): Promise<ApiResponse<Category[]>> => {
 export const getChildCategories = async (
   parentId: string
 ): Promise<ApiResponse<Category[]>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.get(
     `${API_ENDPOINTS.CATEGORIES.BASE}?parent=${parentId}&isActive=true`
   );
@@ -229,7 +214,7 @@ export const getChildCategories = async (
 export const getCategoryPath = async (
   id: string
 ): Promise<ApiResponse<Category[]>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.get(
     `${API_ENDPOINTS.CATEGORIES.GET_BY_ID(id)}/path`
   );

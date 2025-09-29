@@ -459,7 +459,7 @@ export const BrandForm: React.FC<BrandFormProps> = ({
                       <SelectValue placeholder="Select a category to add" />
                     </SelectTrigger>
                     <SelectContent>
-                      {(categories?.data || []).map((cat: any) => (
+                      {(categories?.data?.docs || []).map((cat: any) => (
                         <SelectItem key={cat._id} value={cat._id}>
                           {cat.name}
                         </SelectItem>
@@ -474,7 +474,7 @@ export const BrandForm: React.FC<BrandFormProps> = ({
                           key={id}
                           className="px-2 py-1 text-xs rounded border"
                         >
-                          {categories?.data?.find((c: any) => c._id === id)
+                          {categories?.data?.docs.find((c: any) => c._id === id)
                             ?.name || id}
                         </span>
                       ))}

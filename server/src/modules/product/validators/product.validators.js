@@ -1,3 +1,4 @@
+const Joi = require("joi");
 const {
   validateJoiBody,
   validateJoiQuery,
@@ -46,19 +47,23 @@ const validateProductSearch = [validateJoiQuery(productSearchSchema)];
  * Product ID Validation
  */
 const validateProductId = [
-  validateJoiParams({
-    productId: commonJoiPatterns.objectId.required(),
-  }),
+  validateJoiParams(
+    Joi.object({
+      productId: commonJoiPatterns.objectId.required(),
+    })
+  ),
 ];
 
 /**
  * Product and Variant ID Validation
  */
 const validateProductAndVariantId = [
-  validateJoiParams({
-    productId: commonJoiPatterns.objectId.required(),
-    variantId: commonJoiPatterns.objectId.required(),
-  }),
+  validateJoiParams(
+    Joi.object({
+      productId: commonJoiPatterns.objectId.required(),
+      variantId: commonJoiPatterns.objectId.required(),
+    })
+  ),
 ];
 
 /**
@@ -143,39 +148,47 @@ const validateSpecificationUpdate = [
  * Variant ID Validation
  */
 const validateVariantId = [
-  validateJoiParams({
-    variantId: commonJoiPatterns.objectId.required(),
-  }),
+  validateJoiParams(
+    Joi.object({
+      variantId: commonJoiPatterns.objectId.required(),
+    })
+  ),
 ];
 
 /**
  * Product Image Delete Validation
  */
 const validateProductImageDelete = [
-  validateJoiParams({
-    productId: commonJoiPatterns.objectId.required(),
-    imageId: commonJoiPatterns.objectId.required(),
-  }),
+  validateJoiParams(
+    Joi.object({
+      productId: commonJoiPatterns.objectId.required(),
+      imageId: commonJoiPatterns.objectId.required(),
+    })
+  ),
 ];
 
 /**
  * Product Video Delete Validation
  */
 const validateProductVideoDelete = [
-  validateJoiParams({
-    productId: commonJoiPatterns.objectId.required(),
-    videoId: commonJoiPatterns.objectId.required(),
-  }),
+  validateJoiParams(
+    Joi.object({
+      productId: commonJoiPatterns.objectId.required(),
+      videoId: commonJoiPatterns.objectId.required(),
+    })
+  ),
 ];
 
 /**
  * Product Review ID Validation
  */
 const validateProductReviewId = [
-  validateJoiParams({
-    productId: commonJoiPatterns.objectId.required(),
-    reviewId: commonJoiPatterns.objectId.required(),
-  }),
+  validateJoiParams(
+    Joi.object({
+      productId: commonJoiPatterns.objectId.required(),
+      reviewId: commonJoiPatterns.objectId.required(),
+    })
+  ),
 ];
 
 /**
@@ -184,8 +197,7 @@ const validateProductReviewId = [
 const validateProductStatusUpdate = [
   sanitizeMiddleware,
   validateJoiBody({
-    status: require("joi")
-      .string()
+    status: Joi.string()
       .valid("draft", "active", "inactive", "discontinued")
       .required()
       .messages({
@@ -202,7 +214,7 @@ const validateProductStatusUpdate = [
 const validateProductFeatureToggle = [
   sanitizeMiddleware,
   validateJoiBody({
-    isFeatured: require("joi").boolean().required().messages({
+    isFeatured: Joi.boolean().required().messages({
       "any.required": "Featured status is required",
     }),
   }),
@@ -214,10 +226,10 @@ const validateProductFeatureToggle = [
 const validateProductApproval = [
   sanitizeMiddleware,
   validateJoiBody({
-    isApproved: require("joi").boolean().required().messages({
+    isApproved: Joi.boolean().required().messages({
       "any.required": "Approval status is required",
     }),
-    approvalNotes: require("joi").string().max(500).trim().optional().messages({
+    approvalNotes: Joi.string().max(500).trim().optional().messages({
       "string.max": "Approval notes cannot exceed 500 characters",
     }),
   }),
@@ -229,19 +241,13 @@ const validateProductApproval = [
 const validateProductDuplicate = [
   sanitizeMiddleware,
   validateJoiBody({
-    newName: require("joi")
-      .string()
-      .min(2)
-      .max(200)
-      .trim()
-      .optional()
-      .messages({
-        "string.min": "New product name must be at least 2 characters long",
-        "string.max": "New product name cannot exceed 200 characters",
-      }),
-    duplicateVariants: require("joi").boolean().optional().default(true),
-    duplicateImages: require("joi").boolean().optional().default(true),
-    duplicateSpecifications: require("joi").boolean().optional().default(true),
+    newName: Joi.string().min(2).max(200).trim().optional().messages({
+      "string.min": "New product name must be at least 2 characters long",
+      "string.max": "New product name cannot exceed 200 characters",
+    }),
+    duplicateVariants: Joi.boolean().optional().default(true),
+    duplicateImages: Joi.boolean().optional().default(true),
+    duplicateSpecifications: Joi.boolean().optional().default(true),
   }),
 ];
 
@@ -264,24 +270,13 @@ const validateProductCategoryUpdate = [
 const validateProductPriceUpdate = [
   sanitizeMiddleware,
   validateJoiBody({
-    basePrice: require("joi")
-      .number()
-      .positive()
-      .precision(2)
-      .optional()
-      .messages({
-        "number.positive": "Base price must be a positive number",
-      }),
-    discountPrice: require("joi")
-      .number()
-      .positive()
-      .precision(2)
-      .optional()
-      .messages({
-        "number.positive": "Discount price must be a positive number",
-      }),
-    discountPercentage: require("joi")
-      .number()
+    basePrice: Joi.number().positive().precision(2).optional().messages({
+      "number.positive": "Base price must be a positive number",
+    }),
+    discountPrice: Joi.number().positive().precision(2).optional().messages({
+      "number.positive": "Discount price must be a positive number",
+    }),
+    discountPercentage: Joi.number()
       .min(0)
       .max(100)
       .precision(2)
@@ -291,6 +286,17 @@ const validateProductPriceUpdate = [
         "number.max": "Discount percentage cannot exceed 100",
       }),
   }),
+];
+
+/**
+ * Category ID Validation
+ */
+const validateCategoryId = [
+  validateJoiParams(
+    Joi.object({
+      categoryId: commonJoiPatterns.objectId.required(),
+    })
+  ),
 ];
 
 // ==================== EXPORTS ====================
@@ -326,4 +332,5 @@ module.exports = {
   validateProductDuplicate,
   validateProductCategoryUpdate,
   validateProductPriceUpdate,
+  validateCategoryId,
 };

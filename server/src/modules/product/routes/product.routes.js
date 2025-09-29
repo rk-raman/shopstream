@@ -28,6 +28,15 @@ router.get(
   productController.getProductsByCategory
 );
 router.get("/seller/:sellerId", productController.getProductsBySeller);
+
+// Alias for My Products using hyphen (must come BEFORE dynamic :productId routes)
+router.get(
+  "/my-products",
+  authenticate,
+  sellerOrAdmin,
+  productController.getMyProducts
+);
+
 router.get("/:productId", validateProductId, productController.getProductById);
 router.get("/slug/:slug", productController.getProductBySlug);
 router.get(

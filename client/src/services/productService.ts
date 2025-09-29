@@ -1,21 +1,6 @@
-import axios from "axios";
+import axiosSeller from "@/lib/api/axiosSeller";
 import { API_ENDPOINTS } from "../constants/endpoints";
 import { Product, ProductFormData, ApiResponse } from "../types/global";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
-
-// Create axios instance with seller token
-const createAxiosInstance = () => {
-  const token = localStorage.getItem("sellerToken");
-  return axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-  });
-};
 
 // Helper function to build query parameters
 const buildQueryParams = (params: Record<string, any>): string => {
@@ -63,7 +48,7 @@ export interface ProductStats {
 export const getMyProducts = async (
   filters: ProductFilters = {}
 ): Promise<ApiResponse<{ products: Product[]; pagination: any }>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const queryString = buildQueryParams(filters);
   const url = `${API_ENDPOINTS.PRODUCTS.GET_MY_PRODUCTS}${
     queryString ? `?${queryString}` : ""
@@ -76,7 +61,7 @@ export const getMyProducts = async (
 export const getProducts = async (
   filters: ProductFilters = {}
 ): Promise<ApiResponse<{ products: Product[]; pagination: any }>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const queryString = buildQueryParams(filters);
   const url = `${API_ENDPOINTS.PRODUCTS.BASE}${
     queryString ? `?${queryString}` : ""
@@ -87,7 +72,7 @@ export const getProducts = async (
 
 // Get single product by ID
 export const getProduct = async (id: string): Promise<ApiResponse<Product>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.get(API_ENDPOINTS.PRODUCTS.GET_BY_ID(id));
   return response.data;
 };
@@ -96,7 +81,7 @@ export const getProduct = async (id: string): Promise<ApiResponse<Product>> => {
 export const getProductBySlug = async (
   slug: string
 ): Promise<ApiResponse<Product>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.get(API_ENDPOINTS.PRODUCTS.GET_BY_SLUG(slug));
   return response.data;
 };
@@ -105,7 +90,7 @@ export const getProductBySlug = async (
 export const createProduct = async (
   productData: ProductFormData
 ): Promise<ApiResponse<Product>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.post(API_ENDPOINTS.PRODUCTS.CREATE, productData);
   return response.data;
 };
@@ -115,7 +100,7 @@ export const updateProduct = async (
   id: string,
   productData: Partial<ProductFormData>
 ): Promise<ApiResponse<Product>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.put(
     API_ENDPOINTS.PRODUCTS.UPDATE(id),
     productData
@@ -125,7 +110,7 @@ export const updateProduct = async (
 
 // Delete product
 export const deleteProduct = async (id: string): Promise<ApiResponse<void>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.delete(API_ENDPOINTS.PRODUCTS.DELETE(id));
   return response.data;
 };
@@ -134,7 +119,7 @@ export const deleteProduct = async (id: string): Promise<ApiResponse<void>> => {
 export const bulkDeleteProducts = async (
   productIds: string[]
 ): Promise<ApiResponse<void>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.post(API_ENDPOINTS.PRODUCTS.BULK_DELETE, {
     productIds,
   });
@@ -146,7 +131,7 @@ export const bulkUpdateProducts = async (
   productIds: string[],
   updateData: Partial<ProductFormData>
 ): Promise<ApiResponse<void>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.post(API_ENDPOINTS.PRODUCTS.BULK_UPDATE, {
     productIds,
     updateData,
@@ -159,7 +144,7 @@ export const updateProductStatus = async (
   id: string,
   status: string
 ): Promise<ApiResponse<Product>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.patch(API_ENDPOINTS.PRODUCTS.UPDATE_STATUS(id), {
     status,
   });
@@ -170,7 +155,7 @@ export const updateProductStatus = async (
 export const uploadProductImages = async (
   files: File[]
 ): Promise<ApiResponse<string[]>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const formData = new FormData();
   files.forEach((file) => formData.append("images", file));
 
@@ -188,21 +173,21 @@ export const uploadProductImages = async (
 
 // Get categories
 export const getCategories = async (): Promise<ApiResponse<any[]>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.get(API_ENDPOINTS.CATEGORIES.BASE);
   return response.data;
 };
 
 // Get brands
 export const getBrands = async (): Promise<ApiResponse<any[]>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.get(API_ENDPOINTS.BRANDS.BASE);
   return response.data;
 };
 
 // Get product statistics
 export const getProductStats = async (): Promise<ApiResponse<ProductStats>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.get(API_ENDPOINTS.PRODUCTS.STATS);
   return response.data;
 };
@@ -212,7 +197,7 @@ export const searchProducts = async (
   query: string,
   filters: ProductFilters = {}
 ): Promise<ApiResponse<{ products: Product[]; pagination: any }>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const queryString = buildQueryParams({ ...filters, q: query });
   const url = `${API_ENDPOINTS.PRODUCTS.SEARCH}?${queryString}`;
   const response = await api.get(url);
@@ -225,7 +210,7 @@ export const getProductReviews = async (
   page = 1,
   limit = 10
 ): Promise<ApiResponse<any>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.get(
     `${API_ENDPOINTS.PRODUCTS.REVIEWS(id)}?page=${page}&limit=${limit}`
   );
@@ -237,7 +222,7 @@ export const addProductReview = async (
   id: string,
   reviewData: any
 ): Promise<ApiResponse<any>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.post(
     API_ENDPOINTS.PRODUCTS.ADD_REVIEW(id),
     reviewData

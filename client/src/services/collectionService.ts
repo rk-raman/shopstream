@@ -1,21 +1,6 @@
-import axios from "axios";
+import axiosSeller from "@/lib/api/axiosSeller";
 import { API_ENDPOINTS } from "../constants/endpoints";
 import { Collection, CollectionFormData, ApiResponse } from "../types/global";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
-
-// Create axios instance with seller token
-const createAxiosInstance = () => {
-  const token = localStorage.getItem("sellerToken");
-  return axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-  });
-};
 
 export interface CollectionFilters {
   page?: number;
@@ -47,7 +32,7 @@ const buildQueryParams = (params: Record<string, any>): string => {
 export const getMyCollections = async (
   filters: CollectionFilters = {}
 ): Promise<ApiResponse<{ collections: Collection[]; pagination: any }>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const queryString = buildQueryParams(filters);
   const url = `${API_ENDPOINTS.COLLECTIONS.GET_MY_COLLECTIONS}${
     queryString ? `?${queryString}` : ""
@@ -60,7 +45,7 @@ export const getMyCollections = async (
 export const getCollections = async (
   filters: CollectionFilters = {}
 ): Promise<ApiResponse<{ collections: Collection[]; pagination: any }>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const queryString = buildQueryParams(filters);
   const url = `${API_ENDPOINTS.COLLECTIONS.BASE}${
     queryString ? `?${queryString}` : ""
@@ -73,7 +58,7 @@ export const getCollections = async (
 export const getCollection = async (
   id: string
 ): Promise<ApiResponse<Collection>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.get(API_ENDPOINTS.COLLECTIONS.GET_BY_ID(id));
   return response.data;
 };
@@ -82,7 +67,7 @@ export const getCollection = async (
 export const getCollectionByHandle = async (
   handle: string
 ): Promise<ApiResponse<Collection>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.get(
     API_ENDPOINTS.COLLECTIONS.GET_BY_HANDLE(handle)
   );
@@ -93,7 +78,7 @@ export const getCollectionByHandle = async (
 export const createCollection = async (
   collectionData: CollectionFormData
 ): Promise<ApiResponse<Collection>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.post(
     API_ENDPOINTS.COLLECTIONS.CREATE,
     collectionData
@@ -106,7 +91,7 @@ export const updateCollection = async (
   id: string,
   collectionData: Partial<CollectionFormData>
 ): Promise<ApiResponse<Collection>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.put(
     API_ENDPOINTS.COLLECTIONS.UPDATE(id),
     collectionData
@@ -118,7 +103,7 @@ export const updateCollection = async (
 export const deleteCollection = async (
   id: string
 ): Promise<ApiResponse<void>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.delete(API_ENDPOINTS.COLLECTIONS.DELETE(id));
   return response.data;
 };
@@ -127,7 +112,7 @@ export const deleteCollection = async (
 export const bulkDeleteCollections = async (
   collectionIds: string[]
 ): Promise<ApiResponse<void>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.post(API_ENDPOINTS.COLLECTIONS.BULK_DELETE, {
     collectionIds,
   });
@@ -139,7 +124,7 @@ export const addProductsToCollection = async (
   id: string,
   productIds: string[]
 ): Promise<ApiResponse<Collection>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.post(API_ENDPOINTS.COLLECTIONS.ADD_PRODUCTS(id), {
     productIds,
   });
@@ -151,7 +136,7 @@ export const removeProductsFromCollection = async (
   id: string,
   productIds: string[]
 ): Promise<ApiResponse<Collection>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const response = await api.post(
     API_ENDPOINTS.COLLECTIONS.REMOVE_PRODUCTS(id),
     { productIds }
@@ -164,7 +149,7 @@ export const searchCollections = async (
   query: string,
   filters: CollectionFilters = {}
 ): Promise<ApiResponse<{ collections: Collection[]; pagination: any }>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const queryString = buildQueryParams({ ...filters, q: query });
   const url = `${API_ENDPOINTS.COLLECTIONS.SEARCH}?${queryString}`;
   const response = await api.get(url);
@@ -176,7 +161,7 @@ export const uploadCollectionImage = async (
   id: string,
   file: File
 ): Promise<ApiResponse<{ url: string }>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const formData = new FormData();
   formData.append("image", file);
 
@@ -197,7 +182,7 @@ export const getCollectionProducts = async (
   id: string,
   filters: any = {}
 ): Promise<ApiResponse<any>> => {
-  const api = createAxiosInstance();
+  const api = axiosSeller;
   const queryString = buildQueryParams(filters);
   const url = `${API_ENDPOINTS.COLLECTIONS.GET_BY_ID(id)}/products${
     queryString ? `?${queryString}` : ""
