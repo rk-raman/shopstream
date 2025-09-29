@@ -196,14 +196,23 @@ const productCreateSchema = Joi.object({
     }),
 
   // Media
-  images: Joi.array().items(imageSchema).min(1).max(20).optional().messages({
-    "array.min": "At least one product image is required",
-    "array.max": "Cannot have more than 20 images",
-  }),
+  images: Joi.array()
+    .items(Joi.alternatives().try(imageSchema, Joi.string().uri()))
+    .min(1)
+    .max(20)
+    .optional()
+    .messages({
+      "array.min": "At least one product image is required",
+      "array.max": "Cannot have more than 20 images",
+    }),
 
-  videos: Joi.array().items(videoSchema).max(5).optional().messages({
-    "array.max": "Cannot have more than 5 videos",
-  }),
+  videos: Joi.array()
+    .items(Joi.alternatives().try(videoSchema, Joi.string().uri()))
+    .max(5)
+    .optional()
+    .messages({
+      "array.max": "Cannot have more than 5 videos",
+    }),
 
   // Inventory (for simple products)
   stock: Joi.number().integer().min(0).optional().default(0).messages({
@@ -335,8 +344,15 @@ const productUpdateSchema = Joi.object({
   discountPercentage: Joi.number().min(0).max(100).precision(2).optional(),
 
   // Media
-  images: Joi.array().items(imageSchema).min(1).max(20).optional(),
-  videos: Joi.array().items(videoSchema).max(5).optional(),
+  images: Joi.array()
+    .items(Joi.alternatives().try(imageSchema, Joi.string().uri()))
+    .min(1)
+    .max(20)
+    .optional(),
+  videos: Joi.array()
+    .items(Joi.alternatives().try(videoSchema, Joi.string().uri()))
+    .max(5)
+    .optional(),
 
   // Inventory
   stock: Joi.number().integer().min(0).optional(),

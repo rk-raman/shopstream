@@ -4,6 +4,89 @@ const Brand = require("../models/Brand.model");
 const ApiError = require("../../../shared/utils/apiError");
 const ProductEventPublisher = require("../events/publishers/ProductEventPublisher");
 
+// Helper: derive a public_id from a URL
+function derivePublicIdFromUrl(url, prefix = "prod") {
+  try {
+    const u = new URL(url);
+    const parts = u.pathname.split("/").filter(Boolean);
+    const last = parts[parts.length - 1] || `file-${Date.now()}`;
+    const base = last.replace(/\.[a-zA-Z0-9]+$/, "");
+    return `${prefix}_${base}_${Date.now()}`;
+  } catch {
+    // Fallback if URL parsing fails
+    return `${prefix}_${Math.random().toString(36).slice(2, 10)}_${Date.now()}`;
+  }
+}
+
+// Helper: normalize images array to model's imageSchema
+function normalizeImages(images) {
+  if (!Array.isArray(images)) return images;
+  const mapped = images
+    .slice(0, 20)
+    .map((img) => {
+      if (typeof img === "string") {
+        return {
+          public_id: derivePublicIdFromUrl(img, "img"),
+          url: img,
+          isMain: false,
+        };
+      }
+      // Ensure required fields exist
+      return {
+        public_id: img.public_id || derivePublicIdFromUrl(img.url || "", "img"),
+        url: img.url,
+        isMain: Boolean(img.isMain),
+        alt: img.alt,
+        size: img.size,
+        uploadedAt: img.uploadedAt,
+      };
+    })
+    .filter((i) => !!i && !!i.url);
+
+  // Ensure exactly one main image if any exist
+  if (mapped.length > 0) {
+    const hasMain = mapped.some((i) => i.isMain);
+    if (!hasMain) mapped[0].isMain = true;
+    else {
+      // If multiple marked as main, keep the first as main
+      let seen = false;
+      mapped.forEach((i) => {
+        if (i.isMain && !seen) {
+          seen = true;
+        } else if (i.isMain && seen) {
+          i.isMain = false;
+        }
+      });
+    }
+  }
+
+  return mapped;
+}
+
+// Helper: normalize videos array to model's videoSchema
+function normalizeVideos(videos) {
+  if (!Array.isArray(videos)) return videos;
+  return videos
+    .slice(0, 5)
+    .map((v) => {
+      if (typeof v === "string") {
+        return {
+          public_id: derivePublicIdFromUrl(v, "vid"),
+          url: v,
+        };
+      }
+      return {
+        public_id: v.public_id || derivePublicIdFromUrl(v.url || "", "vid"),
+        url: v.url,
+        thumbnail: v.thumbnail,
+        duration: v.duration,
+        size: v.size,
+        uploadedAt: v.uploadedAt,
+      };
+    })
+    .filter((i) => !!i && !!i.url);
+}
+
 // Create new product
 const createProduct = async (productData, sellerId) => {
   try {
@@ -33,6 +116,14 @@ const createProduct = async (productData, sellerId) => {
 
     // Add seller to product data
     productData.seller = sellerId;
+
+    // Normalize media fields (accept strings or objects)
+    if (productData.images) {
+      productData.images = normalizeImages(productData.images);
+    }
+    if (productData.videos) {
+      productData.videos = normalizeVideos(productData.videos);
+    }
 
     // Create product
     const product = await Product.create(productData);
@@ -107,6 +198,69 @@ const getProductById = async (productId, includeInactive = false) => {
   return product;
 };
 
+// Update product
+const updateProduct = async (productId, updateData, sellerId = null) => {
+  // If seller is provided, ensure they own the product
+  const filter = { _id: productId };
+  if (sellerId) {
+    filter.seller = sellerId;
+  }
+
+  // Check if SKU is being updated and if it already exists
+  if (updateData.sku) {
+    const existingProduct = await Product.findOne({
+      sku: updateData.sku,
+      _id: { $ne: productId },
+    });
+    if (existingProduct) {
+      throw new ApiError(409, "Product with this SKU already exists");
+    }
+  }
+
+  // Only normalize if this is a direct document replacement/update (no operators)
+  const hasOperator = Object.keys(updateData || {}).some((k) =>
+    k.startsWith("$")
+  );
+  if (!hasOperator) {
+    if (Array.isArray(updateData.images)) {
+      updateData.images = normalizeImages(updateData.images);
+    }
+    if (Array.isArray(updateData.videos)) {
+      updateData.videos = normalizeVideos(updateData.videos);
+    }
+  }
+
+  const product = await Product.findOneAndUpdate(filter, updateData, {
+    new: true,
+    runValidators: true,
+  }).populate([
+    { path: "category", select: "name slug" },
+    { path: "brand", select: "name logo" },
+    { path: "seller", select: "firstName lastName email" },
+  ]);
+
+  if (!product) {
+    throw new ApiError(
+      404,
+      "Product not found or you don't have permission to update it"
+    );
+  }
+
+  // Publish event using ProductEventPublisher
+  await ProductEventPublisher.publishProductUpdated({
+    productId: product._id,
+    sellerId: product.seller._id,
+    changes: updateData,
+    updatedBy: sellerId || "admin",
+    metadata: {
+      productName: product.name,
+      previousData: updateData,
+    },
+  });
+
+  return product;
+};
+
 // Get product by slug
 const getProductBySlug = async (slug, includeInactive = false) => {
   const filter = { slug };
@@ -142,56 +296,6 @@ const getProductBySlug = async (slug, includeInactive = false) => {
     metadata: {
       productName: product.name,
       price: product.effectivePrice,
-    },
-  });
-
-  return product;
-};
-
-// Update product
-const updateProduct = async (productId, updateData, sellerId = null) => {
-  // If seller is provided, ensure they own the product
-  const filter = { _id: productId };
-  if (sellerId) {
-    filter.seller = sellerId;
-  }
-
-  // Check if SKU is being updated and if it already exists
-  if (updateData.sku) {
-    const existingProduct = await Product.findOne({
-      sku: updateData.sku,
-      _id: { $ne: productId },
-    });
-    if (existingProduct) {
-      throw new ApiError(409, "Product with this SKU already exists");
-    }
-  }
-
-  const product = await Product.findOneAndUpdate(filter, updateData, {
-    new: true,
-    runValidators: true,
-  }).populate([
-    { path: "category", select: "name slug" },
-    { path: "brand", select: "name logo" },
-    { path: "seller", select: "firstName lastName email" },
-  ]);
-
-  if (!product) {
-    throw new ApiError(
-      404,
-      "Product not found or you don't have permission to update it"
-    );
-  }
-
-  // Publish event using ProductEventPublisher
-  await ProductEventPublisher.publishProductUpdated({
-    productId: product._id,
-    sellerId: product.seller._id,
-    changes: updateData,
-    updatedBy: sellerId || "admin",
-    metadata: {
-      productName: product.name,
-      previousData: updateData,
     },
   });
 
