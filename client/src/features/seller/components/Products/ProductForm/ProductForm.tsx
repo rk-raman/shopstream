@@ -8,13 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 import { Product } from "@/types/global";
 import { PRODUCT_CONFIG, VALIDATION } from "@/constants/constants";
@@ -285,49 +278,24 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 name="category"
                 control={control}
                 rules={{ required: "Category is required" }}
-                render={({ field: { onChange, value } }) => {
-                  const safeValue = categories?.some(
-                    (c: any) => String(c._id) === String(value)
-                  )
-                    ? String(value)
-                    : undefined;
-                  return (
-                    <Select
-                      key={`category-select-${categories?.length || 0}`}
-                      onValueChange={onChange}
-                      value={safeValue}
-                    >
-                      <SelectTrigger
-                        className={errors.category ? "border-red-500" : ""}
-                      >
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories?.map((category: any) => (
-                          <SelectItem
-                            key={category._id}
-                            value={String(category._id)}
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-gray-500">
-                                {"  ".repeat(category.level || 0)}
-                              </span>
-                              {category.icon && (
-                                <span className="text-sm">{category.icon}</span>
-                              )}
-                              <span>{category.name}</span>
-                              {!category.isActive && (
-                                <span className="text-xs text-red-500">
-                                  (Inactive)
-                                </span>
-                              )}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  );
-                }}
+                render={({ field: { onChange, value } }) => (
+                  <select
+                    value={value || ""}
+                    onChange={(e) => onChange(e.target.value)}
+                    className={`flex h-10 w-full items-center rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
+                      errors.category ? "border-red-500" : "border-input"
+                    }`}
+                  >
+                    <option value="" disabled>
+                      Select category
+                    </option>
+                    {categories?.map((category: any) => (
+                      <option key={category._id} value={String(category._id)}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
               />
               {errors.category && (
                 <p className="text-red-500 text-sm mt-1">
@@ -341,54 +309,25 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               <Controller
                 name="brand"
                 control={control}
-                render={({ field: { onChange, value } }) => {
-                  const brandOptions = (brands || []).map((b) => String(b._id));
-                  const safeValue = brandOptions.includes(String(value))
-                    ? String(value)
-                    : undefined;
-                  return (
-                    <Select
-                      key={`brand-select-${brands?.length || 0}`}
-                      onValueChange={(val) =>
-                        onChange(val === "no-brand" ? undefined : val)
-                      }
-                      value={safeValue}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select brand (optional)" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="no-brand">No Brand</SelectItem>
-                        {brands?.map((brand) => (
-                          <SelectItem key={brand._id} value={String(brand._id)}>
-                            <div className="flex items-center gap-2">
-                              {brand.logo?.url ? (
-                                <img
-                                  src={brand.logo.url}
-                                  alt={brand.name}
-                                  className="w-4 h-4 rounded object-cover"
-                                />
-                              ) : (
-                                <div className="w-4 h-4 bg-gray-200 rounded flex items-center justify-center">
-                                  <span className="text-xs">B</span>
-                                </div>
-                              )}
-                              <span>{brand.name}</span>
-                              {brand.isVerified && (
-                                <span className="text-xs text-blue-500">✓</span>
-                              )}
-                              {!brand.isActive && (
-                                <span className="text-xs text-red-500">
-                                  (Inactive)
-                                </span>
-                              )}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  );
-                }}
+                render={({ field: { onChange, value } }) => (
+                  <select
+                    value={value || ""}
+                    onChange={(e) =>
+                      onChange(
+                        e.target.value === "no-brand" ? "" : e.target.value
+                      )
+                    }
+                    className="flex h-10 w-full items-center rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="">Select brand (optional)</option>
+                    <option value="no-brand">No Brand</option>
+                    {brands?.map((brand: any) => (
+                      <option key={brand._id} value={String(brand._id)}>
+                        {brand.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
               />
             </div>
 
@@ -478,32 +417,21 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               <Controller
                 name="status"
                 control={control}
-                render={({ field: { onChange, value } }) => {
-                  const statusOptions = [
-                    "draft",
-                    "active",
-                    "inactive",
-                    "discontinued",
-                  ];
-                  const safeValue = statusOptions.includes(String(value))
-                    ? String(value)
-                    : undefined;
-                  return (
-                    <Select onValueChange={onChange} value={safeValue}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="draft">Draft</SelectItem>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="inactive">Inactive</SelectItem>
-                        <SelectItem value="discontinued">
-                          Discontinued
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  );
-                }}
+                render={({ field: { onChange, value } }) => (
+                  <select
+                    value={value || ""}
+                    onChange={(e) => onChange(e.target.value)}
+                    className="flex h-10 w-full items-center rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="" disabled>
+                      Select status
+                    </option>
+                    <option value="draft">Draft</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="discontinued">Discontinued</option>
+                  </select>
+                )}
               />
             </div>
           </div>
@@ -616,36 +544,22 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 <Controller
                   name={`specifications.${index}.category`}
                   control={control}
-                  render={({ field: { onChange, value } }) => {
-                    const specOptions = [
-                      "technical",
-                      "physical",
-                      "performance",
-                      "compatibility",
-                      "other",
-                    ];
-                    const safeValue = specOptions.includes(String(value))
-                      ? String(value)
-                      : undefined;
-                    return (
-                      <Select value={safeValue} onValueChange={onChange}>
-                        <SelectTrigger className="w-32">
-                          <SelectValue placeholder="Category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="technical">Technical</SelectItem>
-                          <SelectItem value="physical">Physical</SelectItem>
-                          <SelectItem value="performance">
-                            Performance
-                          </SelectItem>
-                          <SelectItem value="compatibility">
-                            Compatibility
-                          </SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    );
-                  }}
+                  render={({ field: { onChange, value } }) => (
+                    <select
+                      value={value || ""}
+                      onChange={(e) => onChange(e.target.value)}
+                      className="w-32 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="" disabled>
+                        Category
+                      </option>
+                      <option value="technical">Technical</option>
+                      <option value="physical">Physical</option>
+                      <option value="performance">Performance</option>
+                      <option value="compatibility">Compatibility</option>
+                      <option value="other">Other</option>
+                    </select>
+                  )}
                 />
                 <Button
                   type="button"
