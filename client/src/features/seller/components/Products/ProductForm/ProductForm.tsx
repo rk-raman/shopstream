@@ -228,8 +228,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     }
   };
 
-  const categories = categoriesData || [];
-  const brands = brandsData || [];
+  const categories = categoriesData?.data?.docs || [];
+  const brands = brandsData?.data?.docs || [];
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -311,7 +311,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categoriesData?.map((category) => (
+                      {categories?.map((category) => (
                         <SelectItem key={category._id} value={category._id}>
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-gray-500">
@@ -352,7 +352,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="no-brand">No Brand</SelectItem>
-                      {brandsData?.map((brand) => (
+                      {brands?.map((brand) => (
                         <SelectItem key={brand._id} value={brand._id}>
                           <div className="flex items-center gap-2">
                             {brand.logo?.url ? (
