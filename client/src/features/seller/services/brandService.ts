@@ -1,5 +1,6 @@
+import API_ENDPOINTS from "@/constants/endpoints";
 import axiosSeller from "@/lib/api/axiosSeller";
-import { API_ENDPOINTS } from "@/lib/api/endpoints";
+
 import {
   Brand,
   BrandFormData,
@@ -37,7 +38,9 @@ export const getBrands = async (params?: {
   sortOrder?: "asc" | "desc";
 }): Promise<PaginatedResponse<Brand>> => {
   const queryString = params ? buildQueryParams(params) : "";
-  const url = `${API_ENDPOINTS.BRANDS}${queryString ? `?${queryString}` : ""}`;
+  const url = `${API_ENDPOINTS.BRANDS.BASE}${
+    queryString ? `?${queryString}` : ""
+  }`;
 
   const response = await axiosSeller.get<PaginatedResponse<Brand>>(url);
   return response.data;
@@ -46,7 +49,7 @@ export const getBrands = async (params?: {
 // Get active brands
 export const getActiveBrands = async (): Promise<Brand[]> => {
   const response = await axiosSeller.get<ApiResponse<Brand[]>>(
-    `${API_ENDPOINTS.BRANDS}/active`
+    `${API_ENDPOINTS.BRANDS.BASE}/active`
   );
   return response.data.data;
 };
@@ -54,7 +57,7 @@ export const getActiveBrands = async (): Promise<Brand[]> => {
 // Get featured brands
 export const getFeaturedBrands = async (): Promise<Brand[]> => {
   const response = await axiosSeller.get<ApiResponse<Brand[]>>(
-    `${API_ENDPOINTS.BRANDS}/featured`
+    `${API_ENDPOINTS.BRANDS.BASE}/featured`
   );
   return response.data.data;
 };
@@ -62,14 +65,14 @@ export const getFeaturedBrands = async (): Promise<Brand[]> => {
 // Get verified brands
 export const getVerifiedBrands = async (): Promise<Brand[]> => {
   const response = await axiosSeller.get<ApiResponse<Brand[]>>(
-    `${API_ENDPOINTS.BRANDS}/verified`
+    `${API_ENDPOINTS.BRANDS.BASE}/verified`
   );
   return response.data.data;
 };
 
 // Get popular brands
 export const getPopularBrands = async (limit?: number): Promise<Brand[]> => {
-  const url = `${API_ENDPOINTS.BRANDS}/popular${
+  const url = `${API_ENDPOINTS.BRANDS.BASE}/popular${
     limit ? `?limit=${limit}` : ""
   }`;
   const response = await axiosSeller.get<ApiResponse<Brand[]>>(url);
@@ -81,7 +84,7 @@ export const getBrandsByCategory = async (
   categoryId: string
 ): Promise<Brand[]> => {
   const response = await axiosSeller.get<ApiResponse<Brand[]>>(
-    `${API_ENDPOINTS.BRANDS}/category/${categoryId}`
+    `${API_ENDPOINTS.BRANDS.BASE}/category/${categoryId}`
   );
   return response.data.data;
 };
@@ -92,14 +95,14 @@ export const getBrandsByAlphabet = async (): Promise<
 > => {
   const response = await axiosSeller.get<
     ApiResponse<{ _id: string; brands: Brand[] }[]>
-  >(`${API_ENDPOINTS.BRANDS}/alphabet`);
+  >(`${API_ENDPOINTS.BRANDS.BASE}/alphabet`);
   return response.data.data;
 };
 
 // Get single brand by ID
 export const getBrand = async (id: string): Promise<Brand> => {
   const response = await axiosSeller.get<ApiResponse<Brand>>(
-    `${API_ENDPOINTS.BRANDS}/${id}`
+    `${API_ENDPOINTS.BRANDS.BASE}/${id}`
   );
   return response.data.data;
 };
@@ -107,7 +110,7 @@ export const getBrand = async (id: string): Promise<Brand> => {
 // Get brand by slug
 export const getBrandBySlug = async (slug: string): Promise<Brand> => {
   const response = await axiosSeller.get<ApiResponse<Brand>>(
-    `${API_ENDPOINTS.BRANDS}/slug/${slug}`
+    `${API_ENDPOINTS.BRANDS.BASE}/slug/${slug}`
   );
   return response.data.data;
 };
@@ -115,7 +118,7 @@ export const getBrandBySlug = async (slug: string): Promise<Brand> => {
 // Create new brand
 export const createBrand = async (brandData: BrandFormData): Promise<Brand> => {
   const response = await axiosSeller.post<ApiResponse<Brand>>(
-    API_ENDPOINTS.BRANDS,
+    API_ENDPOINTS.BRANDS.CREATE,
     brandData
   );
   return response.data.data;
@@ -127,7 +130,7 @@ export const updateBrand = async (
   brandData: Partial<BrandFormData>
 ): Promise<Brand> => {
   const response = await axiosSeller.put<ApiResponse<Brand>>(
-    `${API_ENDPOINTS.BRANDS}/${id}`,
+    `${API_ENDPOINTS.BRANDS.BASE}/${id}`,
     brandData
   );
   return response.data.data;
@@ -135,12 +138,12 @@ export const updateBrand = async (
 
 // Delete brand
 export const deleteBrand = async (id: string): Promise<void> => {
-  await axiosSeller.delete(`${API_ENDPOINTS.BRANDS}/${id}`);
+  await axiosSeller.delete(`${API_ENDPOINTS.BRANDS.BASE}/${id}`);
 };
 
 // Bulk delete brands
 export const bulkDeleteBrands = async (brandIds: string[]): Promise<void> => {
-  await axiosSeller.delete(`${API_ENDPOINTS.BRANDS}/bulk`, {
+  await axiosSeller.delete(`${API_ENDPOINTS.BRANDS.BASE}/bulk`, {
     data: { brandIds },
   });
 };
@@ -151,7 +154,7 @@ export const updateBrandStatus = async (
   isActive: boolean
 ): Promise<Brand> => {
   const response = await axiosSeller.patch<ApiResponse<Brand>>(
-    `${API_ENDPOINTS.BRANDS}/${id}/status`,
+    `${API_ENDPOINTS.BRANDS.BASE}/${id}/status`,
     {
       isActive,
     }
@@ -165,7 +168,7 @@ export const toggleBrandFeatured = async (
   isFeatured: boolean
 ): Promise<Brand> => {
   const response = await axiosSeller.patch<ApiResponse<Brand>>(
-    `${API_ENDPOINTS.BRANDS}/${id}/featured`,
+    `${API_ENDPOINTS.BRANDS.BASE}/${id}/featured`,
     {
       isFeatured,
     }
@@ -179,7 +182,7 @@ export const toggleBrandVerified = async (
   isVerified: boolean
 ): Promise<Brand> => {
   const response = await axiosSeller.patch<ApiResponse<Brand>>(
-    `${API_ENDPOINTS.BRANDS}/${id}/verified`,
+    `${API_ENDPOINTS.BRANDS.BASE}/${id}/verified`,
     {
       isVerified,
     }
@@ -193,7 +196,7 @@ export const updateBrandSortOrder = async (
   sortOrder: number
 ): Promise<Brand> => {
   const response = await axiosSeller.patch<ApiResponse<Brand>>(
-    `${API_ENDPOINTS.BRANDS}/${id}/sort-order`,
+    `${API_ENDPOINTS.BRANDS.BASE}/${id}/sort-order`,
     {
       sortOrder,
     }
@@ -204,7 +207,7 @@ export const updateBrandSortOrder = async (
 // Search brands
 export const searchBrands = async (searchTerm: string): Promise<Brand[]> => {
   const response = await axiosSeller.get<ApiResponse<Brand[]>>(
-    `${API_ENDPOINTS.BRANDS}/search?q=${encodeURIComponent(searchTerm)}`
+    `${API_ENDPOINTS.BRANDS.BASE}/search?q=${encodeURIComponent(searchTerm)}`
   );
   return response.data.data;
 };
