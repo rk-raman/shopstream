@@ -315,9 +315,12 @@ export const ProductList: React.FC<ProductListProps> = ({
                   Category
                 </label>
                 <Select
-                  value={filters.category}
+                  value={filters.category || undefined}
                   onValueChange={(value) =>
-                    handleFilterChange("category", value)
+                    handleFilterChange(
+                      "category",
+                      value === "all-categories" ? "" : value
+                    )
                   }
                 >
                   <SelectTrigger>
@@ -352,8 +355,13 @@ export const ProductList: React.FC<ProductListProps> = ({
               <div>
                 <label className="block text-sm font-medium mb-2">Brand</label>
                 <Select
-                  value={filters.brand}
-                  onValueChange={(value) => handleFilterChange("brand", value)}
+                  value={filters.brand || undefined}
+                  onValueChange={(value) =>
+                    handleFilterChange(
+                      "brand",
+                      value === "all-brands" ? "" : value
+                    )
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All brands" />
@@ -393,8 +401,13 @@ export const ProductList: React.FC<ProductListProps> = ({
               <div>
                 <label className="block text-sm font-medium mb-2">Status</label>
                 <Select
-                  value={filters.status}
-                  onValueChange={(value) => handleFilterChange("status", value)}
+                  value={filters.status || undefined}
+                  onValueChange={(value) =>
+                    handleFilterChange(
+                      "status",
+                      value === "all-statuses" ? "" : value
+                    )
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All statuses" />

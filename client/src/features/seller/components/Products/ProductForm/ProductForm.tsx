@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
-import { X, Upload, Plus, Trash2, Save, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, Save, ArrowLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,10 +22,12 @@ import { ProductFormData } from "@/features/seller/services/productService";
 import {
   useCreateProduct,
   useUpdateProduct,
-  useUploadProductImages,
 } from "@/features/seller/hooks/useProducts";
 import { useCategories } from "@/features/seller/hooks/useCategories";
 import { useBrands } from "@/features/seller/hooks/useBrands";
+import FileUploader, {
+  FileUploaderValue,
+} from "@/components/shared/FileUploader";
 
 interface ProductFormProps {
   product?: Product;
@@ -56,8 +58,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     control,
     watch,
     setValue,
+    getValues,
     formState: { errors, isSubmitting },
-    reset,
   } = useForm<FormData>({
     defaultValues: {
       name: product?.name || "",
@@ -65,9 +67,17 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       shortDescription: product?.shortDescription || "",
       basePrice: product?.basePrice || 0,
       discountPrice: product?.discountPrice || undefined,
-      category: product?.category || "",
-      subcategory: product?.subcategory || "",
-      brand: product?.brand || "",
+      category: product?.category
+        ? String((product as any).category?._id ?? (product as any).category)
+        : "",
+      subcategory: product?.subcategory
+        ? String(
+            (product as any).subcategory?._id ?? (product as any).subcategory
+          )
+        : undefined,
+      brand: product?.brand
+        ? String((product as any).brand?._id ?? (product as any).brand)
+        : "",
       stock: product?.stock || 0,
       sku: product?.sku || "",
       tags: product?.tags?.join(", ") || "",
@@ -99,50 +109,15 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   // Mutations
   const createProductMutation = useCreateProduct();
   const updateProductMutation = useUpdateProduct();
-  const uploadImagesMutation = useUploadProductImages();
 
-  const handleImageUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const files = Array.from(event.target.files || []);
-    if (files.length === 0) return;
-
-    // Validate file types and sizes
-    const validFiles = files.filter((file) => {
-      if (!PRODUCT_CONFIG.ALLOWED_IMAGE_TYPES.includes(file.type)) {
-        return false;
-      }
-      if (file.size > PRODUCT_CONFIG.MAX_IMAGE_SIZE) {
-        return false;
-      }
-      return true;
-    });
-
-    if (validFiles.length === 0) return;
-
-    // Check total image limit
-    if (imagePreview.length + validFiles.length > PRODUCT_CONFIG.MAX_IMAGES) {
-      return;
-    }
-
-    setIsUploading(true);
-    try {
-      const response = await uploadImagesMutation.mutateAsync(validFiles);
-      const newImages = response.data || [];
-      setImagePreview((prev) => [...prev, ...newImages]);
-    } finally {
-      setIsUploading(false);
-      // Reset file input
-      event.target.value = "";
-    }
-  };
-
-  const removeImage = (index: number) => {
-    setImagePreview((prev) => prev.filter((_, i) => i !== index));
+  // FileUploader change handler
+  const handleFilesChange = (assets: FileUploaderValue) => {
+    const urls = assets.map((a) => a.url).filter(Boolean);
+    setImagePreview(urls);
   };
 
   const addSpecification = () => {
-    const currentSpecs = watch("specifications");
+    const currentSpecs = getValues("specifications");
     setValue("specifications", [
       ...currentSpecs,
       { name: "", value: "", category: "other" },
@@ -150,7 +125,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   };
 
   const removeSpecification = (index: number) => {
-    const currentSpecs = watch("specifications");
+    const currentSpecs = getValues("specifications");
     setValue(
       "specifications",
       currentSpecs.filter((_, i) => i !== index)
@@ -163,7 +138,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     }
 
     // Process form data
-    const specifications = data.specifications
+    const processedSpecifications = data.specifications
       .filter((spec) => spec.name.trim() && spec.value.trim())
       .map((spec) => ({
         name: spec.name.trim(),
@@ -198,7 +173,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       sku: data.sku?.trim() || undefined,
       images: imagePreview,
       tags: tags.length > 0 ? tags : undefined,
-      specifications: specifications.length > 0 ? specifications : undefined,
+      specifications:
+        processedSpecifications.length > 0
+          ? processedSpecifications
+          : undefined,
       status: data.status,
       weight: data.weight ? Number(data.weight) : undefined,
       dimensions: data.dimensions,
@@ -231,6 +209,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const categories = categoriesData?.data?.docs || [];
   const brands = brandsData?.data?.docs || [];
 
+  // Get specifications for rendering
+  const specificationsFields = watch("specifications");
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
@@ -255,7 +236,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           disabled={
             isSubmitting ||
             createProductMutation.isPending ||
-            updateProductMutation.isPending
+            updateProductMutation.isPending ||
+            isUploading
           }
           className="flex items-center gap-2"
         >
@@ -303,35 +285,49 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 name="category"
                 control={control}
                 rules={{ required: "Category is required" }}
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger
-                      className={errors.category ? "border-red-500" : ""}
+                render={({ field: { onChange, value } }) => {
+                  const safeValue = categories?.some(
+                    (c: any) => String(c._id) === String(value)
+                  )
+                    ? String(value)
+                    : undefined;
+                  return (
+                    <Select
+                      key={`category-select-${categories?.length || 0}`}
+                      onValueChange={onChange}
+                      value={safeValue}
                     >
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories?.map((category) => (
-                        <SelectItem key={category._id} value={category._id}>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-500">
-                              {"  ".repeat(category.level || 0)}
-                            </span>
-                            {category.icon && (
-                              <span className="text-sm">{category.icon}</span>
-                            )}
-                            <span>{category.name}</span>
-                            {!category.isActive && (
-                              <span className="text-xs text-red-500">
-                                (Inactive)
+                      <SelectTrigger
+                        className={errors.category ? "border-red-500" : ""}
+                      >
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories?.map((category: any) => (
+                          <SelectItem
+                            key={category._id}
+                            value={String(category._id)}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-500">
+                                {"  ".repeat(category.level || 0)}
                               </span>
-                            )}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
+                              {category.icon && (
+                                <span className="text-sm">{category.icon}</span>
+                              )}
+                              <span>{category.name}</span>
+                              {!category.isActive && (
+                                <span className="text-xs text-red-500">
+                                  (Inactive)
+                                </span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  );
+                }}
               />
               {errors.category && (
                 <p className="text-red-500 text-sm mt-1">
@@ -345,42 +341,54 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               <Controller
                 name="brand"
                 control={control}
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select brand (optional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="no-brand">No Brand</SelectItem>
-                      {brands?.map((brand) => (
-                        <SelectItem key={brand._id} value={brand._id}>
-                          <div className="flex items-center gap-2">
-                            {brand.logo?.url ? (
-                              <img
-                                src={brand.logo.url}
-                                alt={brand.name}
-                                className="w-4 h-4 rounded object-cover"
-                              />
-                            ) : (
-                              <div className="w-4 h-4 bg-gray-200 rounded flex items-center justify-center">
-                                <span className="text-xs">B</span>
-                              </div>
-                            )}
-                            <span>{brand.name}</span>
-                            {brand.isVerified && (
-                              <span className="text-xs text-blue-500">✓</span>
-                            )}
-                            {!brand.isActive && (
-                              <span className="text-xs text-red-500">
-                                (Inactive)
-                              </span>
-                            )}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
+                render={({ field: { onChange, value } }) => {
+                  const brandOptions = (brands || []).map((b) => String(b._id));
+                  const safeValue = brandOptions.includes(String(value))
+                    ? String(value)
+                    : undefined;
+                  return (
+                    <Select
+                      key={`brand-select-${brands?.length || 0}`}
+                      onValueChange={(val) =>
+                        onChange(val === "no-brand" ? undefined : val)
+                      }
+                      value={safeValue}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select brand (optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="no-brand">No Brand</SelectItem>
+                        {brands?.map((brand) => (
+                          <SelectItem key={brand._id} value={String(brand._id)}>
+                            <div className="flex items-center gap-2">
+                              {brand.logo?.url ? (
+                                <img
+                                  src={brand.logo.url}
+                                  alt={brand.name}
+                                  className="w-4 h-4 rounded object-cover"
+                                />
+                              ) : (
+                                <div className="w-4 h-4 bg-gray-200 rounded flex items-center justify-center">
+                                  <span className="text-xs">B</span>
+                                </div>
+                              )}
+                              <span>{brand.name}</span>
+                              {brand.isVerified && (
+                                <span className="text-xs text-blue-500">✓</span>
+                              )}
+                              {!brand.isActive && (
+                                <span className="text-xs text-red-500">
+                                  (Inactive)
+                                </span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  );
+                }}
               />
             </div>
 
@@ -470,19 +478,32 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               <Controller
                 name="status"
                 control={control}
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                      <SelectItem value="discontinued">Discontinued</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
+                render={({ field: { onChange, value } }) => {
+                  const statusOptions = [
+                    "draft",
+                    "active",
+                    "inactive",
+                    "discontinued",
+                  ];
+                  const safeValue = statusOptions.includes(String(value))
+                    ? String(value)
+                    : undefined;
+                  return (
+                    <Select onValueChange={onChange} value={safeValue}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="draft">Draft</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                        <SelectItem value="discontinued">
+                          Discontinued
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  );
+                }}
               />
             </div>
           </div>
@@ -534,70 +555,18 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         {/* Images */}
         <Card className="p-6">
           <h2 className="text-lg font-semibold mb-4">Product Images</h2>
-          <div className="space-y-4">
-            {/* Image Upload */}
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Upload Images * (Max {PRODUCT_CONFIG.MAX_IMAGES})
-              </label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                <input
-                  type="file"
-                  multiple
-                  accept={PRODUCT_CONFIG.ALLOWED_IMAGE_TYPES.join(",")}
-                  onChange={handleImageUpload}
-                  className="hidden"
-                  id="image-upload"
-                  disabled={
-                    isUploading ||
-                    imagePreview.length >= PRODUCT_CONFIG.MAX_IMAGES
-                  }
-                />
-                <label
-                  htmlFor="image-upload"
-                  className={`cursor-pointer flex flex-col items-center ${
-                    isUploading ||
-                    imagePreview.length >= PRODUCT_CONFIG.MAX_IMAGES
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
-                  }`}
-                >
-                  <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                  <p className="text-sm text-gray-600">
-                    {isUploading ? "Uploading..." : "Click to upload images"}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    PNG, JPG, WebP up to{" "}
-                    {PRODUCT_CONFIG.MAX_IMAGE_SIZE / (1024 * 1024)}MB each
-                  </p>
-                </label>
-              </div>
-            </div>
-
-            {/* Image Preview */}
-            {imagePreview.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {imagePreview.map((image, index) => (
-                  <div key={index} className="relative group">
-                    <img
-                      src={image}
-                      alt={`Product ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-lg border"
-                    />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => removeImage(index)}
-                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <FileUploader
+            path="products"
+            multiple
+            accept={PRODUCT_CONFIG.ALLOWED_IMAGE_TYPES.join(",")}
+            maxFiles={PRODUCT_CONFIG.MAX_IMAGES}
+            defaultValue={(product?.images || []).map((url) => ({
+              public_id: "",
+              url,
+            }))}
+            onChange={handleFilesChange}
+            onUploadingChange={setIsUploading}
+          />
         </Card>
 
         {/* Tags */}
@@ -632,7 +601,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             </Button>
           </div>
           <div className="space-y-3">
-            {watch("specifications").map((spec, index) => (
+            {specificationsFields?.map((spec, index) => (
               <div key={index} className="flex gap-3">
                 <Input
                   {...register(`specifications.${index}.name`)}
@@ -644,29 +613,46 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   placeholder="Specification value"
                   className="flex-1"
                 />
-                <Select
-                  value={watch(`specifications.${index}.category`) || "other"}
-                  onValueChange={(value) =>
-                    setValue(`specifications.${index}.category`, value)
-                  }
-                >
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="technical">Technical</SelectItem>
-                    <SelectItem value="physical">Physical</SelectItem>
-                    <SelectItem value="performance">Performance</SelectItem>
-                    <SelectItem value="compatibility">Compatibility</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name={`specifications.${index}.category`}
+                  control={control}
+                  render={({ field: { onChange, value } }) => {
+                    const specOptions = [
+                      "technical",
+                      "physical",
+                      "performance",
+                      "compatibility",
+                      "other",
+                    ];
+                    const safeValue = specOptions.includes(String(value))
+                      ? String(value)
+                      : undefined;
+                    return (
+                      <Select value={safeValue} onValueChange={onChange}>
+                        <SelectTrigger className="w-32">
+                          <SelectValue placeholder="Category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="technical">Technical</SelectItem>
+                          <SelectItem value="physical">Physical</SelectItem>
+                          <SelectItem value="performance">
+                            Performance
+                          </SelectItem>
+                          <SelectItem value="compatibility">
+                            Compatibility
+                          </SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    );
+                  }}
+                />
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => removeSpecification(index)}
-                  disabled={watch("specifications").length === 1}
+                  disabled={specificationsFields.length === 1}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -723,7 +709,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             disabled={
               isSubmitting ||
               createProductMutation.isPending ||
-              updateProductMutation.isPending
+              updateProductMutation.isPending ||
+              isUploading
             }
             className="flex items-center gap-2"
           >

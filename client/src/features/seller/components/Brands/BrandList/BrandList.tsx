@@ -451,8 +451,8 @@ export const BrandList: React.FC<BrandListProps> = ({
 
         <div className="flex items-center gap-2">
           <Select
-            value={statusFilter}
-            onValueChange={(value: any) => setStatusFilter(value)}
+            value={statusFilter || undefined}
+            onValueChange={(value: any) => setStatusFilter(value || "all")}
           >
             <SelectTrigger className="w-32">
               <SelectValue />
@@ -465,8 +465,8 @@ export const BrandList: React.FC<BrandListProps> = ({
           </Select>
 
           <Select
-            value={featuredFilter}
-            onValueChange={(value: any) => setFeaturedFilter(value)}
+            value={featuredFilter || undefined}
+            onValueChange={(value: any) => setFeaturedFilter(value || "all")}
           >
             <SelectTrigger className="w-32">
               <SelectValue />
@@ -479,8 +479,8 @@ export const BrandList: React.FC<BrandListProps> = ({
           </Select>
 
           <Select
-            value={verifiedFilter}
-            onValueChange={(value: any) => setVerifiedFilter(value)}
+            value={verifiedFilter || undefined}
+            onValueChange={(value: any) => setVerifiedFilter(value || "all")}
           >
             <SelectTrigger className="w-32">
               <SelectValue />
