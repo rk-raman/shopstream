@@ -14,11 +14,12 @@ export default function Homepage() {
   return (
     <div className="min-h-screen bg-background">
       <HeroSection />
-      <BenefitsSection />
-      <FeaturedCategories />
       <FeaturedProducts />
-      <PromoBanner />
+      <FeaturedCategories />
+
       <TrendingCollections />
+      <PromoBanner />
+      <BenefitsSection />
       <NewsletterSection />
     </div>
   );
