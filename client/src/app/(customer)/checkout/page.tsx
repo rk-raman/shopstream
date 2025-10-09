@@ -1,18 +1,21 @@
 import React from "react";
 import { Metadata } from "next";
+import CustomerHeader from "@/components/layout/Header/CustomerHeader/CustomerHeader";
+import CustomerFooter from "@/components/layout/Footer/CustomerFooter/CustomerFooter";
+import CheckoutPage from "@/features/customer/checkout/components/CheckoutPage";
 
 export const metadata: Metadata = {
   title: "Checkout - ShopStream",
   description: "checkout page",
 };
-
-export default function Page() {
+export default function Cart() {
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
-      <div className="text-center py-16">
-        <p className="text-gray-500 text-lg">Coming soon</p>
-      </div>
+    <div className="min-h-screen flex flex-col">
+      <CustomerHeader />
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <CheckoutPage />
+      </main>
+      <CustomerFooter />
     </div>
   );
 }
