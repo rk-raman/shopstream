@@ -1,4 +1,6 @@
-import React, { useState, useMemo } from "react";
+"use client";
+
+import React, { useState, useEffect, useMemo } from "react";
 import { useProductFilters } from "../../hooks/useProductFilters";
 import { Product } from "../../types";
 import { useProductList } from "../../hooks/useProductList";
@@ -40,7 +42,13 @@ export default function ProductListingContainer() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("popularity");
 
-  const products = useMemo(() => generateMockProducts(), []);
+  const [products, setProducts] = useState<Product[]>([]);
+
+  // Populate mock products only on the client after mount to keep
+  // server and client render deterministic and avoid hydration mismatches.
+  useEffect(() => {
+    setProducts(generateMockProducts());
+  }, []);
   const categories = useMemo(
     () => [...new Set(products.map((p) => p.category))],
     [products]
@@ -81,7 +89,7 @@ export default function ProductListingContainer() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">Products</h1>
             <div className="text-sm text-gray-600">
@@ -95,7 +103,7 @@ export default function ProductListingContainer() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6">
         <div className="flex gap-6">
           {showFilters && (
             <div className="w-64 flex-shrink-0">
