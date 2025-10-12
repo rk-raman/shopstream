@@ -15,8 +15,8 @@ const CustomerLoginForm: React.FC = () => {
   const { values, errors, isLoading, handleChange, handleSubmit } =
     useAuthForm<LoginForm>({
       initialValues: {
-        email: "",
-        password: "",
+        email: "radharaman2220@gmail.com",
+        password: "Test123@",
       },
       validate: validateLoginForm,
       onSubmit: async (formData) => {
