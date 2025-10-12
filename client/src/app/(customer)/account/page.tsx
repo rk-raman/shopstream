@@ -1,5 +1,8 @@
 import React from "react";
 import { Metadata } from "next";
+import CustomerHeader from "@/components/layout/Header/CustomerHeader/CustomerHeader";
+import CustomerFooter from "@/components/layout/Footer/CustomerFooter/CustomerFooter";
+import ProtectedRoute from "@/features/auth/components/ProtectedRoute";
 
 export const metadata: Metadata = {
   title: "Account - ShopStream",
@@ -8,11 +11,14 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Account</h1>
-      <div className="text-center py-16">
-        <p className="text-gray-500 text-lg">Coming soon</p>
+    <ProtectedRoute requiredRole="customer" redirectTo="/login">
+      <div className="min-h-screen flex flex-col">
+        <CustomerHeader />
+        <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          Comming soon
+        </main>
+        <CustomerFooter />
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }

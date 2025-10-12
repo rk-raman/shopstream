@@ -342,7 +342,7 @@ const CustomerRegisterForm: React.FC = () => {
             <p className="text-sm text-gray-600">
               Already have an account?{" "}
               <Link
-                href="/auth/login"
+                href="/login"
                 className="font-medium text-green-600 hover:text-green-500"
               >
                 Sign in here
@@ -362,7 +362,7 @@ const CustomerRegisterForm: React.FC = () => {
 
             <div className="mt-6 text-center">
               <Link
-                href="/seller/register"
+                href="/seller/signup"
                 className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
               >
                 <svg
