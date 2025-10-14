@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Plus, Trash2, Save, ArrowLeft } from "lucide-react";
 
@@ -104,10 +104,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const updateProductMutation = useUpdateProduct();
 
   // FileUploader change handler
-  const handleFilesChange = (assets: FileUploaderValue) => {
+  const handleFilesChange = useCallback((assets: FileUploaderValue) => {
     const urls = assets.map((a) => a.url).filter(Boolean);
     setImagePreview(urls);
-  };
+  }, []);
 
   const addSpecification = () => {
     const currentSpecs = getValues("specifications");
