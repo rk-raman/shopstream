@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { Metadata } from "next";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 

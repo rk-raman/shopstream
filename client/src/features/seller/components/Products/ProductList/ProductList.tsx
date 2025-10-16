@@ -521,9 +521,9 @@ export const ProductList: React.FC<ProductListProps> = ({
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {products.map((product) => (
+          {products.map((product: any) => (
             <Card
-              key={product.id}
+              key={product._id}
               className="overflow-hidden hover:shadow-lg transition-shadow"
             >
               <div className="relative">
@@ -540,9 +540,9 @@ export const ProductList: React.FC<ProductListProps> = ({
                 <div className="h-48 bg-gray-100 relative overflow-hidden">
                   {product.images && product.images.length > 0 ? (
                     <img
-                      src={product.images[0]}
+                      src={product.images[0]?.url}
                       alt={product.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400">

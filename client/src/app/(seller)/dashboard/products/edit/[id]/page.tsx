@@ -1,10 +1,8 @@
 "use client";
 
 import React from "react";
-import { Metadata } from "next";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useRouter, useParams } from "next/navigation";
-
 import { ProductForm } from "@/features/seller/components/Products/ProductForm/ProductForm";
 import { useProduct } from "@/features/seller/hooks/useProducts";
 import { Product } from "@/types/global";
@@ -95,18 +93,13 @@ function EditProductContent() {
   return (
     <div className="container mx-auto px-4 py-6">
       <ProductForm
-        product={productData.data}
+        product={productData?.data?.product}
         onSuccess={handleSuccess}
         onCancel={handleCancel}
       />
     </div>
   );
 }
-
-export const metadata: Metadata = {
-  title: "[id] - ShopStream",
-  description: "[id] page",
-};
 
 export default function EditProductPage() {
   return (

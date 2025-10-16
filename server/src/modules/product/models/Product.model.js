@@ -315,10 +315,18 @@ const productSchema = new mongoose.Schema(
     },
     discountPrice: {
       type: Number,
-      min: [0.01, "Discount price must be positive"],
       validate: {
         validator: function (value) {
-          return !value || value < this.basePrice;
+          if (!value) return true;
+          let base = this.basePrice;
+          if (this.getUpdate) {
+            const u = this.getUpdate();
+            base =
+              base != null ? base : (u.$set && u.$set.basePrice) || u.basePrice;
+          }
+          // if base still missing, decide: allow or block
+          if (base == null) return true; // or return false to block
+          return value < base;
         },
         message: "Discount price must be less than base price",
       },

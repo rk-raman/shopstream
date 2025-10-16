@@ -21,7 +21,7 @@ export default function ProductsPage() {
 
   const handleCreate = () => router.push("/dashboard/products/add");
   const handleEdit = (product: Product) =>
-    router.push(`/dashboard/products/edit/${product.id}`);
+    router.push(`/dashboard/products/edit/${product._id}`);
   const handleView = (product: Product) =>
     router.push(`/product/${product.slug}`);
 

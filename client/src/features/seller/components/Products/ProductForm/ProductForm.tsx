@@ -187,7 +187,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       let response;
       if (isEditing && product) {
         response = await updateProductMutation.mutateAsync({
-          id: product.id,
+          id: product._id,
           productData,
         });
       } else {
@@ -488,9 +488,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             multiple
             accept={PRODUCT_CONFIG.ALLOWED_IMAGE_TYPES.join(",")}
             maxFiles={PRODUCT_CONFIG.MAX_IMAGES}
-            defaultValue={(product?.images || []).map((url) => ({
-              public_id: "",
-              url,
+            defaultValue={(product?.images || []).map((image: any) => ({
+              public_id: image?.public_id,
+              url: image?.url,
             }))}
             onChange={handleFilesChange}
             onUploadingChange={setIsUploading}
