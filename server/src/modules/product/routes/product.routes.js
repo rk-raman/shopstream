@@ -125,6 +125,23 @@ router.get(
   productController.getProductStats
 );
 
+// ==================== BULK OPERATIONS ROUTES ====================
+// These should be BEFORE dynamic :productId routes
+
+router.post(
+  "/bulk/create-update",
+  validateJoiBody(bulkProductCreateUpdateSchema),
+  productController.bulkCreateUpdateProducts
+);
+
+router.post(
+  "/bulk/validate",
+  validateJoiBody(bulkProductCreateUpdateSchema),
+  productController.validateBulkProducts
+);
+
+router.get("/bulk/template", productController.downloadBulkProductTemplate);
+
 // Admin-only routes
 router.use(adminOnly);
 
@@ -156,31 +173,5 @@ router.post(
 
 // Pending products
 router.get("/admin/pending", productController.getPendingProducts);
-
-// ==================== BULK OPERATIONS ROUTES ====================
-// These should be BEFORE dynamic :productId routes
-
-router.post(
-  "/bulk/create-update",
-  authenticate,
-  sellerOrAdmin,
-  validateJoiBody(bulkProductCreateUpdateSchema),
-  productController.bulkCreateUpdateProducts
-);
-
-router.post(
-  "/bulk/validate",
-  authenticate,
-  sellerOrAdmin,
-  validateJoiBody(bulkProductCreateUpdateSchema),
-  productController.validateBulkProducts
-);
-
-router.get(
-  "/bulk/template",
-  authenticate,
-  sellerOrAdmin,
-  productController.downloadBulkProductTemplate
-);
 
 module.exports = router;
