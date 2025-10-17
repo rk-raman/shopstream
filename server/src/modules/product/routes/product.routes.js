@@ -8,7 +8,6 @@ const {
   validateProductImageUpload,
   validateProductReview,
   validateBulkProductOperation,
-  bulkProductCreateUpdateSchema,
 } = require("../validators/product.validators");
 const {
   authenticate,
@@ -16,6 +15,12 @@ const {
   sellerOrAdmin,
 } = require("../../../shared/middleware/auth.middleware");
 const upload = require("../../../shared/middleware/upload.middleware");
+const {
+  bulkProductCreateUpdateSchema,
+} = require("../validators/product.schemas");
+const {
+  validateJoiBody,
+} = require("../../../shared/middleware/validation.middleware");
 
 const router = express.Router();
 

@@ -601,11 +601,6 @@ const specificationUpdateSchema = Joi.object({
     }),
 });
 
-// server/src/modules/product/validators/product.schemas.js
-// Add these schemas to the existing file
-
-const Joi = require("joi");
-
 /**
  * Bulk Product Create/Update Schema
  */
