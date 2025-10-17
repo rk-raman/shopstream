@@ -45,7 +45,7 @@ const variantSchema = new mongoose.Schema(
     sku: {
       type: String,
       required: [true, "Variant SKU is required"],
-      unique: true,
+      unique: false,
       trim: true,
       uppercase: true,
       minlength: [3, "SKU must be at least 3 characters"],
@@ -604,7 +604,16 @@ productSchema.index({ publishedAt: -1 });
 
 // Sparse indexes
 productSchema.index({ sku: 1 }, { sparse: true });
-productSchema.index({ "variants.sku": 1 }, { sparse: true });
+productSchema.index(
+  { "variants.sku": 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      "variants.sku": { $exists: true, $ne: null, $ne: "" },
+    },
+  }
+);
+//productSchema.index({ "variants.sku": 1 }, { sparse: true });
 
 // Add pagination plugin
 productSchema.plugin(mongoosePaginate);
