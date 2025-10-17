@@ -601,6 +601,163 @@ const specificationUpdateSchema = Joi.object({
     }),
 });
 
+// server/src/modules/product/validators/product.schemas.js
+// Add these schemas to the existing file
+
+const Joi = require("joi");
+
+/**
+ * Bulk Product Create/Update Schema
+ */
+const bulkProductCreateUpdateSchema = Joi.object({
+  operations: Joi.array()
+    .items(
+      Joi.object({
+        operation: Joi.string().valid("create", "update").required().messages({
+          "any.only": "Operation must be either 'create' or 'update'",
+          "any.required": "Operation type is required",
+        }),
+
+        productId: Joi.when("operation", {
+          is: "update",
+          then: Joi.string()
+            .regex(/^[0-9a-fA-F]{24}$/)
+            .optional(),
+          otherwise: Joi.forbidden(),
+        }),
+
+        sku: Joi.string().min(3).max(50).trim().optional(),
+
+        data: Joi.object({
+          name: Joi.string().min(2).max(200).trim(),
+          slug: Joi.string().min(2).max(200).lowercase().trim().optional(),
+          description: Joi.string().min(10).max(2000).trim(),
+          shortDescription: Joi.string().max(500).trim().optional(),
+          category: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
+          subcategory: Joi.string()
+            .regex(/^[0-9a-fA-F]{24}$/)
+            .optional(),
+          brand: Joi.string()
+            .regex(/^[0-9a-fA-F]{24}$/)
+            .optional(),
+          basePrice: Joi.number().positive().precision(2),
+          discountPrice: Joi.number().positive().precision(2).optional(),
+          discountPercentage: Joi.number()
+            .min(0)
+            .max(100)
+            .precision(2)
+            .optional(),
+          stock: Joi.number().integer().min(0).optional(),
+          sku: Joi.string().min(3).max(50).trim().optional(),
+          tags: Joi.array()
+            .items(Joi.string().min(2).max(50).trim())
+            .max(20)
+            .optional(),
+          images: Joi.array()
+            .items(
+              Joi.alternatives().try(
+                Joi.object({
+                  public_id: Joi.string().optional(),
+                  url: Joi.string().uri().required(),
+                  isMain: Joi.boolean().optional(),
+                }),
+                Joi.string().uri()
+              )
+            )
+            .max(20)
+            .optional(),
+          videos: Joi.array()
+            .items(
+              Joi.alternatives().try(
+                Joi.object({
+                  public_id: Joi.string().optional(),
+                  url: Joi.string().uri().required(),
+                }),
+                Joi.string().uri()
+              )
+            )
+            .max(5)
+            .optional(),
+          variants: Joi.array()
+            .items(
+              Joi.object({
+                name: Joi.string().min(1).max(50).trim().required(),
+                value: Joi.string().min(1).max(100).trim().required(),
+                price: Joi.number().positive().precision(2).required(),
+                discountPrice: Joi.number().positive().precision(2).optional(),
+                stock: Joi.number().integer().min(0).required(),
+                sku: Joi.string().min(3).max(50).trim().required(),
+                images: Joi.array()
+                  .items(Joi.string().uri())
+                  .max(10)
+                  .optional(),
+                isActive: Joi.boolean().optional(),
+              })
+            )
+            .max(100)
+            .optional(),
+          hasVariants: Joi.boolean().optional(),
+          specifications: Joi.array()
+            .items(
+              Joi.object({
+                name: Joi.string().min(1).max(100).trim().required(),
+                value: Joi.string().min(1).max(500).trim().required(),
+              })
+            )
+            .max(50)
+            .optional(),
+          status: Joi.string()
+            .valid("draft", "active", "inactive", "discontinued")
+            .optional(),
+          isApproved: Joi.boolean().optional(),
+          isFeatured: Joi.boolean().optional(),
+          metaTitle: Joi.string().max(60).trim().optional(),
+          metaDescription: Joi.string().max(160).trim().optional(),
+          metaKeywords: Joi.array()
+            .items(Joi.string().min(2).max(50).trim())
+            .max(10)
+            .optional(),
+          weight: Joi.number().positive().precision(2).optional(),
+          dimensions: Joi.object({
+            length: Joi.number().positive().precision(2).optional(),
+            width: Joi.number().positive().precision(2).optional(),
+            height: Joi.number().positive().precision(2).optional(),
+          }).optional(),
+          shippingClass: Joi.string()
+            .valid("standard", "heavy", "fragile", "liquid")
+            .optional(),
+          lowStockThreshold: Joi.number().integer().min(0).optional(),
+          isDigital: Joi.boolean().optional(),
+          downloadableFiles: Joi.array()
+            .items(
+              Joi.object({
+                name: Joi.string().min(1).max(100).trim().required(),
+                url: Joi.string().uri().required(),
+                size: Joi.number().positive().integer().optional(),
+              })
+            )
+            .max(10)
+            .optional(),
+        }).required(),
+      })
+    )
+    .min(1)
+    .max(500)
+    .required()
+    .messages({
+      "array.min": "At least one operation is required",
+      "array.max": "Cannot process more than 500 products at once",
+      "any.required": "Operations array is required",
+    }),
+
+  options: Joi.object({
+    stopOnError: Joi.boolean().default(false),
+    validateOnly: Joi.boolean().default(false),
+    skipDuplicates: Joi.boolean().default(true),
+    updateExisting: Joi.boolean().default(false),
+  }).optional(),
+});
+
 // ==================== EXPORTS ====================
 
 module.exports = {
@@ -609,6 +766,7 @@ module.exports = {
   productUpdateSchema,
   productSearchSchema,
   productReviewSchema,
+  bulkProductCreateUpdateSchema,
 
   // Variant schemas
   variantCreateSchema,

@@ -506,6 +506,160 @@ const addProductReview = asyncHandler(async (req, res) => {
   return res.success({ review }, "Product review added successfully");
 });
 
+/**
+ * Bulk Create/Update Products
+ */
+const bulkCreateUpdateProducts = asyncHandler(async (req, res) => {
+  const { operations, options } = req.body;
+  const sellerId = req.user.role === "admin" ? null : req.user._id;
+
+  if (!operations || !Array.isArray(operations) || operations.length === 0) {
+    throw new ApiError(400, "Operations array is required and cannot be empty");
+  }
+
+  const results = await productService.bulkCreateUpdateProducts(
+    operations,
+    options,
+    sellerId
+  );
+
+  const hasErrors = results.errors.length > 0;
+  const hasSuccess = results.success.length > 0;
+
+  let status = 200;
+  let message = "";
+
+  if (hasSuccess && !hasErrors) {
+    status = 200;
+    message = `Bulk operation completed successfully. Created: ${results.summary.created}, Updated: ${results.summary.updated}`;
+  } else if (hasSuccess && hasErrors) {
+    status = 207;
+    message = `Bulk operation completed with some errors. Success: ${
+      results.summary.created + results.summary.updated
+    }, Failed: ${results.summary.failed}`;
+  } else {
+    status = 400;
+    message = "Bulk operation failed. All operations encountered errors.";
+  }
+
+  return res.status(status).json({
+    success: hasSuccess,
+    message,
+    data: results,
+  });
+});
+
+/**
+ * Validate Bulk Operations
+ */
+const validateBulkProducts = asyncHandler(async (req, res) => {
+  const { operations } = req.body;
+  const sellerId = req.user.role === "admin" ? null : req.user._id;
+
+  if (!operations || !Array.isArray(operations) || operations.length === 0) {
+    throw new ApiError(400, "Operations array is required and cannot be empty");
+  }
+
+  const results = await productService.bulkCreateUpdateProducts(
+    operations,
+    { validateOnly: true },
+    sellerId
+  );
+
+  return res.json({
+    success: results.valid,
+    message: results.valid
+      ? "All operations are valid"
+      : "Validation errors found",
+    data: results,
+  });
+});
+
+/**
+ * Download Bulk Template
+ */
+const downloadBulkProductTemplate = asyncHandler(async (req, res) => {
+  const { format = "csv" } = req.query;
+
+  const templateData = {
+    headers: [
+      "operation",
+      "productId",
+      "sku",
+      "name",
+      "description",
+      "category",
+      "brand",
+      "basePrice",
+      "discountPrice",
+      "stock",
+      "status",
+      "tags",
+      "images",
+      "weight",
+      "shippingClass",
+    ],
+    sampleData: [
+      {
+        operation: "create",
+        productId: "",
+        sku: "PROD-001",
+        name: "Sample Product",
+        description: "This is a sample product description",
+        category: "60d5ecb54b24a07f4c5e6789",
+        brand: "60d5ecb54b24a07f4c5e6790",
+        basePrice: "99.99",
+        discountPrice: "79.99",
+        stock: "100",
+        status: "active",
+        tags: "electronics,gadgets",
+        images: "https://example.com/image1.jpg,https://example.com/image2.jpg",
+        weight: "500",
+        shippingClass: "standard",
+      },
+      {
+        operation: "update",
+        productId: "60d5ecb54b24a07f4c5e6791",
+        sku: "PROD-002",
+        name: "Updated Product Name",
+        description: "",
+        category: "",
+        brand: "",
+        basePrice: "129.99",
+        discountPrice: "",
+        stock: "50",
+        status: "active",
+        tags: "",
+        images: "",
+        weight: "",
+        shippingClass: "",
+      },
+    ],
+  };
+
+  if (format === "json") {
+    return res.json({
+      success: true,
+      message: "Bulk product template",
+      data: templateData,
+    });
+  }
+
+  const csv = [
+    templateData.headers.join(","),
+    ...templateData.sampleData.map((row) =>
+      templateData.headers.map((header) => `"${row[header] || ""}"`).join(",")
+    ),
+  ].join("\n");
+
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader(
+    "Content-Disposition",
+    "attachment; filename=bulk-product-template.csv"
+  );
+  return res.send(csv);
+});
+
 module.exports = {
   // Basic product operations
   createProduct,
@@ -515,6 +669,9 @@ module.exports = {
   deleteProduct,
   getAllProducts,
   searchProducts,
+  bulkCreateUpdateProducts,
+  validateBulkProducts,
+  downloadBulkProductTemplate,
 
   // Product queries
   getProductsBySeller,

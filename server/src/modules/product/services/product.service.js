@@ -761,6 +761,408 @@ const addProductReview = async (productId, reviewData) => {
   return newReview;
 };
 
+//Bulk Create/Update Products
+
+const bulkCreateUpdateProducts = async (operations, options = {}, sellerId) => {
+  const {
+    stopOnError = false,
+    validateOnly = false,
+    skipDuplicates = true,
+    updateExisting = false,
+  } = options;
+
+  const results = {
+    success: [],
+    errors: [],
+    summary: {
+      total: operations.length,
+      created: 0,
+      updated: 0,
+      skipped: 0,
+      failed: 0,
+    },
+  };
+
+  // PHASE 1: VALIDATION
+  const validationErrors = [];
+  for (let i = 0; i < operations.length; i++) {
+    const op = operations[i];
+    const errors = await validateOperation(op, i, sellerId);
+    if (errors.length > 0) {
+      validationErrors.push(...errors);
+    }
+  }
+
+  if (validationErrors.length > 0 && stopOnError) {
+    throw new ApiError(400, "Validation failed", validationErrors);
+  }
+
+  if (validateOnly) {
+    return {
+      valid: validationErrors.length === 0,
+      errors: validationErrors,
+      summary: {
+        total: operations.length,
+        validOperations: operations.length - validationErrors.length,
+        invalidOperations: validationErrors.length,
+      },
+    };
+  }
+
+  // PHASE 2: PROCESSING
+  for (let i = 0; i < operations.length; i++) {
+    const op = operations[i];
+
+    try {
+      if (op.operation === "create") {
+        const result = await processCreateOperation(
+          op,
+          sellerId,
+          skipDuplicates
+        );
+
+        if (result.skipped) {
+          results.summary.skipped++;
+          results.success.push({
+            index: i,
+            operation: "create",
+            status: "skipped",
+            reason: result.reason,
+            data: result.data,
+          });
+        } else {
+          results.summary.created++;
+          results.success.push({
+            index: i,
+            operation: "create",
+            status: "created",
+            productId: result.product._id,
+            sku: result.product.sku,
+            data: result.product,
+          });
+        }
+      } else if (op.operation === "update") {
+        const result = await processUpdateOperation(
+          op,
+          sellerId,
+          updateExisting
+        );
+
+        if (result.skipped) {
+          results.summary.skipped++;
+          results.success.push({
+            index: i,
+            operation: "update",
+            status: "skipped",
+            reason: result.reason,
+          });
+        } else {
+          results.summary.updated++;
+          results.success.push({
+            index: i,
+            operation: "update",
+            status: "updated",
+            productId: result.product._id,
+            sku: result.product.sku,
+            data: result.product,
+          });
+        }
+      }
+    } catch (error) {
+      results.summary.failed++;
+      results.errors.push({
+        index: i,
+        operation: op.operation,
+        productId: op.productId,
+        sku: op.sku || op.data?.sku,
+        error: error.message,
+        details: error.details || null,
+      });
+
+      if (stopOnError) {
+        throw new ApiError(
+          400,
+          `Bulk operation failed at index ${i}: ${error.message}`,
+          results
+        );
+      }
+    }
+  }
+
+  // Publish event
+  await productEventPublisher.publishBulkUpdated({
+    sellerId,
+    operationType: "bulk_create_update",
+    summary: results.summary,
+    timestamp: new Date(),
+  });
+
+  return results;
+};
+
+/**
+ * Validate Operation
+ */
+async function validateOperation(operation, index, sellerId) {
+  const errors = [];
+
+  if (operation.operation === "create") {
+    if (!operation.data.name) {
+      errors.push({
+        index,
+        field: "name",
+        message: "Product name is required for create operation",
+      });
+    }
+    if (!operation.data.basePrice) {
+      errors.push({
+        index,
+        field: "basePrice",
+        message: "Base price is required for create operation",
+      });
+    }
+    if (!operation.data.category) {
+      errors.push({
+        index,
+        field: "category",
+        message: "Category is required for create operation",
+      });
+    }
+  } else if (operation.operation === "update") {
+    if (!operation.productId && !operation.sku) {
+      errors.push({
+        index,
+        message: "Either productId or SKU is required for update operation",
+      });
+    }
+  }
+
+  if (operation.data.category) {
+    const categoryExists = await Category.findById(operation.data.category);
+    if (!categoryExists) {
+      errors.push({
+        index,
+        field: "category",
+        message: `Category ${operation.data.category} not found`,
+      });
+    }
+  }
+
+  if (operation.data.brand) {
+    const brandExists = await Brand.findById(operation.data.brand);
+    if (!brandExists) {
+      errors.push({
+        index,
+        field: "brand",
+        message: `Brand ${operation.data.brand} not found`,
+      });
+    }
+  }
+
+  if (operation.operation === "create" && operation.data.sku) {
+    const existingProduct = await Product.findOne({ sku: operation.data.sku });
+    if (existingProduct) {
+      errors.push({
+        index,
+        field: "sku",
+        message: `Product with SKU ${operation.data.sku} already exists`,
+      });
+    }
+  }
+
+  if (operation.data.variants && operation.data.variants.length > 0) {
+    const skus = operation.data.variants.map((v) => v.sku);
+    const uniqueSkus = new Set(skus);
+    if (skus.length !== uniqueSkus.size) {
+      errors.push({
+        index,
+        field: "variants",
+        message: "Duplicate variant SKUs found in operation",
+      });
+    }
+  }
+
+  return errors;
+}
+
+/**
+ * Process Create Operation
+ */
+async function processCreateOperation(operation, sellerId, skipDuplicates) {
+  const productData = { ...operation.data, seller: sellerId };
+
+  if (skipDuplicates && productData.sku) {
+    const existing = await Product.findOne({ sku: productData.sku });
+    if (existing) {
+      return {
+        skipped: true,
+        reason: "Product with this SKU already exists",
+        data: { sku: productData.sku, existingProductId: existing._id },
+      };
+    }
+  }
+
+  if (productData.images) {
+    productData.images = normalizeImages(productData.images);
+  }
+  if (productData.videos) {
+    productData.videos = normalizeVideos(productData.videos);
+  }
+
+  if (Array.isArray(productData.variants)) {
+    productData.variants = productData.variants.map((v, idx) => {
+      const variant = { ...v };
+      if (variant.price != null) variant.price = Number(variant.price);
+      if (variant.stock != null) variant.stock = Number(variant.stock);
+      if (!variant.sku) {
+        variant.sku = `VRT-${Date.now()}-${Math.random()
+          .toString(36)
+          .slice(2, 6)
+          .toUpperCase()}-${idx}`;
+      }
+      return variant;
+    });
+  }
+
+  const product = await Product.create(productData);
+
+  await product.populate([
+    { path: "category", select: "name slug" },
+    { path: "brand", select: "name logo" },
+    { path: "seller", select: "firstName lastName email" },
+  ]);
+
+  return { product };
+}
+
+/**
+ * Process Update Operation
+ */
+async function processUpdateOperation(operation, sellerId, updateExisting) {
+  const filter = {};
+
+  if (operation.productId) {
+    filter._id = operation.productId;
+  } else if (operation.sku) {
+    filter.sku = operation.sku;
+  } else {
+    throw new ApiError(400, "Either productId or SKU is required for update");
+  }
+
+  if (sellerId) {
+    filter.seller = sellerId;
+  }
+
+  const existingProduct = await Product.findOne(filter);
+  if (!existingProduct) {
+    if (updateExisting) {
+      return await processCreateOperation(
+        { data: operation.data },
+        sellerId,
+        false
+      );
+    }
+    throw new ApiError(404, "Product not found");
+  }
+
+  const updateData = { ...operation.data };
+
+  if (updateData.images) {
+    updateData.images = normalizeImages(updateData.images);
+  }
+  if (updateData.videos) {
+    updateData.videos = normalizeVideos(updateData.videos);
+  }
+
+  Object.assign(existingProduct, updateData);
+  await existingProduct.save();
+
+  await existingProduct.populate([
+    { path: "category", select: "name slug" },
+    { path: "brand", select: "name logo" },
+    { path: "seller", select: "firstName lastName email" },
+  ]);
+
+  return { product: existingProduct };
+}
+
+// Helper functions
+function derivePublicIdFromUrl(url, prefix = "prod") {
+  try {
+    const u = new URL(url);
+    const parts = u.pathname.split("/").filter(Boolean);
+    const last = parts[parts.length - 1] || `file-${Date.now()}`;
+    const base = last.replace(/\.[a-zA-Z0-9]+$/, "");
+    return `${prefix}_${base}_${Date.now()}`;
+  } catch {
+    return `${prefix}_${Math.random().toString(36).slice(2, 10)}_${Date.now()}`;
+  }
+}
+
+function normalizeImages(images) {
+  if (!Array.isArray(images)) return images;
+  const mapped = images
+    .slice(0, 20)
+    .map((img) => {
+      if (typeof img === "string") {
+        return {
+          public_id: derivePublicIdFromUrl(img, "img"),
+          url: img,
+          isMain: false,
+        };
+      }
+      return {
+        public_id: img.public_id || derivePublicIdFromUrl(img.url || "", "img"),
+        url: img.url,
+        isMain: Boolean(img.isMain),
+        alt: img.alt,
+        size: img.size,
+        uploadedAt: img.uploadedAt,
+      };
+    })
+    .filter((i) => !!i && !!i.url);
+
+  if (mapped.length > 0) {
+    const hasMain = mapped.some((i) => i.isMain);
+    if (!hasMain) mapped[0].isMain = true;
+    else {
+      let seen = false;
+      mapped.forEach((i) => {
+        if (i.isMain && !seen) {
+          seen = true;
+        } else if (i.isMain && seen) {
+          i.isMain = false;
+        }
+      });
+    }
+  }
+
+  return mapped;
+}
+
+function normalizeVideos(videos) {
+  if (!Array.isArray(videos)) return videos;
+  return videos
+    .slice(0, 5)
+    .map((v) => {
+      if (typeof v === "string") {
+        return {
+          public_id: derivePublicIdFromUrl(v, "vid"),
+          url: v,
+        };
+      }
+      return {
+        public_id: v.public_id || derivePublicIdFromUrl(v.url || "", "vid"),
+        url: v.url,
+        thumbnail: v.thumbnail,
+        duration: v.duration,
+        size: v.size,
+        uploadedAt: v.uploadedAt,
+      };
+    })
+    .filter((i) => !!i && !!i.url);
+}
+
 module.exports = {
   // Basic product operations
   createProduct,
@@ -770,6 +1172,7 @@ module.exports = {
   deleteProduct,
   getAllProducts,
   searchProducts,
+  bulkCreateUpdateProducts,
 
   // Product queries
   getProductsBySeller,
