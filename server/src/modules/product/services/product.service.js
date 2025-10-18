@@ -188,7 +188,7 @@ const getProductById = async (productId, includeInactive = false) => {
   }
 
   const product = await Product.findOne(filter).populate([
-    { path: "category", select: "name slug" },
+    // { path: "category", select: "name slug" },
     { path: "brand", select: "name logo" },
     { path: "seller", select: "firstName lastName email avatar" },
     // {

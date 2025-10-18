@@ -63,6 +63,7 @@ export interface ProductListResponse {
   hasPrevPage: boolean;
   nextPage: number | null;
   prevPage: number | null;
+  meta?: any;
 }
 
 // Helper function to build query parameters

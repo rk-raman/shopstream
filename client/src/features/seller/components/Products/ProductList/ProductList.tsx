@@ -55,7 +55,7 @@ interface Filters {
   inStock: boolean;
 }
 
-const ITEMS_PER_PAGE = 12;
+const ITEMS_PER_PAGE = 100;
 
 export const ProductList: React.FC<ProductListProps> = ({
   onCreateProduct,
@@ -136,6 +136,8 @@ export const ProductList: React.FC<ProductListProps> = ({
     refetch,
   } = useProducts(queryParams);
 
+  const paginationData = productsData?.meta?.pagination;
+
   const { data: categoriesData } = useCategories();
   const { data: brandsData } = useBrands();
 
@@ -144,8 +146,8 @@ export const ProductList: React.FC<ProductListProps> = ({
   const bulkDeleteMutation = useBulkDeleteProducts();
 
   const products = productsData?.data || [];
-  const totalProducts = productsData?.total || 0;
-  const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
+  const totalProducts = paginationData?.totalResults || 0;
+  const totalPages = paginationData?.totalPages || 0;
   const categories = categoriesData || [];
   const brands = brandsData || [];
 
