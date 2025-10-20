@@ -1,5 +1,6 @@
 // client/src/features/customer/cart/components/PromoCode.tsx
 
+"use client";
 import { Tag, X } from "lucide-react";
 import { useState } from "react";
 

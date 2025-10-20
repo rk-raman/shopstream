@@ -1,4 +1,5 @@
 // client/src/features/customer/cart/hooks/useCart.ts
+"use client";
 
 import { useState, useEffect, useCallback } from "react";
 
@@ -14,7 +15,7 @@ import {
   validateCartItem,
 } from "../cartUtils";
 import { useAuth } from "@/features/auth/context/AuthContext";
-
+import { Product } from "@/types/global";
 interface UseCartReturn {
   cart: Cart | null;
   items: CartItem[];
@@ -101,17 +102,16 @@ export const useCart = (): UseCartReturn => {
     }
   }, [isAuthenticated, user, syncCartAfterLogin]);
 
-  // Add to cart
   const addToCart = useCallback(
-    async (productId: string, quantity: number = 1) => {
+    async (product: Product, quantity: number = 1) => {
       setIsLoading(true);
       setError(null);
 
       try {
         if (isAuthenticated) {
-          // Add to server
+          // 🧭 Add to server-side cart
           const response = await cartService.addToCart({
-            productId,
+            productId: product._id,
             quantity,
           });
 
@@ -121,19 +121,25 @@ export const useCart = (): UseCartReturn => {
             toast.success("Item added to cart!");
           }
         } else {
-          // Add to localStorage
+          // 🧭 Add to localStorage cart
           const localItems = getLocalCart();
           const existingIndex = localItems.findIndex(
-            (item) => item.productId === productId
+            (item) => item.productId === product._id
           );
 
           if (existingIndex >= 0) {
             localItems[existingIndex].quantity += quantity;
           } else {
-            // Note: You'll need to fetch product details here
-            // For now, this is a placeholder
-            toast.info("Please login to add items to cart");
-            return;
+            const newItem = {
+              ...product,
+              productId: product._id,
+              name: product.name,
+              price: product.discountPrice,
+              image: product.images[0].url,
+              quantity,
+            };
+
+            localItems.push(newItem);
           }
 
           saveLocalCart(localItems);

@@ -17,6 +17,8 @@ export default function CartItem({
   onRemove,
   isUpdating = false,
 }: CartItemProps) {
+  // console.log("item", item);
+
   const price = item.discountPrice || item.price;
   const hasDiscount = item.discountPrice && item.discountPrice < item.price;
 
@@ -46,7 +48,7 @@ export default function CartItem({
           height={96}
           className="w-full h-full object-cover"
         />
-        {!item.inStock && (
+        {item.isOutOfStock && (
           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <span className="text-white text-xs font-semibold">
               Out of Stock
@@ -80,19 +82,19 @@ export default function CartItem({
         <span className="text-sm text-gray-600">${price.toFixed(2)} each</span>
 
         {/* Stock Warnings */}
-        {!item.inStock && (
+        {item.isOutOfStock && (
           <div className="flex items-center gap-1 text-red-600 text-sm font-semibold mt-2">
             <AlertCircle size={16} />
             <span>Out of Stock</span>
           </div>
         )}
 
-        {item.inStock && isLowStock && (
+        {/* {item.inStock && isLowStock && (
           <div className="flex items-center gap-1 text-orange-600 text-sm mt-2">
             <AlertCircle size={16} />
             <span>Only {item.stock} left in stock</span>
           </div>
-        )}
+        )} */}
       </div>
 
       {/* Quantity Controls */}

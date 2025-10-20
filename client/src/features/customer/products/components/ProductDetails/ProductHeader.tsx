@@ -1,4 +1,8 @@
+"use client";
+
+import { useCart } from "@/features/customer/cart/hooks/useCart";
 import { Heart, Share2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function ProductHeader({
   name,
@@ -7,6 +11,7 @@ export default function ProductHeader({
   rating,
   reviews,
   inStock,
+  product,
 }: {
   name: string;
   price: number;
@@ -14,8 +19,17 @@ export default function ProductHeader({
   rating: number;
   reviews: number;
   inStock: boolean;
+  product: any;
 }) {
+  const { _id } = product;
   const discount = Math.round(((originalPrice - price) / originalPrice) * 100);
+  const { addToCart } = useCart(); // Example usage of useCart hook
+  const router = useRouter();
+
+  const handleAddToCart = async () => {
+    await addToCart(product, 1);
+    router.push("/cart");
+  };
 
   return (
     <div className="space-y-4">
@@ -64,7 +78,10 @@ export default function ProductHeader({
       </div>
 
       <div className="flex gap-3 pt-2">
-        <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition">
+        <button
+          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition"
+          onClick={handleAddToCart}
+        >
           Add to Cart
         </button>
         <button className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold py-3 rounded-lg transition">

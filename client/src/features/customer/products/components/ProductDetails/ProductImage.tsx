@@ -4,7 +4,6 @@ import Image from "next/image";
 
 export default function ProductImage({ images }: { images: string[] }) {
   const [selectedImage, setSelectedImage] = useState(0);
-  console.log("images", images);
 
   return (
     <div className="space-y-4">

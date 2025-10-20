@@ -45,6 +45,7 @@ export default async function ProductPage({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
             <ProductImage images={productData.images} />
             <ProductHeader
+              product={productData}
               name={productData.name}
               price={productData.discountPrice}
               originalPrice={productData.basePrice}
