@@ -187,6 +187,18 @@ export const API_ENDPOINTS = {
       url: "/cart",
       method: "DELETE",
     }),
+    applyPromoCode: (): ApiEndpoint => ({
+      url: "/cart/apply-promo",
+      method: "POST",
+    }),
+    removePromoCode: (): ApiEndpoint => ({
+      url: "/cart/remove-promo",
+      method: "DELETE",
+    }),
+    syncCart: (): ApiEndpoint => ({
+      url: "/cart/sync",
+      method: "POST",
+    }),
   },
 
   // Order endpoints
