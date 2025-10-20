@@ -95,6 +95,10 @@ export const API_ENDPOINTS = {
       url: "/products",
       method: "GET",
     }),
+    getFeatureProducts: (): ApiEndpoint => ({
+      url: "/products/featured",
+      method: "GET",
+    }),
     getProduct: (id: string): ApiEndpoint => ({
       url: `/products/${id}`,
       method: "GET",
@@ -140,7 +144,7 @@ export const API_ENDPOINTS = {
       method: "GET",
     }),
     getCategories: (): ApiEndpoint => ({
-      url: "/products/categories",
+      url: "/categories",
       method: "GET",
     }),
     getBrands: (): ApiEndpoint => ({

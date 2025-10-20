@@ -117,11 +117,11 @@ export default function CollectionForm({
   // Fetch products for manual collections
   const { data: productsResponse } = useQuery({
     queryKey: ["products", productSearch],
-    queryFn: () => getMyProducts({ search: productSearch, limit: 50 }),
+    queryFn: () => getMyProducts({ search: productSearch, limit: 100 }),
     enabled: form.watch("type") === "manual",
   });
 
-  const products = productsResponse?.data?.docs || [];
+  const products = productsResponse?.data || [];
 
   // Initialize selected products for editing
   useEffect(() => {
@@ -449,7 +449,7 @@ export default function CollectionForm({
                                   <div className="flex items-center gap-2">
                                     {product.images?.[0] && (
                                       <img
-                                        src={product.images[0]}
+                                        src={product.images[0].url}
                                         alt={product.name}
                                         className="w-8 h-8 object-cover rounded"
                                       />
@@ -494,7 +494,7 @@ export default function CollectionForm({
                                 <div className="flex items-center gap-3">
                                   {product.images?.[0] && (
                                     <img
-                                      src={product.images[0]}
+                                      src={product.images[0].url}
                                       alt={product.name}
                                       className="w-12 h-12 object-cover rounded"
                                     />

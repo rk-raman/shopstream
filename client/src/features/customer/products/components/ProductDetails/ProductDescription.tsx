@@ -3,7 +3,7 @@ export default function ProductDescription({
   features,
 }: {
   description: string;
-  features: string[];
+  features: { name: string; value: string }[];
 }) {
   return (
     <div className="space-y-6">
@@ -19,8 +19,10 @@ export default function ProductDescription({
         <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {features.map((feature, idx) => (
             <li key={idx} className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold mt-1">✓</span>
-              <span className="text-gray-700">{feature}</span>
+              <span className="text-blue-600 font-bold mt-1">
+                {feature?.name}
+              </span>
+              <span className="text-gray-700">{feature?.value}</span>
             </li>
           ))}
         </ul>

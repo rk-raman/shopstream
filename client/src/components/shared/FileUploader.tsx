@@ -52,7 +52,7 @@ export default function FileUploader({
     onChange,
   });
 
-  console.log("assets", assets);
+  // console.log("assets", assets);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 

@@ -9,18 +9,23 @@ import TrendingCollections from "./TrendingCollections";
 import PromoBanner from "./PromoBanner";
 import NewsletterSection from "./NewsletterSection";
 import BenefitsSection from "./BenefitsSection";
+import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 
 export default function Homepage() {
-  return (
-    <div className="min-h-screen bg-background">
-      <HeroSection />
-      <FeaturedProducts />
-      <FeaturedCategories />
+  const [queryClient] = React.useState(() => new QueryClient());
 
-      <TrendingCollections />
-      <PromoBanner />
-      <BenefitsSection />
-      <NewsletterSection />
-    </div>
+  return (
+    <QueryClientProvider client={queryClient}>
+      <div className="min-h-screen bg-background">
+        <HeroSection />
+        <FeaturedProducts />
+        <FeaturedCategories />
+
+        {/* <TrendingCollections /> */}
+        <PromoBanner />
+        <BenefitsSection />
+        <NewsletterSection />
+      </div>
+    </QueryClientProvider>
   );
 }

@@ -1,83 +1,49 @@
 import React, { useState } from "react";
 import { ChevronRight } from "lucide-react";
+import { useGetCategories } from "../hooks/useHomepage";
 
 interface Category {
-  id: number;
+  _id: number;
   name: string;
-  image: string;
+  image: Object & { url: string };
   itemCount: string;
   bgColor: string;
+  productCount: any;
 }
+const gradientColors = [
+  "from-blue-500/20 to-purple-500/20",
+  "from-pink-500/20 to-rose-500/20",
+  "from-cyan-500/20 to-blue-500/20",
+  "from-amber-500/20 to-orange-500/20",
+  "from-purple-500/20 to-pink-500/20",
+  "from-green-500/20 to-emerald-500/20",
+  "from-yellow-500/20 to-orange-500/20",
+  "from-indigo-500/20 to-purple-500/20",
+  "from-red-500/20 to-pink-500/20",
+  "from-teal-500/20 to-cyan-500/20",
+];
 
 const FeaturedCategories: React.FC = () => {
   const [hoveredCategory, setHoveredCategory] = useState<number | null>(null);
 
-  const categories: Category[] = [
-    {
-      id: 1,
-      name: "Men's Fashion",
-      image:
-        "https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?w=400&h=400&fit=crop",
-      itemCount: "2,500+ Products",
-      bgColor: "from-blue-500/20 to-purple-500/20",
-    },
-    {
-      id: 2,
-      name: "Women's Fashion",
-      image:
-        "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&h=400&fit=crop",
-      itemCount: "3,200+ Products",
-      bgColor: "from-pink-500/20 to-rose-500/20",
-    },
-    {
-      id: 3,
-      name: "Electronics",
-      image:
-        "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400&h=400&fit=crop",
-      itemCount: "1,800+ Products",
-      bgColor: "from-cyan-500/20 to-blue-500/20",
-    },
-    {
-      id: 4,
-      name: "Home & Living",
-      image:
-        "https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=400&h=400&fit=crop",
-      itemCount: "1,500+ Products",
-      bgColor: "from-amber-500/20 to-orange-500/20",
-    },
-    {
-      id: 5,
-      name: "Beauty & Personal Care",
-      image:
-        "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&h=400&fit=crop",
-      itemCount: "2,100+ Products",
-      bgColor: "from-purple-500/20 to-pink-500/20",
-    },
-    {
-      id: 6,
-      name: "Sports & Fitness",
-      image:
-        "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400&h=400&fit=crop",
-      itemCount: "1,200+ Products",
-      bgColor: "from-green-500/20 to-emerald-500/20",
-    },
-    {
-      id: 7,
-      name: "Kids & Toys",
-      image:
-        "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=400&h=400&fit=crop",
-      itemCount: "1,900+ Products",
-      bgColor: "from-yellow-500/20 to-orange-500/20",
-    },
-    {
-      id: 8,
-      name: "Books & Stationery",
-      image:
-        "https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=400&h=400&fit=crop",
-      itemCount: "800+ Products",
-      bgColor: "from-indigo-500/20 to-purple-500/20",
-    },
-  ];
+  // Fetch data
+  const { data: productsData, isLoading, error, refetch } = useGetCategories();
+  // console.log("Featured Products Data:", productsData);
+
+  // Normalize productsData which can be either an array of categories or an object containing data.docs
+  let categories: Category[] = [];
+  if (Array.isArray(productsData)) {
+    categories = productsData as Category[];
+  } else {
+    categories = (productsData as any)?.data?.docs || [];
+  }
+
+  // Modify categories with gradient colors
+  const modifyCategories: Category[] = categories.map((category, index) => ({
+    ...category,
+    bgColor: gradientColors[index % gradientColors.length], // Cycle through gradients
+    productCount: `${category.productCount} Products`,
+  }));
 
   return (
     <section className="bg-white py-12 px-4">
@@ -94,11 +60,11 @@ const FeaturedCategories: React.FC = () => {
 
         {/* Categories Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-          {categories.map((category) => (
+          {modifyCategories.map((category) => (
             <div
-              key={category.id}
+              key={category._id}
               className="relative group cursor-pointer"
-              onMouseEnter={() => setHoveredCategory(category.id)}
+              onMouseEnter={() => setHoveredCategory(category._id)}
               onMouseLeave={() => setHoveredCategory(null)}
             >
               <div className="relative overflow-hidden rounded-2xl aspect-square">
@@ -109,7 +75,7 @@ const FeaturedCategories: React.FC = () => {
 
                 {/* Image */}
                 <img
-                  src={category.image}
+                  src={category?.image?.url}
                   alt={category.name}
                   className="w-full h-full object-cover mix-blend-overlay group-hover:scale-110 transition-transform duration-500"
                 />
@@ -124,13 +90,13 @@ const FeaturedCategories: React.FC = () => {
                       {category.name}
                     </h3>
                     <p className="text-xs md:text-sm text-gray-700 font-medium mb-2">
-                      {category.itemCount}
+                      {category.productCount}
                     </p>
 
                     {/* Shop Now Button - Shows on hover */}
                     <div
                       className={`flex items-center gap-1 text-sm font-semibold text-gray-900 transition-all duration-300 ${
-                        hoveredCategory === category.id
+                        hoveredCategory === category._id
                           ? "opacity-100 translate-x-0"
                           : "opacity-0 -translate-x-2"
                       }`}

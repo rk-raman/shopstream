@@ -6,9 +6,12 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { useFeatureProducts } from "../hooks/useHomepage";
+import Link from "next/link";
 
 interface Product {
-  id: number;
+  _id: number;
+  images: { url: string }[];
   name: string;
   brand: string;
   price: number;
@@ -18,91 +21,105 @@ interface Product {
   reviews: number;
   image: string;
   badge?: string;
+  effectivePrice?: number;
+  basePrice: number;
+  discountPrice?: number;
+  discountPercentage?: number;
 }
 
 const FeaturedProducts: React.FC = () => {
   const [wishlist, setWishlist] = useState<number[]>([]);
   const [currentSlide, setCurrentSlide] = useState<number>(0);
 
-  const products: Product[] = [
-    {
-      id: 1,
-      name: "Slim Fit Casual Shirt",
-      brand: "ZARA",
-      price: 1299,
-      originalPrice: 2599,
-      discount: 50,
-      rating: 4.3,
-      reviews: 2840,
-      image:
-        "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400&h=500&fit=crop",
-      badge: "Bestseller",
-    },
-    {
-      id: 2,
-      name: "Women's Kurta Set",
-      brand: "Libas",
-      price: 1899,
-      originalPrice: 3999,
-      discount: 52,
-      rating: 4.5,
-      reviews: 1560,
-      image:
-        "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400&h=500&fit=crop",
-      badge: "Trending",
-    },
-    {
-      id: 3,
-      name: "Wireless Headphones",
-      brand: "boAt",
-      price: 1999,
-      originalPrice: 4990,
-      discount: 60,
-      rating: 4.2,
-      reviews: 8420,
-      image:
-        "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=500&fit=crop",
-      badge: "Hot Deal",
-    },
-    {
-      id: 4,
-      name: "Running Shoes",
-      brand: "Nike",
-      price: 3499,
-      originalPrice: 6999,
-      discount: 50,
-      rating: 4.6,
-      reviews: 3240,
-      image:
-        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=500&fit=crop",
-    },
-    {
-      id: 5,
-      name: "Denim Jacket",
-      brand: "Levi's",
-      price: 2799,
-      originalPrice: 5599,
-      discount: 50,
-      rating: 4.4,
-      reviews: 1890,
-      image:
-        "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&h=500&fit=crop",
-      badge: "New Arrival",
-    },
-    {
-      id: 6,
-      name: "Smartwatch Pro",
-      brand: "Noise",
-      price: 2499,
-      originalPrice: 7999,
-      discount: 69,
-      rating: 4.1,
-      reviews: 5620,
-      image:
-        "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=500&fit=crop",
-      badge: "Limited",
-    },
-  ];
+  // Fetch data
+  const {
+    data: productsData,
+    isLoading,
+    error,
+    refetch,
+  } = useFeatureProducts();
+  // console.log("Featured Products Data:", productsData);
+  const products: Product[] = productsData?.data?.products || [];
+
+  // const products: Product[] = [
+  //   {
+  //     id: 1,
+  //     name: "Slim Fit Casual Shirt",
+  //     brand: "ZARA",
+  //     price: 1299,
+  //     originalPrice: 2599,
+  //     discount: 50,
+  //     rating: 4.3,
+  //     reviews: 2840,
+  //     image:
+  //       "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400&h=500&fit=crop",
+  //     badge: "Bestseller",
+  //   },
+  //   {
+  //     id: 2,
+  //     name: "Women's Kurta Set",
+  //     brand: "Libas",
+  //     price: 1899,
+  //     originalPrice: 3999,
+  //     discount: 52,
+  //     rating: 4.5,
+  //     reviews: 1560,
+  //     image:
+  //       "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400&h=500&fit=crop",
+  //     badge: "Trending",
+  //   },
+  //   {
+  //     id: 3,
+  //     name: "Wireless Headphones",
+  //     brand: "boAt",
+  //     price: 1999,
+  //     originalPrice: 4990,
+  //     discount: 60,
+  //     rating: 4.2,
+  //     reviews: 8420,
+  //     image:
+  //       "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=500&fit=crop",
+  //     badge: "Hot Deal",
+  //   },
+  //   {
+  //     id: 4,
+  //     name: "Running Shoes",
+  //     brand: "Nike",
+  //     price: 3499,
+  //     originalPrice: 6999,
+  //     discount: 50,
+  //     rating: 4.6,
+  //     reviews: 3240,
+  //     image:
+  //       "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=500&fit=crop",
+  //   },
+  //   {
+  //     id: 5,
+  //     name: "Denim Jacket",
+  //     brand: "Levi's",
+  //     price: 2799,
+  //     originalPrice: 5599,
+  //     discount: 50,
+  //     rating: 4.4,
+  //     reviews: 1890,
+  //     image:
+  //       "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&h=500&fit=crop",
+  //     badge: "New Arrival",
+  //   },
+  //   {
+  //     id: 6,
+  //     name: "Smartwatch Pro",
+  //     brand: "Noise",
+  //     price: 2499,
+  //     originalPrice: 7999,
+  //     discount: 69,
+  //     rating: 4.1,
+  //     reviews: 5620,
+  //     image:
+  //       "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=500&fit=crop",
+  //     badge: "Limited",
+  //   },
+  // ];
 
   const toggleWishlist = (id: number): void => {
     setWishlist((prev) =>
@@ -159,14 +176,15 @@ const FeaturedProducts: React.FC = () => {
         {/* Products Grid - Always 4 columns */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {visibleProducts.map((product) => (
-            <div
-              key={product.id}
+            <Link
+              href={`/product/${product._id}`}
+              key={product._id}
               className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group cursor-pointer"
             >
               {/* Image Container */}
               <div className="relative overflow-hidden aspect-square">
                 <img
-                  src={product.image}
+                  src={product.images[0]?.url}
                   alt={product.name}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
@@ -182,13 +200,13 @@ const FeaturedProducts: React.FC = () => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    toggleWishlist(product.id);
+                    toggleWishlist(product._id);
                   }}
                   className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:scale-110 transition-transform"
                 >
                   <Heart
                     className={`w-4 h-4 ${
-                      wishlist.includes(product.id)
+                      wishlist.includes(product._id)
                         ? "fill-red-500 text-red-500"
                         : "text-gray-600"
                     }`}
@@ -197,7 +215,7 @@ const FeaturedProducts: React.FC = () => {
 
                 {/* Discount Badge */}
                 <div className="absolute bottom-2 left-2 bg-green-600 text-white text-xs font-bold px-2 py-1 rounded">
-                  {product.discount}% OFF
+                  {product?.discountPercentage}% OFF
                 </div>
 
                 {/* Quick Add to Cart - Shows on Hover */}
@@ -212,7 +230,7 @@ const FeaturedProducts: React.FC = () => {
               {/* Product Info */}
               <div className="p-3">
                 <div className="text-xs text-gray-500 font-medium mb-1">
-                  {product.brand}
+                  {/* {product.brand} */}
                 </div>
                 <h3 className="text-sm font-medium text-gray-900 mb-2 line-clamp-2 h-10">
                   {product.name}
@@ -220,26 +238,26 @@ const FeaturedProducts: React.FC = () => {
 
                 {/* Rating */}
                 <div className="flex items-center gap-1 mb-2">
-                  <div className="flex items-center bg-green-600 text-white text-xs font-semibold px-1.5 py-0.5 rounded">
+                  {/* <div className="flex items-center bg-green-600 text-white text-xs font-semibold px-1.5 py-0.5 rounded">
                     {product.rating}
                     <Star className="w-3 h-3 ml-0.5 fill-white" />
-                  </div>
+                  </div> */}
                   <span className="text-xs text-gray-500">
-                    ({product.reviews.toLocaleString()})
+                    {/* ({product.reviews.toLocaleString()}) */}
                   </span>
                 </div>
 
                 {/* Price */}
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-lg font-bold text-gray-900">
-                    ₹{product.price.toLocaleString()}
+                    ${product?.effectivePrice?.toLocaleString()}
                   </span>
                   <span className="text-xs text-gray-500 line-through">
-                    ₹{product.originalPrice.toLocaleString()}
+                    ${product?.basePrice.toLocaleString()}
                   </span>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 

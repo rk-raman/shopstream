@@ -4,12 +4,13 @@ import Image from "next/image";
 
 export default function ProductImage({ images }: { images: string[] }) {
   const [selectedImage, setSelectedImage] = useState(0);
+  console.log("images", images);
 
   return (
     <div className="space-y-4">
       <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
         <Image
-          src={images[selectedImage]}
+          src={images[selectedImage]?.url}
           alt="Product"
           width={500}
           height={500}
@@ -27,7 +28,7 @@ export default function ProductImage({ images }: { images: string[] }) {
             }`}
           >
             <Image
-              src={img}
+              src={img?.url}
               alt={`Thumbnail ${idx}`}
               width={80}
               height={80}

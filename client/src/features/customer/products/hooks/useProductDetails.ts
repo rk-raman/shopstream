@@ -1,22 +1,23 @@
-'use client';
+";
 
-import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import {
+  getFeatureProducts,
+  getCategories,
+  getProductById
+} from "../../services/productService";
 
-interface useProductDetailsReturn {
-  data: any;
-  loading: boolean;
-  error: string | null;
-}
-
-export const useProductDetails = (): useProductDetailsReturn => {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    // TODO: Implement hook logic
-    setLoading(false);
-  }, []);
-
-  return { data, loading, error };
+// Query Keys
+export const PRODUCT_QUERY_KEYS = {
+  useProductDetails: ["useProductDetails"] as const,
 };
+
+export const useProductDetails = (id: any ) => {
+  return useQuery({
+    queryKey: PRODUCT_QUERY_KEYS.useProductDetails,
+    queryFn: () => getProductById(id),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
