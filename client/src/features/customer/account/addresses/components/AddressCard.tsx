@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Edit2, Trash2, Home, Briefcase } from "lucide-react";
+import { Edit2, Trash2, Home, Briefcase, MapPin } from "lucide-react";
 import type { Address } from "../types";
 
 interface AddressCardProps {
@@ -17,6 +17,19 @@ export default function AddressCard({
   onDelete,
   onSetDefault,
 }: AddressCardProps) {
+  const getAddressTypeIcon = () => {
+    switch (address.type) {
+      case "home":
+        return <Home className="w-5 h-5 text-blue-600 flex-shrink-0 mt-1" />;
+      case "work":
+        return (
+          <Briefcase className="w-5 h-5 text-blue-600 flex-shrink-0 mt-1" />
+        );
+      default:
+        return <MapPin className="w-5 h-5 text-blue-600 flex-shrink-0 mt-1" />;
+    }
+  };
+
   return (
     <div
       className={`bg-white rounded-lg shadow-sm p-6 border-2 ${
@@ -30,26 +43,23 @@ export default function AddressCard({
       )}
 
       <div className="flex items-start space-x-3 mb-4">
-        {address.addressType === "home" ? (
-          <Home className="w-5 h-5 text-blue-600 flex-shrink-0 mt-1" />
-        ) : (
-          <Briefcase className="w-5 h-5 text-blue-600 flex-shrink-0 mt-1" />
-        )}
+        {getAddressTypeIcon()}
         <div>
-          <h3 className="font-semibold text-gray-900">{address.name}</h3>
-          <p className="text-sm text-gray-600 capitalize">
-            {address.addressType}
-          </p>
+          <h3 className="font-semibold text-gray-900">{address.fullName}</h3>
+          <p className="text-sm text-gray-600 capitalize">{address.type}</p>
         </div>
       </div>
 
       <div className="space-y-2 text-sm text-gray-600 mb-4">
-        <p>{address.address}</p>
+        <p>{address.addressLine1}</p>
+        {address.addressLine2 && <p>{address.addressLine2}</p>}
         {address.landmark && <p>Landmark: {address.landmark}</p>}
-        <p>{address.locality}</p>
         <p>
           {address.city}, {address.state} - {address.pincode}
         </p>
+        {address.country && address.country !== "India" && (
+          <p>{address.country}</p>
+        )}
         <p className="font-medium text-gray-900">Ph: {address.phone}</p>
       </div>
 
@@ -62,7 +72,7 @@ export default function AddressCard({
           <span>Edit</span>
         </button>
         <button
-          onClick={() => onDelete(address.id)}
+          onClick={() => onDelete(address._id)}
           className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 text-red-600 border border-red-600 rounded hover:bg-red-50 transition-colors"
         >
           <Trash2 className="w-4 h-4" />
@@ -72,7 +82,7 @@ export default function AddressCard({
 
       {!address.isDefault && (
         <button
-          onClick={() => onSetDefault(address.id)}
+          onClick={() => onSetDefault(address._id)}
           className="w-full mt-3 px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors text-sm font-medium"
         >
           Set as Default

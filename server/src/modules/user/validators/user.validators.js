@@ -145,6 +145,7 @@ const validateAddress = [sanitizeMiddleware, validateJoiBody(addressSchema)];
  * Validates MongoDB ObjectId for address operations
  */
 const validateAddressId = [
+  sanitizeMiddleware,
   validateJoiParams({
     addressId: commonPatterns.objectId.required(),
   }),

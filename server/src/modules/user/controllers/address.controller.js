@@ -5,13 +5,7 @@ const asyncHandler = require("../../../shared/utils/asyncHandler");
 const getAddresses = asyncHandler(async (req, res) => {
   const user = await userService.getUserById(req.user._id);
 
-  return res.success(
-    {
-      addresses: user.addresses,
-      count: user.addresses.length,
-    },
-    "Addresses retrieved successfully"
-  );
+  return res.success(user.addresses, "Addresses retrieved successfully");
 });
 
 // Get single address by ID

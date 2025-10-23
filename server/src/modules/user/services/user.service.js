@@ -165,8 +165,8 @@ const addAddress = async (userId, addressData) => {
 
   // Publish event
   await userEventPublisher.publishAddressAdded({
-    userId: user._id,
-    addressId: newAddress._id,
+    userId: user._id.toString(),
+    addressId: newAddress._id.toString(),
     addressType: newAddress.type || "home",
     city: newAddress.city,
     state: newAddress.state,
@@ -203,8 +203,8 @@ const updateAddress = async (userId, addressId, updateData) => {
 
   // Publish event
   await userEventPublisher.publishAddressUpdated({
-    userId: user._id,
-    addressId: address._id,
+    userId: user._id.toString(),
+    addressId: address._id.toString(),
     changes: updateData,
   });
 
@@ -235,8 +235,8 @@ const deleteAddress = async (userId, addressId) => {
 
   // Publish event
   await userEventPublisher.publishAddressDeleted({
-    userId: user._id,
-    addressId,
+    userId: user._id.toString(),
+    addressId: addressId.toString(),
   });
 
   return { message: "Address deleted successfully" };

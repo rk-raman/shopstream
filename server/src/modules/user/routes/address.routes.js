@@ -19,18 +19,18 @@ router.get("/type/:type", addressController.getAddressesByType);
 router.get("/:addressId", validateAddressId, addressController.getAddress);
 router.put(
   "/:addressId",
-  validateAddressId,
+  // validateAddressId,
   validateAddress,
   addressController.updateAddress
 );
 router.delete(
   "/:addressId",
-  validateAddressId,
+  // validateAddressId,
   addressController.deleteAddress
 );
 router.patch(
   "/:addressId/default",
-  validateAddressId,
+  // validateAddressId,
   addressController.setDefaultAddress
 );
 

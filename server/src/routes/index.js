@@ -55,6 +55,7 @@ const brandRoutes = require("../modules/product/routes/brand.routes");
 const cartRoutes = require("../modules/cart/routes/cart.routes");
 const paymentRoutes = require("../modules/payment/routes/payment.routes");
 const uploadRoutes = require("../modules/upload/routes/upload.routes");
+const addressRoutes = require("../modules/user/routes/address.routes");
 // Health check endpoint
 router.get("/health", (req, res) => {
   res.json({
@@ -70,6 +71,7 @@ router.get("/health", (req, res) => {
 });
 
 router.use(userRoutes);
+//router.use(addressRoutes);
 router.use("/notifications", notificationRoutes);
 router.use("/products", productRoutes);
 router.use("/categories", categoryRoutes);
