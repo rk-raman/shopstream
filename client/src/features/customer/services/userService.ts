@@ -48,6 +48,16 @@ export const userService = {
       throw new Error(error.response?.data?.message || "Failed to add");
     }
   },
+
+  deleteAddress: async (id: string): Promise<ApiResponse<Address>> => {
+    try {
+      const endpoint = API_ENDPOINTS.USER.deleteAddress(id);
+      const response = await axiosCustomer.delete(endpoint.url);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || "Failed to delete");
+    }
+  },
 };
 
 export default userService;
