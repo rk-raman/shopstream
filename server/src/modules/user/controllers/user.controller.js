@@ -1,7 +1,8 @@
 const userService = require("../services/user.service");
 //const ApiError = require("../../../shared/utils/apiError");
 const asyncHandler = require("../../../shared/utils/asyncHandler");
-const ApiError = require("../../../shared/utils/ApiError");
+const ApiError = require("../../../shared/utils/apiError");
+//const ApiError = require("../../../shared/utils/ApiError");
 
 // Get user profile
 const getProfile = asyncHandler(async (req, res) => {
