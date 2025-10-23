@@ -50,7 +50,7 @@ router.get(
 router.post(
   "/",
   authenticate,
-  authorize("seller", "admin"),,
+  authorize("seller", "admin"),
   validateCreateOrder,
   orderController.createOrder
 );

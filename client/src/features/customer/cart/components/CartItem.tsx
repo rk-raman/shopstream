@@ -23,21 +23,24 @@ export default function CartItem({
     ...cart_item.product,
     productId: cart_item.product._id,
     image: cart_item.product.images[0].url,
+    itemId: cart_item._id,
+    inStock: cart_item.product.totalStock > 0,
+    stock: cart_item.product.totalStock,
   };
-  // console.log("cart item", item);
+  //console.log("cart item", item);
 
   const price = item.discountPrice || item.price;
   const hasDiscount = item.discountPrice && item.discountPrice < item.price;
 
   const handleDecrease = () => {
     if (item.quantity > 1) {
-      onUpdateQuantity(item.productId, item.quantity - 1);
+      onUpdateQuantity(item.itemId, item.quantity - 1);
     }
   };
 
   const handleIncrease = () => {
     if (item.quantity < item.stock) {
-      onUpdateQuantity(item.productId, item.quantity + 1);
+      onUpdateQuantity(item.itemId, item.quantity + 1);
     }
   };
 
@@ -139,7 +142,7 @@ export default function CartItem({
 
       {/* Delete Button */}
       <button
-        onClick={() => onRemove(item.productId)}
+        onClick={() => onRemove(item.itemId)}
         disabled={isUpdating}
         className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded transition h-fit disabled:opacity-50"
         aria-label="Remove item"

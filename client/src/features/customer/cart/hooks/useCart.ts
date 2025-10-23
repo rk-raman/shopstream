@@ -177,8 +177,8 @@ export const useCart = (): UseCartReturn => {
           });
 
           if (response.success && response.data) {
-            setCart(response.data);
-            setItems(response?.data?.items || []);
+            setCart(response?.data?.cart);
+            setItems(response?.data?.cart?.items || []);
           }
         } else {
           // Update localStorage

@@ -65,9 +65,9 @@ export default function CartPage() {
               </div>
 
               <div className="divide-y divide-gray-200">
-                {items.map((item) => (
+                {items.map((item, index) => (
                   <CartItem
-                    key={item.productId}
+                    key={index}
                     item={item}
                     onUpdateQuantity={updateQuantity}
                     onRemove={removeItem}
