@@ -3,38 +3,41 @@
 
 import React from "react";
 import { Plus } from "lucide-react";
-import type { Address } from "@/features/customer/account/addresses/types";
+import { Address } from "@/features/customer/account/types";
 import { useAddresses } from "@/features/customer/account/addresses/useAddresses";
 import AddressForm from "@/features/customer/account/addresses/components/AddressForm";
 import AddressList from "@/features/customer/account/addresses/components/AddressList";
 import AddressEmptyState from "@/features/customer/account/addresses/components/AddressEmptyState";
 
 // Mock data - Replace with API call
-const mockAddresses: Address[] = [
+const mockAddresses: any[] = [
   {
-    id: "1",
-    name: "Home",
+    _id: "1",
+    fullName: "Radharaman kar",
+    type: "home",
     phone: "9876543210",
     pincode: "600001",
-    locality: "T Nagar",
-    address: "123, Main Street, Anna Nagar",
+    landmark: "T Nagar",
+    addressLine1: "123, Main Street, Anna Nagar",
+    addressLine2: "Near Bus Stop",
     city: "Chennai",
     state: "Tamil Nadu",
-    addressType: "home",
+    coordinates: { latitude: 13.0827, longitude: 80.2707 },
     isDefault: true,
   },
   {
-    id: "2",
-    name: "Office",
+    _id: "2",
+    fullName: "Radharaman kar",
+    type: "work",
     phone: "9876543210",
-    pincode: "600002",
-    locality: "Velachery",
-    address: "456, Office Tower, IT Park",
+    pincode: "600001",
+    landmark: "T Nagar",
+    addressLine1: "123, Main Street, Anna Nagar",
+    addressLine2: "Near Bus Stop",
     city: "Chennai",
     state: "Tamil Nadu",
-    landmark: "Near Metro Station",
-    addressType: "work",
-    isDefault: false,
+    coordinates: { latitude: 13.0827, longitude: 80.2707 },
+    isDefault: true,
   },
 ];
 

@@ -21,7 +21,7 @@ export default function AddressList({
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {addresses.map((address) => (
         <AddressCard
-          key={address.id}
+          key={address._id}
           address={address}
           onEdit={onEdit}
           onDelete={onDelete}
