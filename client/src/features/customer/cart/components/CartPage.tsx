@@ -30,7 +30,7 @@ export default function CartPage() {
     await applyPromoCode(code);
   };
 
-  if (isLoading && items.length === 0) {
+  if (isLoading && items && items.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="animate-spin text-blue-600" size={48} />
@@ -83,7 +83,7 @@ export default function CartPage() {
 
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <PromoCode
+            {/* <PromoCode
               onApply={handleApplyPromo}
               currentCode={cart?.promoCode}
               onRemove={removePromoCode}
@@ -95,7 +95,7 @@ export default function CartPage() {
                   ✓ {cart.discount}% discount applied!
                 </p>
               </div>
-            )}
+            )} */}
 
             <CartSummary
               subtotal={calculations.subtotal}

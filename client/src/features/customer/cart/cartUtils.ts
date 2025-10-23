@@ -10,7 +10,19 @@ export const calculateCartTotals = (
   items: CartItem[],
   discountPercent: number = 0
 ): CartCalculations => {
-  const subtotal = items.reduce((sum, item) => {
+  if (!items || items.length === 0) {
+    return {
+      subtotal: 0,
+      discount: 0,
+      discountAmount: 0,
+      tax: 0,
+      shipping: 0,
+      total: 0,
+      itemCount: 0,
+    };
+  }
+
+  const subtotal = items?.reduce((sum, item) => {
     const price = item.discountPrice || item.price;
     return sum + price * item.quantity;
   }, 0);

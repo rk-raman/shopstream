@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { Trash2, Plus, Minus, AlertCircle } from "lucide-react";
 import type { CartItem as CartItemType } from "@/types/cart";
+import { ca } from "zod/v4/locales";
 
 interface CartItemProps {
   item: CartItemType;
@@ -12,12 +13,18 @@ interface CartItemProps {
 }
 
 export default function CartItem({
-  item,
+  item: cart_item,
   onUpdateQuantity,
   onRemove,
   isUpdating = false,
 }: CartItemProps) {
-  // console.log("item", item);
+  const item = {
+    ...cart_item,
+    ...cart_item.product,
+    productId: cart_item.product._id,
+    image: cart_item.product.images[0].url,
+  };
+  // console.log("cart item", item);
 
   const price = item.discountPrice || item.price;
   const hasDiscount = item.discountPrice && item.discountPrice < item.price;

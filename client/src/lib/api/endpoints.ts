@@ -172,15 +172,15 @@ export const API_ENDPOINTS = {
       method: "GET",
     }),
     addToCart: (): ApiEndpoint => ({
-      url: "/cart/items",
+      url: "/cart/add",
       method: "POST",
     }),
     updateCartItem: (id: string): ApiEndpoint => ({
-      url: `/cart/items/${id}`,
+      url: `/cart/item/${id}`,
       method: "PUT",
     }),
     removeFromCart: (id: string): ApiEndpoint => ({
-      url: `/cart/items/${id}`,
+      url: `/cart/item/${id}`,
       method: "DELETE",
     }),
     clearCart: (): ApiEndpoint => ({

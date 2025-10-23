@@ -53,15 +53,16 @@ export const useCart = (): UseCartReturn => {
       if (isAuthenticated) {
         // Load from server
         const response = await cartService.getCart();
+
         if (response.success && response.data) {
-          setCart(response.data);
-          setItems(response.data.items);
+          setCart(response?.data?.cart);
+          setItems(response?.data?.cart?.items || []);
           setDiscount(response.data.discount || 0);
         }
       } else {
         // Load from localStorage
         const localItems = getLocalCart();
-        setItems(localItems);
+        setItems(localItems || []);
       }
     } catch (err: any) {
       setError(err.message);
@@ -78,8 +79,8 @@ export const useCart = (): UseCartReturn => {
       try {
         const response = await cartService.syncCart(localItems);
         if (response.success && response.data) {
-          setCart(response.data);
-          setItems(response.data.items);
+          setCart(response?.data?.cart);
+          setItems(response?.data?.cart?.items || []);
           clearLocalCart();
           toast.success("Cart synced successfully!");
         }
@@ -116,8 +117,8 @@ export const useCart = (): UseCartReturn => {
           });
 
           if (response.success && response.data) {
-            setCart(response.data);
-            setItems(response.data.items);
+            setCart(response?.data?.cart);
+            setItems(response?.data?.cart?.items || []);
             toast.success("Item added to cart!");
           }
         } else {
@@ -177,7 +178,7 @@ export const useCart = (): UseCartReturn => {
 
           if (response.success && response.data) {
             setCart(response.data);
-            setItems(response.data.items);
+            setItems(response?.data?.items || []);
           }
         } else {
           // Update localStorage
@@ -187,7 +188,7 @@ export const useCart = (): UseCartReturn => {
           );
 
           saveLocalCart(updatedItems);
-          setItems(updatedItems);
+          setItems(updatedItems || []);
         }
       } catch (err: any) {
         setError(err.message);
@@ -211,8 +212,8 @@ export const useCart = (): UseCartReturn => {
           const response = await cartService.removeFromCart(productId);
 
           if (response.success && response.data) {
-            setCart(response.data);
-            setItems(response.data.items);
+            setCart(response?.data?.cart);
+            setItems(response?.data?.cart?.items || []);
             toast.success("Item removed from cart");
           }
         } else {
@@ -223,7 +224,7 @@ export const useCart = (): UseCartReturn => {
           );
 
           saveLocalCart(updatedItems);
-          setItems(updatedItems);
+          setItems(updatedItems || []);
           toast.success("Item removed from cart");
         }
       } catch (err: any) {
@@ -282,7 +283,7 @@ export const useCart = (): UseCartReturn => {
 
         if (response.success && response.data) {
           setCart(response.data);
-          setItems(response.data.items);
+          setItems(response?.data?.items || []);
           setDiscount(response.data.discount || 0);
           toast.success(`Promo code "${code}" applied!`);
         }
@@ -308,7 +309,7 @@ export const useCart = (): UseCartReturn => {
 
       if (response.success && response.data) {
         setCart(response.data);
-        setItems(response.data.items);
+        setItems(response?.data?.items || []);
         setDiscount(0);
         toast.success("Promo code removed");
       }
