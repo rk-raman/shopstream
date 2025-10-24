@@ -150,12 +150,39 @@ export interface WishlistItem {
   inStock: boolean;
 }
 
+// ==================== PROFILE TYPES ====================
+
 export interface UserProfile {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
-  phone: string;
+  phone?: string;
   gender?: "male" | "female" | "other";
   dateOfBirth?: string;
+  bio?: string;
+  avatar?: {
+    url: string;
+    publicId: string;
+  };
+  role: "customer" | "seller" | "admin";
+  isEmailVerified: boolean;
+  isPhoneVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateProfilePayload {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  dateOfBirth?: string;
+  gender?: "male" | "female" | "other";
+  bio?: string;
+}
+
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
 }

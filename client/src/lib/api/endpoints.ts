@@ -71,6 +71,10 @@ export const API_ENDPOINTS = {
       url: "/users/avatar",
       method: "POST",
     }),
+    deleteAccount: (): ApiEndpoint => ({
+      url: "/users/delete-account",
+      method: "DELETE",
+    }),
     getAddresses: (): ApiEndpoint => ({
       url: "/users/addresses",
       method: "GET",

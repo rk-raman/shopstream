@@ -29,6 +29,7 @@ export interface User {
   isVerified: boolean;
   createdAt: string;
   updatedAt: string;
+  fullName?: string;
 }
 
 // Product types

@@ -5,6 +5,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { User, Package, MapPin, Heart, Power } from "lucide-react";
+import { useAuth } from "@/features/auth/context/AuthContext";
 
 interface MenuItem {
   href: string;
@@ -14,6 +15,7 @@ interface MenuItem {
 
 export default function AccountSidebar() {
   const pathname = usePathname();
+  const { user } = useAuth();
 
   const menuItems: MenuItem[] = [
     {
@@ -55,7 +57,7 @@ export default function AccountSidebar() {
           </div>
           <div>
             <p className="text-sm opacity-90">Hello,</p>
-            <p className="font-semibold text-lg">John Doe</p>
+            <p className="font-semibold text-lg">{user?.fullName}</p>
           </div>
         </div>
       </div>

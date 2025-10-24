@@ -7,6 +7,8 @@ import {
   Address,
   CreateAddressPayload,
   UpdateAddressPayload,
+  UserProfile,
+  UpdateProfilePayload,
 } from "../account/types";
 
 export const userService = {
@@ -56,6 +58,69 @@ export const userService = {
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || "Failed to delete");
+    }
+  },
+
+  // ==================== PROFILE OPERATIONS ====================
+
+  // Get user profile
+  getProfile: async (): Promise<ApiResponse<UserProfile>> => {
+    try {
+      const endpoint = API_ENDPOINTS.USER.getProfile();
+      const response = await axiosCustomer.get(endpoint.url);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch profile"
+      );
+    }
+  },
+
+  // Update user profile
+  updateProfile: async (
+    payload: UpdateProfilePayload
+  ): Promise<ApiResponse<UserProfile>> => {
+    try {
+      const endpoint = API_ENDPOINTS.USER.updateProfile();
+      const response = await axiosCustomer.put(endpoint.url, payload);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to update profile"
+      );
+    }
+  },
+
+  // Upload avatar
+  uploadAvatar: async (file: File): Promise<ApiResponse<UserProfile>> => {
+    try {
+      const formData = new FormData();
+      formData.append("avatar", file);
+
+      const endpoint = API_ENDPOINTS.USER.uploadAvatar();
+      const response = await axiosCustomer.post(endpoint.url, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to upload avatar"
+      );
+    }
+  },
+
+  // Delete account
+  deleteAccount: async (): Promise<ApiResponse<null>> => {
+    try {
+      const endpoint = API_ENDPOINTS.USER.deleteAccount();
+      const response = await axiosCustomer.delete(endpoint.url);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to delete account"
+      );
     }
   },
 };
