@@ -2,7 +2,7 @@ export const productData = {
   id: "prod_001",
   name: "Premium Wireless Headphones",
   price: 299.99,
-  originalPrice: 399.99,
+  originalPrice: 399.98,
   rating: 4.8,
   reviews: 1250,
   inStock: true,
