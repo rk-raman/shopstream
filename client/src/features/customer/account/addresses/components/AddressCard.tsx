@@ -42,7 +42,7 @@ export default function AddressCard({
         </div>
       )}
 
-      <div className="flex items-start space-x-3 mb-4">
+      <div className="flex items-start space-x-3 mb-3">
         {getAddressTypeIcon()}
         <div>
           <h3 className="font-semibold text-gray-900">{address.fullName}</h3>
