@@ -205,10 +205,54 @@ export const API_ENDPOINTS = {
     }),
   },
 
+  // Checkout endpoints
+  CHECKOUT: {
+    createSession: (): ApiEndpoint => ({
+      url: "/checkout/session",
+      method: "POST",
+    }),
+    getSession: (sessionId: string): ApiEndpoint => ({
+      url: `/checkout/session/${sessionId}`,
+      method: "GET",
+    }),
+    setAddress: (sessionId: string): ApiEndpoint => ({
+      url: `/checkout/session/${sessionId}/address`,
+      method: "PUT",
+    }),
+    getSummary: (sessionId: string): ApiEndpoint => ({
+      url: `/checkout/session/${sessionId}/summary`,
+      method: "GET",
+    }),
+    applyCoupon: (sessionId: string): ApiEndpoint => ({
+      url: `/checkout/session/${sessionId}/coupon`,
+      method: "POST",
+    }),
+    removeCoupon: (sessionId: string): ApiEndpoint => ({
+      url: `/checkout/session/${sessionId}/coupon`,
+      method: "DELETE",
+    }),
+    initiatePayment: (sessionId: string): ApiEndpoint => ({
+      url: `/checkout/session/${sessionId}/payment/initiate`,
+      method: "POST",
+    }),
+    confirmPayment: (sessionId: string): ApiEndpoint => ({
+      url: `/checkout/session/${sessionId}/payment/confirm`,
+      method: "POST",
+    }),
+    placeCODOrder: (sessionId: string): ApiEndpoint => ({
+      url: `/checkout/session/${sessionId}/payment/cod`,
+      method: "POST",
+    }),
+    getConfirmation: (sessionId: string): ApiEndpoint => ({
+      url: `/checkout/session/${sessionId}/confirmation`,
+      method: "GET",
+    }),
+  },
+
   // Order endpoints
   ORDERS: {
-    getOrders: (): ApiEndpoint => ({
-      url: "/orders",
+    getMyOrders: (): ApiEndpoint => ({
+      url: "/orders/my-orders",
       method: "GET",
     }),
     getOrder: (id: string): ApiEndpoint => ({
@@ -219,13 +263,17 @@ export const API_ENDPOINTS = {
       url: "/orders",
       method: "POST",
     }),
-    updateOrderStatus: (id: string): ApiEndpoint => ({
-      url: `/orders/${id}/status`,
-      method: "PUT",
-    }),
     cancelOrder: (id: string): ApiEndpoint => ({
       url: `/orders/${id}/cancel`,
+      method: "PATCH",
+    }),
+    requestReturn: (id: string): ApiEndpoint => ({
+      url: `/orders/${id}/return`,
       method: "POST",
+    }),
+    getTracking: (id: string): ApiEndpoint => ({
+      url: `/orders/${id}/tracking`,
+      method: "GET",
     }),
   },
 

@@ -1,4 +1,4 @@
-// client/src/features/customer/account/orders/components/OrderAddressDisplay.tsx
+"use client";
 
 import React from "react";
 import { MapPin } from "lucide-react";
@@ -20,14 +20,14 @@ export default function OrderAddressDisplay({
         </h2>
       </div>
       <div className="space-y-1 text-gray-600">
-        <p className="font-semibold text-gray-900">{address.name}</p>
-        <p>{address.address}</p>
-        <p>{address.locality}</p>
+        <p className="font-semibold text-gray-900">{address.fullName}</p>
+        <p>{address.addressLine1}</p>
+        {address.addressLine2 && <p>{address.addressLine2}</p>}
         <p>
           {address.city}, {address.state} - {address.pincode}
         </p>
-        {address.landmark && (
-          <p className="text-sm text-gray-500">Landmark: {address.landmark}</p>
+        {address.country && address.country !== "India" && (
+          <p>{address.country}</p>
         )}
         <p className="mt-3 font-medium text-gray-900">
           Phone: <span className="font-normal">{address.phone}</span>

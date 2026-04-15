@@ -1,8 +1,7 @@
-// client/src/features/customer/account/orders/components/OrderSearchFilter.tsx
+"use client";
 
 import React from "react";
 import { Search } from "lucide-react";
-import type { OrderStatus } from "../types";
 
 interface OrderSearchFilterProps {
   searchTerm: string;
@@ -38,10 +37,14 @@ export default function OrderSearchFilter({
         className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white"
       >
         <option value="all">All Orders</option>
+        <option value="pending">Pending</option>
+        <option value="confirmed">Confirmed</option>
         <option value="processing">Processing</option>
         <option value="shipped">Shipped</option>
+        <option value="out_for_delivery">Out for Delivery</option>
         <option value="delivered">Delivered</option>
         <option value="cancelled">Cancelled</option>
+        <option value="returned">Returned</option>
       </select>
     </div>
   );

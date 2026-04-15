@@ -110,6 +110,19 @@ const CART_EVENTS = {
   CART_ITEMS_COUNT_CHANGED: "cart.items_count_changed",
 };
 
+const CHECKOUT_EVENTS = {
+  SESSION_CREATED: "checkout.session_created",
+  SESSION_UPDATED: "checkout.session_updated",
+  SESSION_COMPLETED: "checkout.session_completed",
+  SESSION_ABANDONED: "checkout.session_abandoned",
+  SESSION_EXPIRED: "checkout.session_expired",
+  ADDRESS_SELECTED: "checkout.address_selected",
+  COUPON_APPLIED: "checkout.coupon_applied",
+  COUPON_REMOVED: "checkout.coupon_removed",
+  PAYMENT_INITIATED: "checkout.payment_initiated",
+  ORDER_PLACED: "checkout.order_placed",
+};
+
 const REVIEW_EVENTS = {
   REVIEW_CREATED: "review.created",
   REVIEW_UPDATED: "review.updated",
@@ -152,6 +165,7 @@ module.exports = {
   PAYMENT_EVENTS,
   INVENTORY_EVENTS,
   CART_EVENTS,
+  CHECKOUT_EVENTS,
   REVIEW_EVENTS,
   NOTIFICATION_EVENTS,
 };

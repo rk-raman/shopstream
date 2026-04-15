@@ -6,8 +6,11 @@ const orderController = require("../controllers/order.controller");
 const trackingController = require("../controllers/tracking.controller");
 
 // Middleware
-const { authenticate } = require("../../../shared/middleware/auth");
-const { authorize } = require("../../../shared/middleware/authorization");
+const {
+  authenticate,
+  authorize,
+  customerOnly,
+} = require("../../../shared/middleware/auth.middleware");
 
 // Validators
 const {
@@ -50,17 +53,16 @@ router.get(
 router.post(
   "/",
   authenticate,
-  authorize("seller", "admin"),
+  customerOnly,
   validateCreateOrder,
   orderController.createOrder
 );
 
-// Get user's orders
+// Get user's orders (customers can see their own orders)
 router.get(
   "/my-orders",
   authenticate,
-  authorize("seller", "admin"),,
-  validateOrderQuery,
+  customerOnly,
   orderController.getMyOrders
 );
 
@@ -76,7 +78,7 @@ router.get(
 router.patch(
   "/:orderId/cancel",
   authenticate,
-  authorize("seller", "admin"),,
+  customerOnly,
   validateCancelOrder,
   orderController.cancelOrder
 );
@@ -85,7 +87,7 @@ router.patch(
 router.post(
   "/:orderId/return",
   authenticate,
-  authorize("seller", "admin"),,
+  customerOnly,
   validateRequestReturn,
   orderController.requestReturn
 );

@@ -1,5 +1,5 @@
 const Joi = require("joi");
-const { validateRequest } = require("../../../shared/middleware/validation");
+const { validateJoiMultiple: validateRequest } = require("../../../shared/middleware/validation.middleware");
 
 // Common schemas
 const objectIdSchema = Joi.string()

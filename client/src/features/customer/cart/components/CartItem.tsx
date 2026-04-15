@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { Trash2, Plus, Minus, AlertCircle } from "lucide-react";
 import type { CartItem as CartItemType } from "@/types/cart";
-import { ca } from "zod/v4/locales";
 
 interface CartItemProps {
   item: CartItemType;
@@ -18,14 +17,34 @@ export default function CartItem({
   onRemove,
   isUpdating = false,
 }: CartItemProps) {
+  if (!cart_item.product) {
+    return (
+      <div className="flex gap-4 py-4 border-b border-gray-200 px-4 rounded bg-gray-50">
+        <div className="w-24 h-24 bg-gray-200 rounded-lg flex-shrink-0" />
+        <div className="flex-grow flex items-center">
+          <p className="text-sm text-gray-500">This product is no longer available.</p>
+        </div>
+        <button
+          onClick={() => onRemove(cart_item._id)}
+          disabled={isUpdating}
+          className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded transition h-fit disabled:opacity-50"
+          aria-label="Remove item"
+        >
+          <Trash2 size={20} />
+        </button>
+      </div>
+    );
+  }
+
+  const product = cart_item.product;
   const item = {
     ...cart_item,
-    ...cart_item.product,
-    productId: cart_item.product._id,
-    image: cart_item.product.images[0].url,
+    ...product,
+    productId: product._id,
+    image: product.images?.[0]?.url,
     itemId: cart_item._id,
-    inStock: cart_item.product.totalStock > 0,
-    stock: cart_item.product.totalStock,
+    inStock: (product.totalStock ?? product.stock ?? 0) > 0,
+    stock: product.totalStock ?? product.stock ?? 0,
   };
   //console.log("cart item", item);
 
