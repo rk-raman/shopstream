@@ -60,6 +60,7 @@ const checkoutRoutes = require("../modules/checkout/routes/checkout.routes");
 const orderRoutes = require("../modules/order/routes/order.routes");
 const couponRoutes = require("../modules/coupon/routes/coupon.routes");
 const webhookRoutes = require("../modules/notification/webhooks/webhook.routes");
+const reviewRoutes = require("../modules/review/routes/review.routes");
 // Health check endpoint
 router.get("/health", (req, res) => {
   res.json({
@@ -88,6 +89,7 @@ router.use("/checkout", checkoutRoutes);
 router.use("/orders", orderRoutes);
 router.use("/coupons", couponRoutes);
 router.use("/webhooks", webhookRoutes);
+router.use("/reviews", reviewRoutes);
 
 // API Info endpoint
 router.get("/", (req, res) => {

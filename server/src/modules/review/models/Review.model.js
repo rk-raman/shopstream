@@ -30,9 +30,34 @@ const reviewSchema = new mongoose.Schema(
       trim: true,
       maxlength: 2000,
     },
+    images: [
+      {
+        url: String,
+        public_id: String,
+      },
+    ],
     isVerifiedPurchase: {
       type: Boolean,
       default: false,
+    },
+    helpfulCount: {
+      type: Number,
+      default: 0,
+    },
+    helpfulBy: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    sellerReply: {
+      comment: String,
+      repliedAt: Date,
+    },
+    status: {
+      type: String,
+      enum: ["active", "hidden", "flagged"],
+      default: "active",
     },
   },
   {
@@ -40,6 +65,10 @@ const reviewSchema = new mongoose.Schema(
   }
 );
 
-// Export the model (registers 'Review' with mongoose)
+// Compound index: one review per user per product
+reviewSchema.index({ product: 1, user: 1 }, { unique: true });
+reviewSchema.index({ product: 1, rating: -1 });
+reviewSchema.index({ product: 1, createdAt: -1 });
+
 module.exports =
   mongoose.models.Review || mongoose.model("Review", reviewSchema);

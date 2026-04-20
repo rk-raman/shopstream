@@ -109,6 +109,38 @@ export const API_ENDPOINTS = {
     }),
   },
 
+  // Review endpoints
+  REVIEWS: {
+    getProductReviews: (productId: string): ApiEndpoint => ({
+      url: `/reviews/product/${productId}`,
+      method: "GET",
+    }),
+    addReview: (productId: string): ApiEndpoint => ({
+      url: `/reviews/product/${productId}`,
+      method: "POST",
+    }),
+    updateReview: (reviewId: string): ApiEndpoint => ({
+      url: `/reviews/${reviewId}`,
+      method: "PUT",
+    }),
+    deleteReview: (reviewId: string): ApiEndpoint => ({
+      url: `/reviews/${reviewId}`,
+      method: "DELETE",
+    }),
+    markHelpful: (reviewId: string): ApiEndpoint => ({
+      url: `/reviews/${reviewId}/helpful`,
+      method: "POST",
+    }),
+    getMyReviews: (): ApiEndpoint => ({
+      url: "/reviews/my-reviews",
+      method: "GET",
+    }),
+    addSellerReply: (reviewId: string): ApiEndpoint => ({
+      url: `/reviews/${reviewId}/reply`,
+      method: "POST",
+    }),
+  },
+
   // Product endpoints
   PRODUCTS: {
     getProducts: (): ApiEndpoint => ({

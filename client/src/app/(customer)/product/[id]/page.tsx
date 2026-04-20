@@ -5,7 +5,7 @@ import ProductHeader from "@/features/customer/products/components/ProductDetail
 import ProductDescription from "@/features/customer/products/components/ProductDetails/ProductDescription";
 import Specifications from "@/features/customer/products/components/ProductDetails/Specifications";
 import ShippingInfo from "@/features/customer/products/components/ProductDetails/ShippingInfo";
-import Reviews from "@/features/customer/products/components/ProductDetails/Reviews";
+import ReviewSection from "@/features/customer/reviews/components/ReviewSection";
 import CustomerHeader from "@/components/layout/Header/CustomerHeader/CustomerHeader";
 import CustomerFooter from "@/components/layout/Footer/CustomerFooter/CustomerFooter";
 import { getProductById } from "@/features/customer/services/productService";
@@ -68,7 +68,7 @@ export default async function ProductPage({
           </div>
 
           <div className="border-t border-gray-200 pt-8">
-            <Reviews reviews={productData?.reviews || []} />
+            <ReviewSection productId={id} />
           </div>
         </main>
 
