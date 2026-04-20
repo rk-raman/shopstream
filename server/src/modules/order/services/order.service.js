@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Order = require("../models/Order.model");
 const Product = require("../../product/models/Product.model");
 const cartService = require("../../cart/services/cart.service");
@@ -629,6 +630,163 @@ class OrderService {
       data: JSON.stringify(exportData, null, 2),
       contentType: "application/json",
       filename: `orders_${Date.now()}.json`,
+    };
+  }
+
+  /**
+   * Get unique customers for a seller, aggregated from orders
+   */
+  async getSellerCustomers(sellerId, options = {}) {
+    const { page = 1, limit = 20, search, sortBy = "lastOrderDate", sortOrder = "desc" } = options;
+
+    const matchStage = { "items.seller": new mongoose.Types.ObjectId(sellerId) };
+
+    const pipeline = [
+      { $match: matchStage },
+      {
+        $group: {
+          _id: "$customer",
+          totalOrders: { $sum: 1 },
+          totalSpent: { $sum: "$totalAmount" },
+          lastOrderDate: { $max: "$createdAt" },
+          firstOrderDate: { $min: "$createdAt" },
+          statuses: { $push: "$status" },
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "customer",
+        },
+      },
+      { $unwind: "$customer" },
+      {
+        $project: {
+          _id: "$customer._id",
+          firstName: "$customer.firstName",
+          lastName: "$customer.lastName",
+          email: "$customer.email",
+          phone: "$customer.phone",
+          avatar: "$customer.avatar",
+          totalOrders: 1,
+          totalSpent: 1,
+          lastOrderDate: 1,
+          firstOrderDate: 1,
+          deliveredCount: {
+            $size: {
+              $filter: { input: "$statuses", cond: { $eq: ["$$this", "delivered"] } },
+            },
+          },
+          cancelledCount: {
+            $size: {
+              $filter: { input: "$statuses", cond: { $eq: ["$$this", "cancelled"] } },
+            },
+          },
+        },
+      },
+    ];
+
+    // Search filter
+    if (search) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { firstName: { $regex: search, $options: "i" } },
+            { lastName: { $regex: search, $options: "i" } },
+            { email: { $regex: search, $options: "i" } },
+          ],
+        },
+      });
+    }
+
+    // Get total before pagination
+    const countPipeline = [...pipeline, { $count: "total" }];
+    const countResult = await Order.aggregate(countPipeline);
+    const total = countResult[0]?.total || 0;
+
+    // Sort
+    const sortField = sortBy === "totalSpent" ? "totalSpent"
+      : sortBy === "totalOrders" ? "totalOrders"
+      : sortBy === "name" ? "firstName"
+      : "lastOrderDate";
+    pipeline.push({ $sort: { [sortField]: sortOrder === "asc" ? 1 : -1 } });
+
+    // Pagination
+    pipeline.push({ $skip: (page - 1) * limit });
+    pipeline.push({ $limit: limit });
+
+    const customers = await Order.aggregate(pipeline);
+
+    return {
+      customers,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  /**
+   * Get a single customer's details and order history for a seller
+   */
+  async getSellerCustomerDetails(sellerId, customerId, options = {}) {
+    const { page = 1, limit = 10 } = options;
+
+    // Get customer info
+    const User = require("../../user/models/User.model");
+    const customer = await User.findById(customerId).select(
+      "firstName lastName email phone avatar addresses createdAt lastActiveAt"
+    );
+
+    if (!customer) {
+      throw new ApiError(404, "Customer not found");
+    }
+
+    // Get orders from this customer to this seller
+    const query = {
+      customer: customerId,
+      "items.seller": sellerId,
+    };
+
+    const skip = (page - 1) * limit;
+
+    const orders = await Order.find(query)
+      .populate("items.product", "name images")
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(skip);
+
+    const total = await Order.countDocuments(query);
+
+    // Aggregate stats
+    const stats = await Order.aggregate([
+      { $match: { customer: new mongoose.Types.ObjectId(customerId), "items.seller": new mongoose.Types.ObjectId(sellerId) } },
+      {
+        $group: {
+          _id: null,
+          totalOrders: { $sum: 1 },
+          totalSpent: { $sum: "$totalAmount" },
+          avgOrderValue: { $avg: "$totalAmount" },
+          firstOrder: { $min: "$createdAt" },
+          lastOrder: { $max: "$createdAt" },
+        },
+      },
+    ]);
+
+    return {
+      customer,
+      stats: stats[0] || { totalOrders: 0, totalSpent: 0, avgOrderValue: 0 },
+      orders,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
     };
   }
 

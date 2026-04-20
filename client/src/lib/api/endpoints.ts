@@ -329,6 +329,18 @@ export const API_ENDPOINTS = {
     }),
   },
 
+  // Seller customer endpoints
+  SELLER_CUSTOMERS: {
+    getCustomers: (): ApiEndpoint => ({
+      url: "/orders/seller/customers",
+      method: "GET",
+    }),
+    getCustomer: (customerId: string): ApiEndpoint => ({
+      url: `/orders/seller/customers/${customerId}`,
+      method: "GET",
+    }),
+  },
+
   // Seller dashboard endpoints
   SELLER: {
     getDashboard: (): ApiEndpoint => ({

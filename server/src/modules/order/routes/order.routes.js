@@ -175,6 +175,21 @@ router.get(
   orderController.exportOrders
 );
 
+// Seller customers (aggregated from orders)
+router.get(
+  "/seller/customers",
+  authenticate,
+  authorize("seller", "admin"),
+  orderController.getSellerCustomers
+);
+
+router.get(
+  "/seller/customers/:customerId",
+  authenticate,
+  authorize("seller", "admin"),
+  orderController.getSellerCustomerDetails
+);
+
 // ============================================================================
 // ADMIN ROUTES (Admin-only access)
 // ============================================================================

@@ -290,6 +290,42 @@ const exportOrders = asyncHandler(async (req, res) => {
   return res.send(exportData.data);
 });
 
+// Get seller's customers (aggregated from orders)
+const getSellerCustomers = asyncHandler(async (req, res) => {
+  const sellerId = req.user._id;
+  const {
+    page = 1,
+    limit = 20,
+    search,
+    sortBy = "lastOrderDate",
+    sortOrder = "desc",
+  } = req.query;
+
+  const result = await orderService.getSellerCustomers(sellerId, {
+    page: parseInt(page),
+    limit: parseInt(limit),
+    search,
+    sortBy,
+    sortOrder,
+  });
+
+  return res.success(result, "Customers retrieved successfully");
+});
+
+// Get single customer details for seller
+const getSellerCustomerDetails = asyncHandler(async (req, res) => {
+  const sellerId = req.user._id;
+  const { customerId } = req.params;
+  const { page = 1, limit = 10 } = req.query;
+
+  const result = await orderService.getSellerCustomerDetails(sellerId, customerId, {
+    page: parseInt(page),
+    limit: parseInt(limit),
+  });
+
+  return res.success(result, "Customer details retrieved successfully");
+});
+
 module.exports = {
   // Basic order operations
   createOrder,
@@ -318,4 +354,8 @@ module.exports = {
 
   // Bulk operations
   bulkUpdateOrders,
+
+  // Seller customers
+  getSellerCustomers,
+  getSellerCustomerDetails,
 };
