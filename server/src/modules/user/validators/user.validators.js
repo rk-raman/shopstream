@@ -1,3 +1,4 @@
+const Joi = require("joi");
 const {
   validateJoiBody,
   validateJoiQuery,
@@ -146,9 +147,9 @@ const validateAddress = [sanitizeMiddleware, validateJoiBody(addressSchema)];
  */
 const validateAddressId = [
   sanitizeMiddleware,
-  validateJoiParams({
+  validateJoiParams(Joi.object({
     addressId: commonPatterns.objectId.required(),
-  }),
+  })),
 ];
 
 // ==================== WISHLIST VALIDATORS ====================
@@ -167,9 +168,9 @@ const validateWishlistAdd = [
  * Validates product ID from URL parameters
  */
 const validateWishlistRemove = [
-  validateJoiParams({
+  validateJoiParams(Joi.object({
     productId: commonPatterns.objectId.required(),
-  }),
+  })),
 ];
 
 // ==================== QUERY VALIDATORS ====================
@@ -191,9 +192,9 @@ const validateSearch = [validateJoiQuery(searchSchema)];
  * Validates MongoDB ObjectId for user operations
  */
 const validateUserId = [
-  validateJoiParams({
+  validateJoiParams(Joi.object({
     userId: commonPatterns.objectId.required(),
-  }),
+  })),
 ];
 
 // ==================== ADMIN VALIDATORS ====================

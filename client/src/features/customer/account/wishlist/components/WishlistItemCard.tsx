@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Heart, Trash2, ShoppingCart, Star, AlertCircle } from "lucide-react";
 import type { WishlistItem } from "../types";
 
@@ -20,11 +21,18 @@ export default function WishlistItemCard({
     <div className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
       {/* Image Container */}
       <div className="relative w-full h-48 bg-gray-100 overflow-hidden group">
-        <img
-          src={item.image}
-          alt={item.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-        />
+        {item.image ? (
+          <Image
+            src={item.image}
+            alt={item.name}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-300">
+            No image
+          </div>
+        )}
 
         {/* Stock Badge */}
         {!item.inStock && (
@@ -56,7 +64,7 @@ export default function WishlistItemCard({
       <div className="p-4 flex-1 flex flex-col">
         {/* Name */}
         <Link
-          href={`/products/${item.productId}`}
+          href={`/shop/products/${item.productId}`}
           className="font-medium text-gray-900 hover:text-blue-600 transition-colors line-clamp-2 mb-2"
         >
           {item.name}
@@ -75,9 +83,9 @@ export default function WishlistItemCard({
                 }`}
               />
             ))}
-            {item.reviewCount && (
+            {item.reviewCount !== undefined && (
               <span className="text-xs text-gray-600 ml-1">
-                ({item.reviewCount} reviews)
+                ({item.reviewCount})
               </span>
             )}
           </div>
@@ -87,11 +95,11 @@ export default function WishlistItemCard({
         <div className="mb-4">
           <div className="flex items-baseline space-x-2">
             <span className="text-2xl font-bold text-gray-900">
-              ₹{item.price.toLocaleString()}
+              ₹{item.price.toLocaleString("en-IN")}
             </span>
             {item.originalPrice && (
               <span className="text-sm text-gray-500 line-through">
-                ₹{item.originalPrice.toLocaleString()}
+                ₹{item.originalPrice.toLocaleString("en-IN")}
               </span>
             )}
           </div>
@@ -100,7 +108,7 @@ export default function WishlistItemCard({
         {/* Stock Status */}
         <div className="mb-4">
           {item.inStock ? (
-            <p className="text-sm text-green-600 font-medium">✓ In Stock</p>
+            <p className="text-sm text-green-600 font-medium">In Stock</p>
           ) : (
             <p className="text-sm text-gray-500 flex items-center space-x-1">
               <AlertCircle className="w-4 h-4" />

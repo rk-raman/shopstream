@@ -7,7 +7,6 @@ import { useRouter, usePathname } from "next/navigation";
 import {
   Search,
   ShoppingCart,
-  Heart,
   User,
   Menu,
   X,
@@ -93,7 +92,6 @@ export default function CustomerHeader({ children }: CustomerHeaderProps) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [cartCount, setCartCount] = useState(0);
-  const [wishlistCount, setWishlistCount] = useState(0);
   const [notificationCount, setNotificationCount] = useState(3);
 
   const searchRef = useRef<HTMLDivElement>(null);
@@ -297,20 +295,6 @@ export default function CustomerHeader({ children }: CustomerHeaderProps) {
                 </Link>
               )}
 
-              {/* Wishlist */}
-              <Link
-                href="/wishlist"
-                className="hidden md:flex relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Wishlist"
-              >
-                <Heart className="w-6 h-6 text-gray-700" />
-                {wishlistCount > 0 && (
-                  <span className="absolute top-1 right-1 bg-primary text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">
-                    {wishlistCount}
-                  </span>
-                )}
-              </Link>
-
               {/* Cart */}
               <Link
                 href="/cart"
@@ -372,13 +356,6 @@ export default function CustomerHeader({ children }: CustomerHeaderProps) {
                         >
                           <MapPin className="w-4 h-4 text-gray-600" />
                           <span>Addresses</span>
-                        </Link>
-                        <Link
-                          href="/wishlist"
-                          className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
-                        >
-                          <Heart className="w-4 h-4 text-gray-600" />
-                          <span>Wishlist</span>
                         </Link>
                         <Link
                           href="/account/settings"
@@ -546,19 +523,6 @@ export default function CustomerHeader({ children }: CustomerHeaderProps) {
                 >
                   <Package className="w-5 h-5 text-primary" />
                   <span className="text-xs">Orders</span>
-                </Link>
-                <Link
-                  href="/wishlist"
-                  className="flex flex-col items-center gap-1 p-2 bg-white rounded-lg relative"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <Heart className="w-5 h-5 text-primary" />
-                  <span className="text-xs">Wishlist</span>
-                  {wishlistCount > 0 && (
-                    <span className="absolute top-1 right-1 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">
-                      {wishlistCount}
-                    </span>
-                  )}
                 </Link>
                 <Link
                   href="/cart"

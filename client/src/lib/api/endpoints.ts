@@ -91,6 +91,22 @@ export const API_ENDPOINTS = {
       url: `/users/addresses/${id}`,
       method: "DELETE",
     }),
+    getWishlist: (): ApiEndpoint => ({
+      url: "/users/wishlist",
+      method: "GET",
+    }),
+    addToWishlist: (): ApiEndpoint => ({
+      url: "/users/wishlist",
+      method: "POST",
+    }),
+    removeFromWishlist: (productId: string): ApiEndpoint => ({
+      url: `/users/wishlist/${productId}`,
+      method: "DELETE",
+    }),
+    clearWishlist: (): ApiEndpoint => ({
+      url: "/users/wishlist",
+      method: "DELETE",
+    }),
   },
 
   // Product endpoints

@@ -1,6 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useCart } from "@/features/customer/cart/hooks/useCart";
+import { useWishlist } from "@/features/customer/account/wishlist/useWishlist";
 import { Heart, Share2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -23,12 +25,23 @@ export default function ProductHeader({
 }) {
   const { _id } = product;
   const discount = Math.round(((originalPrice - price) / originalPrice) * 100);
-  const { addToCart } = useCart(); // Example usage of useCart hook
+  const { addToCart } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
   const router = useRouter();
+  const [wishlisted, setWishlisted] = useState(false);
+
+  useEffect(() => {
+    setWishlisted(isInWishlist(_id));
+  }, [isInWishlist, _id]);
 
   const handleAddToCart = async () => {
     await addToCart(product, 1);
     router.push("/cart");
+  };
+
+  const handleWishlistToggle = async () => {
+    setWishlisted(!wishlisted);
+    await toggleWishlist(_id);
   };
 
   return (
@@ -57,14 +70,18 @@ export default function ProductHeader({
 
       <div className="flex items-baseline gap-3">
         <span className="text-3xl font-bold text-gray-900">
-          ${price.toFixed(2)}
+          ₹{price.toLocaleString("en-IN")}
         </span>
-        <span className="text-lg text-gray-500 line-through">
-          ${originalPrice.toFixed(2)}
-        </span>
-        <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-semibold">
-          Save {discount}%
-        </span>
+        {originalPrice > price && (
+          <>
+            <span className="text-lg text-gray-500 line-through">
+              ₹{originalPrice.toLocaleString("en-IN")}
+            </span>
+            <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-semibold">
+              Save {discount}%
+            </span>
+          </>
+        )}
       </div>
 
       <div className="flex gap-2">
@@ -90,8 +107,19 @@ export default function ProductHeader({
       </div>
 
       <div className="flex gap-2 pt-2">
-        <button className="flex-1 flex items-center justify-center gap-2 border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold py-2 rounded-lg transition">
-          <Heart size={20} /> Wishlist
+        <button
+          onClick={handleWishlistToggle}
+          className={`flex-1 flex items-center justify-center gap-2 border font-semibold py-2 rounded-lg transition ${
+            wishlisted
+              ? "border-red-300 bg-red-50 text-red-600 hover:bg-red-100"
+              : "border-gray-300 hover:bg-gray-50 text-gray-700"
+          }`}
+        >
+          <Heart
+            size={20}
+            className={wishlisted ? "fill-current" : ""}
+          />
+          {wishlisted ? "Wishlisted" : "Wishlist"}
         </button>
         <button className="flex-1 flex items-center justify-center gap-2 border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold py-2 rounded-lg transition">
           <Share2 size={20} /> Share

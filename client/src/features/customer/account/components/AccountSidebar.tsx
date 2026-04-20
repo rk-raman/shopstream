@@ -1,21 +1,47 @@
-// client/src/features/customer/account/components/AccountSidebar.tsx
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { User, Package, MapPin, Heart, Power } from "lucide-react";
 import { useAuth } from "@/features/auth/context/AuthContext";
+import wishlistService from "@/features/customer/account/wishlist/services/wishlistService";
 
 interface MenuItem {
   href: string;
   label: string;
   icon: React.ReactNode;
+  badge?: number;
 }
 
 export default function AccountSidebar() {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const [wishlistCount, setWishlistCount] = useState(0);
+
+  const fetchCount = () => {
+    wishlistService
+      .getWishlist()
+      .then((res) => {
+        if (res.success && res.data?.wishlist) {
+          setWishlistCount(
+            res.data.wishlist.filter((p: any) => p != null).length
+          );
+        }
+      })
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    if (user) fetchCount();
+  }, [user]);
+
+  // Listen for wishlist changes from other components
+  useEffect(() => {
+    const handler = () => fetchCount();
+    window.addEventListener("wishlist-updated", handler);
+    return () => window.removeEventListener("wishlist-updated", handler);
+  }, []);
 
   const menuItems: MenuItem[] = [
     {
@@ -37,6 +63,7 @@ export default function AccountSidebar() {
       href: "/account/wishlist",
       label: "My Wishlist",
       icon: <Heart className="w-5 h-5" />,
+      badge: wishlistCount,
     },
   ];
 
@@ -68,14 +95,21 @@ export default function AccountSidebar() {
           <Link
             key={item.href}
             href={item.href}
-            className={`flex items-center space-x-3 px-6 py-4 transition-colors ${
+            className={`flex items-center justify-between px-6 py-4 transition-colors ${
               isActive(item.href)
                 ? "bg-blue-50 text-blue-600 border-l-4 border-blue-600"
                 : "text-gray-700 hover:bg-gray-50"
             }`}
           >
-            {item.icon}
-            <span className="font-medium">{item.label}</span>
+            <div className="flex items-center space-x-3">
+              {item.icon}
+              <span className="font-medium">{item.label}</span>
+            </div>
+            {item.badge !== undefined && item.badge > 0 && (
+              <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                {item.badge}
+              </span>
+            )}
           </Link>
         ))}
 
@@ -83,8 +117,7 @@ export default function AccountSidebar() {
         <button
           className="w-full flex items-center space-x-3 px-6 py-4 text-gray-700 hover:bg-gray-50 transition-colors"
           onClick={() => {
-            // Add logout logic here
-            console.log("Logout clicked");
+            if (logout) logout();
           }}
         >
           <Power className="w-5 h-5" />
