@@ -4,6 +4,7 @@ const emailService = require("./email.service");
 const smsService = require("./sms.service");
 const pushService = require("./push.service");
 const NotificationEventPublisher = require("../events/publishers/NotificationEventPublisher");
+const { enqueueNotification } = require("../../../jobs/notificationQueue");
 
 // Initialize event publisher
 const notificationEventPublisher = new NotificationEventPublisher();
@@ -82,7 +83,16 @@ const createNotification = async (notificationData) => {
   }
 };
 
-// Send notification through enabled channels
+// Resolve recipient userId to actual contact details
+const resolveRecipient = async (recipientId) => {
+  const User = require("../../user/models/User.model");
+  const user = await User.findById(recipientId).select(
+    "email phone firstName lastName"
+  );
+  return user;
+};
+
+// Send notification through enabled channels (via Bull queues)
 const sendNotification = async (notificationId) => {
   try {
     const notification = await Notification.findById(notificationId);
@@ -94,105 +104,53 @@ const sendNotification = async (notificationId) => {
       return notification;
     }
 
-    const results = {
-      email: null,
-      sms: null,
-      push: null,
-      inApp: null,
-    };
-
-    // Send email notification
-    if (
-      notification.channels.email.enabled &&
-      !notification.channels.email.sent
-    ) {
-      try {
-        results.email = await emailService.sendEmail({
-          to: notification.recipient,
-          subject: notification.subject || notification.title,
-          html: notification.emailContent?.html,
-          text: notification.emailContent?.text,
-          attachments: notification.emailContent?.attachments,
-        });
-
-        await notification.markChannelAsSent("email", {
-          emailId: results.email.messageId,
-        });
-      } catch (error) {
-        await notification.markChannelAsFailed("email", error.message);
-        results.email = { error: error.message };
-      }
-    }
-
-    // Send SMS notification
-    if (notification.channels.sms.enabled && !notification.channels.sms.sent) {
-      try {
-        results.sms = await smsService.sendSMS({
-          to: notification.recipient,
-          message: notification.smsContent?.message || notification.message,
-        });
-
-        await notification.markChannelAsSent("sms", {
-          messageId: results.sms.messageId,
-        });
-      } catch (error) {
-        await notification.markChannelAsFailed("sms", error.message);
-        results.sms = { error: error.message };
-      }
-    }
-
-    // Send push notification
-    if (
-      notification.channels.push.enabled &&
-      !notification.channels.push.sent
-    ) {
-      try {
-        results.push = await pushService.sendPushNotification({
-          recipient: notification.recipient,
-          title: notification.pushContent?.title || notification.title,
-          body: notification.pushContent?.body || notification.message,
-          icon: notification.pushContent?.icon,
-          image: notification.pushContent?.image,
-          actionUrl:
-            notification.pushContent?.actionUrl || notification.actionUrl,
-          actionText:
-            notification.pushContent?.actionText || notification.actionText,
-          data: notification.actionData,
-        });
-
-        await notification.markChannelAsSent("push", {
-          deviceTokens: results.push.deviceTokens,
-        });
-      } catch (error) {
-        await notification.markChannelAsFailed("push", error.message);
-        results.push = { error: error.message };
-      }
-    }
-
-    // Mark in-app notification as delivered
-    if (notification.channels.inApp.enabled) {
-      await notification.markAsDelivered();
-      results.inApp = { delivered: true };
-    }
-
-    // Update notification status
-    const allChannelsSent = Object.values(notification.channels).every(
-      (channel) => !channel.enabled || channel.sent || channel.delivered
-    );
-
-    if (allChannelsSent) {
-      notification.status = "sent";
+    // Resolve user contact details from recipient ID
+    const user = await resolveRecipient(notification.recipient);
+    if (!user) {
+      console.warn(
+        `[Notification] Recipient ${notification.recipient} not found, skipping send`
+      );
+      notification.status = "failed";
       await notification.save();
+      return notification;
     }
+
+    // Mark in-app as delivered immediately (no queue needed)
+    if (notification.channels.inApp?.enabled) {
+      await notification.markAsDelivered();
+    }
+
+    // Enqueue all external channels (email, SMS, push, WhatsApp)
+    const queueResults = await enqueueNotification({
+      notificationId: notification._id,
+      channels: notification.channels,
+      user,
+      title: notification.title,
+      message: notification.message,
+      subject: notification.subject || notification.title,
+      emailHtml: notification.emailContent?.html,
+      emailText: notification.emailContent?.text,
+      smsMessage:
+        notification.smsContent?.message ||
+        `${notification.title}: ${notification.message}`,
+      pushData: notification.actionData,
+      actionUrl: notification.actionUrl,
+      priority: notification.priority,
+    });
+
+    // Update status to processing (queues will update to sent per-channel)
+    notification.status = "processing";
+    await notification.save();
 
     // Publish event
     await notificationEventPublisher.publishNotificationSent({
       notificationId: notification._id,
       recipient: notification.recipient,
-      results,
+      queued: true,
+      channelsQueued: queueResults.length,
     });
 
-    return { notification, results };
+    return { notification, queued: true };
   } catch (error) {
     throw error;
   }

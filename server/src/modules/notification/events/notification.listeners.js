@@ -289,14 +289,16 @@ class NotificationListeners {
 
   async handleOrderCreated(eventData) {
     try {
-      const { orderId, userId, totalAmount, items } = eventData;
+      const { orderId, orderNumber, customerId, userId, totalAmount, items } = eventData;
+      const recipientId = customerId || userId;
+      const displayOrderId = orderNumber || orderId;
 
       await notificationService.createNotification({
-        recipient: userId,
+        recipient: recipientId,
         type: "order",
         category: "success",
         title: "Order Placed Successfully",
-        message: `Your order #${orderId} has been placed successfully. Total amount: ₹${totalAmount}`,
+        message: `Your order #${displayOrderId} has been placed successfully. Total amount: ₹${totalAmount}`,
         channels: {
           email: { enabled: true },
           inApp: { enabled: true },
@@ -320,10 +322,11 @@ class NotificationListeners {
 
   async handleOrderConfirmed(eventData) {
     try {
-      const { orderId, userId, estimatedDelivery } = eventData;
+      const { orderId, orderNumber, customerId, userId, estimatedDelivery } = eventData;
+      const recipientId = customerId || userId;
 
       await notificationService.createNotification({
-        recipient: userId,
+        recipient: recipientId,
         type: "order",
         category: "success",
         title: "Order Confirmed",
@@ -351,10 +354,11 @@ class NotificationListeners {
 
   async handleOrderShipped(eventData) {
     try {
-      const { orderId, userId, trackingNumber, carrier } = eventData;
+      const { orderId, orderNumber, customerId, userId, trackingNumber, carrier } = eventData;
+      const recipientId = customerId || userId;
 
       await notificationService.createNotification({
-        recipient: userId,
+        recipient: recipientId,
         type: "shipping",
         category: "success",
         title: "Order Shipped",
@@ -383,10 +387,11 @@ class NotificationListeners {
 
   async handleOrderDelivered(eventData) {
     try {
-      const { orderId, userId, deliveredAt } = eventData;
+      const { orderId, orderNumber, customerId, userId, deliveredAt } = eventData;
+      const recipientId = customerId || userId;
 
       await notificationService.createNotification({
-        recipient: userId,
+        recipient: recipientId,
         type: "shipping",
         category: "success",
         title: "Order Delivered",

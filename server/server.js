@@ -1,6 +1,7 @@
 require("dotenv").config();
 const { app, initializeServices } = require("./src/app");
 const eventSystemManager = require("./src/shared/events/eventSystemManager");
+const { closeQueues } = require("./src/jobs/notificationQueue");
 
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || "development";
@@ -36,10 +37,12 @@ async function gracefulShutdown(signal) {
   console.log(`\n📴 Received ${signal}. Shutting down gracefully...`);
 
   try {
+    // Close notification queues
+    await closeQueues();
+
     // Cleanup event-driven architecture
     await eventSystemManager.cleanup();
 
-    // Close database connections, stop background jobs, etc.
     console.log("Graceful shutdown completed");
   } catch (error) {
     console.error("Error during graceful shutdown:", error);
