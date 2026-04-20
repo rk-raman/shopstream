@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Inventory = require("../models/Inventory.model");
 const Product = require("../../product/models/Product.model");
 const ApiError = require("../../../shared/utils/apiError");
@@ -144,38 +145,112 @@ class InventoryService {
     return inventory.availableStock >= requestedQuantity;
   }
 
+  /**
+   * ATOMIC reserve stock using findOneAndUpdate with $inc.
+   * The condition `availableStock >= quantity` is checked atomically
+   * with the decrement — if two requests race, only one succeeds.
+   */
   async reserveStock(productId, variantSku = null, quantity, orderId) {
-    let query = { product: productId };
-    if (variantSku) {
-      query["variant.sku"] = variantSku;
-    }
+    let query = { product: productId, availableStock: { $gte: quantity } };
+    if (variantSku) query["variant.sku"] = variantSku;
 
-    const inventory = await Inventory.findOne(query);
+    const inventory = await Inventory.findOneAndUpdate(
+      query,
+      {
+        $inc: { availableStock: -quantity, reservedStock: quantity },
+        $push: {
+          movements: {
+            type: "reserved",
+            quantity,
+            reference: String(orderId),
+            timestamp: new Date(),
+          },
+        },
+      },
+      { new: true }
+    );
+
     if (!inventory) {
-      throw new ApiError(404, "Inventory record not found");
+      const exists = await Inventory.findOne({
+        product: productId,
+        ...(variantSku ? { "variant.sku": variantSku } : {}),
+      });
+      if (!exists) throw new ApiError(404, "Inventory record not found");
+      throw new ApiError(409, `Insufficient stock. Only ${exists.availableStock} available.`);
     }
 
-    try {
-      await inventory.reserveStock(quantity, orderId);
-      return true;
-    } catch (error) {
-      throw new ApiError(400, error.message);
-    }
+    return inventory;
   }
 
+  /**
+   * ATOMIC release stock (reverse of reserve).
+   */
   async releaseStock(productId, variantSku = null, quantity, orderId) {
-    let query = { product: productId };
-    if (variantSku) {
-      query["variant.sku"] = variantSku;
-    }
+    let query = { product: productId, reservedStock: { $gte: quantity } };
+    if (variantSku) query["variant.sku"] = variantSku;
 
-    const inventory = await Inventory.findOne(query);
+    const inventory = await Inventory.findOneAndUpdate(
+      query,
+      {
+        $inc: { availableStock: quantity, reservedStock: -quantity },
+        $push: {
+          movements: {
+            type: "released",
+            quantity,
+            reference: String(orderId),
+            timestamp: new Date(),
+          },
+        },
+      },
+      { new: true }
+    );
+
     if (!inventory) {
-      throw new ApiError(404, "Inventory record not found");
+      throw new ApiError(404, "Inventory record not found or nothing to release");
+    }
+    return inventory;
+  }
+
+  /**
+   * ATOMIC stock decrement on Product model directly.
+   * Uses findOneAndUpdate with $gte condition — atomic check-and-decrement.
+   */
+  async atomicDecrementProductStock(productId, variantId, quantity) {
+    if (variantId) {
+      const product = await Product.findOneAndUpdate(
+        { _id: productId, "variants._id": variantId, "variants.stock": { $gte: quantity } },
+        { $inc: { "variants.$.stock": -quantity } },
+        { new: true }
+      );
+      if (!product) throw new ApiError(409, "Insufficient variant stock");
+      return product;
     }
 
-    await inventory.releaseStock(quantity, orderId);
-    return true;
+    const product = await Product.findOneAndUpdate(
+      { _id: productId, stock: { $gte: quantity } },
+      { $inc: { stock: -quantity } },
+      { new: true }
+    );
+    if (!product) throw new ApiError(409, "Insufficient stock");
+    return product;
+  }
+
+  /**
+   * ATOMIC restore product stock (reverse of decrement).
+   */
+  async atomicIncrementProductStock(productId, variantId, quantity) {
+    if (variantId) {
+      return await Product.findOneAndUpdate(
+        { _id: productId, "variants._id": variantId },
+        { $inc: { "variants.$.stock": quantity } },
+        { new: true }
+      );
+    }
+    return await Product.findOneAndUpdate(
+      { _id: productId },
+      { $inc: { stock: quantity } },
+      { new: true }
+    );
   }
 
   async getLowStockItems(threshold = null) {

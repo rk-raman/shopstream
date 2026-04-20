@@ -60,14 +60,14 @@ class CartService {
       price = variant.price;
       discountPrice = variant.discountPrice;
 
-      // Check variant stock
+      // Soft stock check (final validation happens atomically at checkout)
       if (variant.stock < quantity) {
-        throw new ApiError(400, "Insufficient stock for selected variant");
+        throw new ApiError(400, `Only ${variant.stock} units available for this variant`);
       }
     } else {
-      // Check product stock
+      // Soft stock check
       if (product.stock < quantity) {
-        throw new ApiError(400, "Insufficient stock");
+        throw new ApiError(400, `Only ${product.stock} units available`);
       }
     }
 

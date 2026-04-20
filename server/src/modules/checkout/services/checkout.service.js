@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const CheckoutSession = require("../models/CheckoutSession.model");
 const Cart = require("../../cart/models/Cart.model");
 const Product = require("../../product/models/Product.model");
@@ -8,6 +9,8 @@ const inventoryService = require("../../inventory/services/inventory.service");
 const ApiError = require("../../../shared/utils/apiError");
 const eventEmitter = require("../../../shared/events/eventEmitter");
 const { ORDER_EVENTS, CHECKOUT_EVENTS } = require("../../../shared/events/eventTypes");
+const RedisLock = require("../../../shared/utils/redisLock");
+const { getRedisClient } = require("../../../config/redis");
 
 class CheckoutService {
   /**
@@ -258,6 +261,14 @@ class CheckoutService {
   /**
    * Confirm payment and place order
    */
+  /**
+   * Confirm payment and place order.
+   *
+   * Concurrency strategy (3 layers):
+   * 1. Redis distributed lock — per-session, prevents double-submit
+   * 2. Atomic MongoDB $inc — inventory reservation can't oversell
+   * 3. Rollback — if order save fails, reserved stock is released
+   */
   async confirmAndPlaceOrder(sessionId, userId, paymentData = {}) {
     const session = await this.getSession(sessionId, userId);
 
@@ -269,148 +280,207 @@ class CheckoutService {
       throw ApiError.badRequest("Please select a payment method");
     }
 
-    // Validate inventory one final time
-    for (const item of session.items) {
-      const product = await Product.findById(item.product);
-      if (!product || product.status !== "active") {
-        throw ApiError.badRequest(`${item.productName} is no longer available`);
-      }
-
-      if (product.hasVariants && item.variant?.variantId) {
-        const variant = product.variants.id(item.variant.variantId);
-        if (!variant || variant.stock < item.quantity) {
-          throw ApiError.badRequest(
-            `Insufficient stock for ${item.productName}`
-          );
-        }
-      } else if (product.stock < item.quantity) {
-        throw ApiError.badRequest(
-          `Insufficient stock for ${item.productName}`
-        );
-      }
+    // Layer 1: Redis lock — prevents double-submit on same session
+    let redisClient;
+    try {
+      redisClient = getRedisClient();
+    } catch {
+      // Redis not available — proceed without distributed lock
+      redisClient = null;
     }
 
-    // Generate order number (pre-save hook can't run before required validation)
-    const orderCount = await Order.countDocuments();
-    const orderNumber = `ORD${Date.now()}${(orderCount + 1)
-      .toString()
-      .padStart(4, "0")}`;
+    const lock = redisClient ? new RedisLock(redisClient) : null;
+    const lockKey = `checkout:${sessionId}`;
 
-    // Create the order
-    const order = new Order({
-      orderNumber,
-      customer: userId,
-      items: session.items.map((item) => ({
-        product: item.product,
-        productName: item.productName,
-        productImage: item.productImage,
-        variant: item.variant?.variantId
-          ? {
-              name: item.variant.name,
-              value: item.variant.value,
-              sku: item.variant.sku,
-            }
-          : undefined,
-        quantity: item.quantity,
-        price: item.price,
-        discountPrice: item.discountPrice,
-        seller: item.seller,
-      })),
-      subtotal: session.pricing.subtotal,
-      tax: session.pricing.tax,
-      shippingCharges: session.pricing.deliveryCharge,
-      discount: session.pricing.discount,
-      totalAmount: session.pricing.total,
-      shippingAddress: {
-        fullName: session.deliveryAddress.fullName,
-        addressLine1: session.deliveryAddress.addressLine1,
-        addressLine2: session.deliveryAddress.addressLine2,
-        city: session.deliveryAddress.city,
-        state: session.deliveryAddress.state,
-        pincode: session.deliveryAddress.pincode,
-        country: session.deliveryAddress.country,
-        phone: session.deliveryAddress.phone,
-      },
-      payment: {
-        method: session.selectedPaymentMethod,
-        status:
-          session.selectedPaymentMethod === "cod" ? "pending" : "paid",
-        transactionId: paymentData.transactionId || null,
-        paidAt:
-          session.selectedPaymentMethod !== "cod" ? new Date() : null,
-      },
-      shipping: {
-        method: "standard",
-        estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-      },
-      coupon: session.appliedCoupon
-        ? {
-            code: session.appliedCoupon.code,
-            discountAmount: session.appliedCoupon.discountAmount,
-            discountType: session.appliedCoupon.discountType,
+    const executePlaceOrder = async () => {
+      // Layer 2: Atomic stock reservation FIRST (before creating order)
+      // Reserve stock for each item using atomic $inc with $gte condition.
+      // If any item fails, roll back all previously reserved items.
+      const reservedItems = [];
+
+      try {
+        for (const item of session.items) {
+          // Validate product is still active
+          const product = await Product.findById(item.product);
+          if (!product || product.status !== "active") {
+            throw ApiError.badRequest(
+              `${item.productName} is no longer available`
+            );
           }
-        : undefined,
-      statusHistory: [
-        {
-          status: "pending",
-          note: "Order placed via checkout",
-          timestamp: new Date(),
-        },
-      ],
-    });
 
-    await order.save();
+          // Atomic reserve via inventory service (uses findOneAndUpdate with $gte)
+          try {
+            await inventoryService.reserveStock(
+              item.product,
+              item.variant?.sku,
+              item.quantity,
+              sessionId // temporary reference, will update to orderId
+            );
+            reservedItems.push(item);
+          } catch (inventoryErr) {
+            // Also try direct product stock decrement as fallback
+            try {
+              await inventoryService.atomicDecrementProductStock(
+                item.product,
+                item.variant?.variantId,
+                item.quantity
+              );
+              reservedItems.push(item);
+            } catch {
+              throw ApiError.badRequest(
+                `Insufficient stock for ${item.productName}. Someone else may have purchased it.`
+              );
+            }
+          }
+        }
 
-    // Reserve inventory for each item
-    for (const item of session.items) {
-      try {
-        await inventoryService.reserveStock(
-          item.product,
-          item.variant?.sku,
-          item.quantity,
-          order._id
-        );
-      } catch (err) {
-        // Log but don't fail the order
-        console.error("Inventory reservation error:", err.message);
+        // All stock reserved — now create the order
+        const orderCount = await Order.countDocuments();
+        const orderNumber = `ORD${Date.now()}${(orderCount + 1)
+          .toString()
+          .padStart(4, "0")}`;
+
+        const order = new Order({
+          orderNumber,
+          customer: userId,
+          items: session.items.map((item) => ({
+            product: item.product,
+            productName: item.productName,
+            productImage: item.productImage,
+            variant: item.variant?.variantId
+              ? {
+                  name: item.variant.name,
+                  value: item.variant.value,
+                  sku: item.variant.sku,
+                }
+              : undefined,
+            quantity: item.quantity,
+            price: item.price,
+            discountPrice: item.discountPrice,
+            seller: item.seller,
+          })),
+          subtotal: session.pricing.subtotal,
+          tax: session.pricing.tax,
+          shippingCharges: session.pricing.deliveryCharge,
+          discount: session.pricing.discount,
+          totalAmount: session.pricing.total,
+          shippingAddress: {
+            fullName: session.deliveryAddress.fullName,
+            addressLine1: session.deliveryAddress.addressLine1,
+            addressLine2: session.deliveryAddress.addressLine2,
+            city: session.deliveryAddress.city,
+            state: session.deliveryAddress.state,
+            pincode: session.deliveryAddress.pincode,
+            country: session.deliveryAddress.country,
+            phone: session.deliveryAddress.phone,
+          },
+          payment: {
+            method: session.selectedPaymentMethod,
+            status:
+              session.selectedPaymentMethod === "cod" ? "pending" : "paid",
+            transactionId: paymentData.transactionId || null,
+            paidAt:
+              session.selectedPaymentMethod !== "cod" ? new Date() : null,
+          },
+          shipping: {
+            method: "standard",
+            estimatedDelivery: new Date(
+              Date.now() + 5 * 24 * 60 * 60 * 1000
+            ),
+          },
+          coupon: session.appliedCoupon
+            ? {
+                code: session.appliedCoupon.code,
+                discountAmount: session.appliedCoupon.discountAmount,
+                discountType: session.appliedCoupon.discountType,
+              }
+            : undefined,
+          statusHistory: [
+            {
+              status: "pending",
+              note: "Order placed via checkout",
+              timestamp: new Date(),
+            },
+          ],
+        });
+
+        await order.save();
+
+        // Mark coupon as used
+        if (session.appliedCoupon?.couponId) {
+          try {
+            await couponService.markUsed(
+              session.appliedCoupon.couponId,
+              userId
+            );
+          } catch (err) {
+            console.error("Coupon mark-used error:", err.message);
+          }
+        }
+
+        // Clear cart
+        const cart = await Cart.findOne({ user: userId });
+        if (cart) await cart.clear();
+
+        // Update session
+        session.status = "completed";
+        session.orderId = order._id;
+        session.completedAt = new Date();
+        await session.save();
+
+        // Emit events
+        eventEmitter.publish(ORDER_EVENTS.ORDER_CREATED, {
+          orderId: order._id,
+          orderNumber: order.orderNumber,
+          customerId: userId,
+          totalAmount: session.pricing.total,
+          paymentMethod: session.selectedPaymentMethod,
+          timestamp: new Date().toISOString(),
+        });
+
+        return {
+          order: await Order.findById(order._id).populate(
+            "items.product",
+            "name images"
+          ),
+          session,
+        };
+      } catch (error) {
+        // Layer 3: ROLLBACK — release any stock we reserved
+        for (const item of reservedItems) {
+          try {
+            await inventoryService.releaseStock(
+              item.product,
+              item.variant?.sku,
+              item.quantity,
+              sessionId
+            );
+          } catch (rollbackErr) {
+            // Also try restoring product stock
+            try {
+              await inventoryService.atomicIncrementProductStock(
+                item.product,
+                item.variant?.variantId,
+                item.quantity
+              );
+            } catch {
+              console.error(
+                `[CRITICAL] Failed to rollback stock for product ${item.product}:`,
+                rollbackErr.message
+              );
+            }
+          }
+        }
+
+        throw error; // Re-throw the original error
       }
-    }
-
-    // Mark coupon as used
-    if (session.appliedCoupon?.couponId) {
-      try {
-        await couponService.markUsed(session.appliedCoupon.couponId, userId);
-      } catch (err) {
-        console.error("Coupon mark-used error:", err.message);
-      }
-    }
-
-    // Clear the user's cart
-    const cart = await Cart.findOne({ user: userId });
-    if (cart) {
-      await cart.clear();
-    }
-
-    // Update session to completed
-    session.status = "completed";
-    session.orderId = order._id;
-    session.completedAt = new Date();
-    await session.save();
-
-    // Emit events
-    eventEmitter.publish(ORDER_EVENTS.ORDER_CREATED, {
-      orderId: order._id,
-      orderNumber: order.orderNumber,
-      customerId: userId,
-      totalAmount: session.pricing.total,
-      paymentMethod: session.selectedPaymentMethod,
-      timestamp: new Date().toISOString(),
-    });
-
-    return {
-      order: await Order.findById(order._id).populate("items.product", "name images"),
-      session,
     };
+
+    // Execute with or without Redis lock
+    if (lock) {
+      return await lock.withLock(lockKey, 15000, executePlaceOrder);
+    }
+    return await executePlaceOrder();
   }
 
   /**
