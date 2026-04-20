@@ -250,8 +250,12 @@ class OrderService {
   async getOrderDetails(orderId, userId, role) {
     let query = { _id: orderId };
 
-    // Non-admin users can only see their own orders
-    if (role !== "admin") {
+    // Non-admin users can only see orders they're involved in
+    if (role === "seller") {
+      // Sellers can see orders that contain their items
+      query["items.seller"] = userId;
+    } else if (role !== "admin") {
+      // Customers can only see their own orders
       query.customer = userId;
     }
 

@@ -301,6 +301,34 @@ export const API_ENDPOINTS = {
     }),
   },
 
+  // Seller order endpoints
+  SELLER_ORDERS: {
+    getMyOrders: (): ApiEndpoint => ({
+      url: "/orders/seller/my-orders",
+      method: "GET",
+    }),
+    getOrder: (id: string): ApiEndpoint => ({
+      url: `/orders/${id}`,
+      method: "GET",
+    }),
+    updateStatus: (id: string): ApiEndpoint => ({
+      url: `/orders/${id}/status`,
+      method: "PATCH",
+    }),
+    updateTracking: (id: string): ApiEndpoint => ({
+      url: `/orders/${id}/tracking`,
+      method: "PATCH",
+    }),
+    processReturn: (id: string): ApiEndpoint => ({
+      url: `/orders/${id}/return/process`,
+      method: "PATCH",
+    }),
+    getStats: (): ApiEndpoint => ({
+      url: "/orders/analytics/stats",
+      method: "GET",
+    }),
+  },
+
   // Seller dashboard endpoints
   SELLER: {
     getDashboard: (): ApiEndpoint => ({

@@ -46,7 +46,7 @@ const getMyOrders = asyncHandler(async (req, res) => {
     options.page,
     options.limit
   );
-  return res.paginated(result, "Orders retrieved successfully");
+  return res.success(result, "Orders retrieved successfully");
 });
 
 // Update order status (Admin/Seller only)
@@ -107,8 +107,8 @@ const getAllOrders = asyncHandler(async (req, res) => {
     sortOrder,
   };
 
-  const orders = await orderService.getAllOrders(filters, options);
-  return res.paginated(orders, "Orders retrieved successfully");
+  const result = await orderService.getAllOrders(filters, options);
+  return res.success(result, "Orders retrieved successfully");
 });
 
 // Get orders by seller
@@ -131,8 +131,8 @@ const getOrdersBySeller = asyncHandler(async (req, res) => {
     sortOrder,
   };
 
-  const orders = await orderService.getOrdersBySeller(sellerId, options);
-  return res.paginated(orders, "Seller orders retrieved successfully");
+  const result = await orderService.getOrdersBySeller(sellerId, options);
+  return res.success(result, "Seller orders retrieved successfully");
 });
 
 // Process payment

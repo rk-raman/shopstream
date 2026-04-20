@@ -116,7 +116,7 @@ router.get(
 router.get(
   "/seller/my-orders",
   authenticate,
-  authorize(["seller", "admin"]),
+  authorize("seller", "admin"),
   validateOrderQuery,
   orderController.getOrdersBySeller
 );
@@ -125,7 +125,7 @@ router.get(
 router.patch(
   "/:orderId/status",
   authenticate,
-  authorize(["seller", "admin"]),
+  authorize("seller", "admin"),
   validateUpdateOrderStatus,
   orderController.updateOrderStatus
 );
@@ -134,7 +134,7 @@ router.patch(
 router.patch(
   "/:orderId/tracking",
   authenticate,
-  authorize(["seller", "admin"]),
+  authorize("seller", "admin"),
   validateUpdateTracking,
   trackingController.updateTracking
 );
@@ -143,7 +143,7 @@ router.patch(
 router.post(
   "/:orderId/tracking/events",
   authenticate,
-  authorize(["seller", "admin"]),
+  authorize("seller", "admin"),
   validateAddTrackingEvent,
   trackingController.addTrackingEvent
 );
@@ -152,7 +152,7 @@ router.post(
 router.patch(
   "/:orderId/return/process",
   authenticate,
-  authorize(["seller", "admin"]),
+  authorize("seller", "admin"),
   validateProcessReturn,
   orderController.processReturnRequest
 );
@@ -161,7 +161,7 @@ router.patch(
 router.get(
   "/analytics/stats",
   authenticate,
-  authorize(["seller", "admin"]),
+  authorize("seller", "admin"),
   validateOrderStatsQuery,
   orderController.getOrderStats
 );
@@ -170,7 +170,7 @@ router.get(
 router.get(
   "/export/data",
   authenticate,
-  authorize(["seller", "admin"]),
+  authorize("seller", "admin"),
   validateExportOrdersQuery,
   orderController.exportOrders
 );
@@ -183,7 +183,7 @@ router.get(
 router.get(
   "/admin/all",
   authenticate,
-  authorize(["admin"]),
+  authorize("admin"),
   validateOrderQuery,
   orderController.getAllOrders
 );
@@ -192,7 +192,7 @@ router.get(
 router.get(
   "/admin/seller/:sellerId",
   authenticate,
-  authorize(["admin"]),
+  authorize("admin"),
   validateSellerIdParam,
   validateOrderQuery,
   orderController.getOrdersBySeller
@@ -202,7 +202,7 @@ router.get(
 router.post(
   "/:orderId/payment/process",
   authenticate,
-  authorize(["admin"]),
+  authorize("admin"),
   validateProcessPayment,
   orderController.processPayment
 );
@@ -211,7 +211,7 @@ router.post(
 router.post(
   "/:orderId/refund",
   authenticate,
-  authorize(["admin"]),
+  authorize("admin"),
   validateInitiateRefund,
   orderController.initiateRefund
 );
@@ -220,7 +220,7 @@ router.post(
 router.patch(
   "/admin/bulk-update",
   authenticate,
-  authorize(["admin"]),
+  authorize("admin"),
   validateBulkUpdateOrders,
   orderController.bulkUpdateOrders
 );
@@ -229,7 +229,7 @@ router.patch(
 router.patch(
   "/admin/bulk-update-tracking",
   authenticate,
-  authorize(["admin"]),
+  authorize("admin"),
   validateBulkUpdateTracking,
   trackingController.bulkUpdateTracking
 );
@@ -238,7 +238,7 @@ router.patch(
 router.get(
   "/admin/tracking/report",
   authenticate,
-  authorize(["admin"]),
+  authorize("admin"),
   validateTrackingReportQuery,
   trackingController.generateTrackingReport
 );
