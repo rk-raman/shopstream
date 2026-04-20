@@ -1,21 +1,18 @@
-import React from "react";
-import { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Products - ShopStream",
-  description: "Browse our wide selection of products",
-};
+import React from "react";
+import CustomerHeader from "@/components/layout/Header/CustomerHeader/CustomerHeader";
+import CustomerFooter from "@/components/layout/Footer/CustomerFooter/CustomerFooter";
+import ProductListingContainer from "@/features/customer/products/components/ProductList/ProductListingContainer";
 
 export default function ProductsPage() {
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">All Products</h1>
-      <div className="text-center py-16">
-        <p className="text-gray-500 text-lg">Products will be displayed here</p>
-        <p className="text-gray-400 mt-2">
-          Product listing functionality coming soon
-        </p>
-      </div>
+    <div className="min-h-screen flex flex-col">
+      <CustomerHeader />
+      <main className="flex-1">
+        <ProductListingContainer />
+      </main>
+      <CustomerFooter />
     </div>
   );
 }

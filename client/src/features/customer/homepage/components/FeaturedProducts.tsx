@@ -200,9 +200,9 @@ const FeaturedProducts: React.FC = () => {
 
         {/* View All Button */}
         <div className="flex justify-center mt-8">
-          <button className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all hover:scale-105 transform">
+          <Link href="/shop/products" className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all hover:scale-105 transform">
             View All Products
-          </button>
+          </Link>
         </div>
       </div>
     </section>

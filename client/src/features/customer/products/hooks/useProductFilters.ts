@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { DEFAULT_PRICE_RANGE } from "../constants";
-import { SortOption, FilterState, Product } from "../types";
+import { FilterState } from "../types";
 
 export const useProductFilters = () => {
   const [filters, setFilters] = useState<FilterState>({
@@ -8,56 +8,62 @@ export const useProductFilters = () => {
     brands: [],
     priceRange: DEFAULT_PRICE_RANGE,
     minRating: 0,
+    search: "",
   });
 
-  const toggleCategory = (category: string) => {
+  const toggleCategory = useCallback((category: string) => {
     setFilters((prev) => ({
       ...prev,
       categories: prev.categories.includes(category)
         ? prev.categories.filter((c) => c !== category)
         : [...prev.categories, category],
     }));
-  };
+  }, []);
 
-  const toggleBrand = (brand: string) => {
+  const toggleBrand = useCallback((brand: string) => {
     setFilters((prev) => ({
       ...prev,
       brands: prev.brands.includes(brand)
         ? prev.brands.filter((b) => b !== brand)
         : [...prev.brands, brand],
     }));
-  };
+  }, []);
 
-  const setPriceRange = (range: [number, number]) => {
+  const setPriceRange = useCallback((range: [number, number]) => {
     setFilters((prev) => ({ ...prev, priceRange: range }));
-  };
+  }, []);
 
-  const setMinRating = (rating: number) => {
+  const setMinRating = useCallback((rating: number) => {
     setFilters((prev) => ({ ...prev, minRating: rating }));
-  };
+  }, []);
 
-  const clearFilters = () => {
+  const setSearch = useCallback((search: string) => {
+    setFilters((prev) => ({ ...prev, search }));
+  }, []);
+
+  const clearFilters = useCallback(() => {
     setFilters({
       categories: [],
       brands: [],
       priceRange: DEFAULT_PRICE_RANGE,
       minRating: 0,
+      search: "",
     });
-  };
+  }, []);
 
-  const removeCategory = (category: string) => {
+  const removeCategory = useCallback((category: string) => {
     setFilters((prev) => ({
       ...prev,
       categories: prev.categories.filter((c) => c !== category),
     }));
-  };
+  }, []);
 
-  const removeBrand = (brand: string) => {
+  const removeBrand = useCallback((brand: string) => {
     setFilters((prev) => ({
       ...prev,
       brands: prev.brands.filter((b) => b !== brand),
     }));
-  };
+  }, []);
 
   return {
     filters,
@@ -65,6 +71,7 @@ export const useProductFilters = () => {
     toggleBrand,
     setPriceRange,
     setMinRating,
+    setSearch,
     clearFilters,
     removeCategory,
     removeBrand,

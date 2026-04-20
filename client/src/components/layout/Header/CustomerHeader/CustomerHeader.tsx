@@ -16,6 +16,7 @@ import {
   MapPin,
   Settings,
   Bell,
+  Heart,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/context/AuthContext";
 
@@ -349,6 +350,13 @@ export default function CustomerHeader({ children }: CustomerHeaderProps) {
                         >
                           <Package className="w-4 h-4 text-gray-600" />
                           <span>Orders</span>
+                        </Link>
+                             <Link
+                          href="/account/wishlist"
+                          className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
+                        >
+                          <Heart className="w-4 h-4 text-gray-600" />
+                          <span>Wishlist</span>
                         </Link>
                         <Link
                           href="/account/addresses"
