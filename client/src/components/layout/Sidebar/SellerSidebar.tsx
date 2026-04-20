@@ -17,6 +17,7 @@ import {
   FolderOpen,
   FolderTree,
   Building,
+  Ticket,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -55,6 +56,15 @@ const navigation = [
     children: [
       { name: "All Collections", href: "/dashboard/collections" },
       { name: "Create Collection", href: "/dashboard/collections/create" },
+    ],
+  },
+  {
+    name: "Coupons",
+    href: "/dashboard/coupons",
+    icon: Ticket,
+    children: [
+      { name: "All Coupons", href: "/dashboard/coupons" },
+      { name: "Create Coupon", href: "/dashboard/coupons/create" },
     ],
   },
   {

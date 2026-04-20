@@ -58,6 +58,7 @@ const uploadRoutes = require("../modules/upload/routes/upload.routes");
 const addressRoutes = require("../modules/user/routes/address.routes");
 const checkoutRoutes = require("../modules/checkout/routes/checkout.routes");
 const orderRoutes = require("../modules/order/routes/order.routes");
+const couponRoutes = require("../modules/coupon/routes/coupon.routes");
 // Health check endpoint
 router.get("/health", (req, res) => {
   res.json({
@@ -84,6 +85,7 @@ router.use("/payments", paymentRoutes);
 router.use("/uploads", uploadRoutes);
 router.use("/checkout", checkoutRoutes);
 router.use("/orders", orderRoutes);
+router.use("/coupons", couponRoutes);
 
 // API Info endpoint
 router.get("/", (req, res) => {

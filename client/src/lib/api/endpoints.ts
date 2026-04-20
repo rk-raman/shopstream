@@ -317,6 +317,42 @@ export const API_ENDPOINTS = {
     }),
   },
 
+  // Coupon management endpoints (seller/admin)
+  COUPONS: {
+    getAll: (): ApiEndpoint => ({
+      url: "/coupons",
+      method: "GET",
+    }),
+    getById: (id: string): ApiEndpoint => ({
+      url: `/coupons/${id}`,
+      method: "GET",
+    }),
+    create: (): ApiEndpoint => ({
+      url: "/coupons",
+      method: "POST",
+    }),
+    update: (id: string): ApiEndpoint => ({
+      url: `/coupons/${id}`,
+      method: "PUT",
+    }),
+    delete: (id: string): ApiEndpoint => ({
+      url: `/coupons/${id}`,
+      method: "DELETE",
+    }),
+    toggle: (id: string): ApiEndpoint => ({
+      url: `/coupons/${id}/toggle`,
+      method: "PATCH",
+    }),
+    getStats: (): ApiEndpoint => ({
+      url: "/coupons/stats",
+      method: "GET",
+    }),
+    getUsage: (id: string): ApiEndpoint => ({
+      url: `/coupons/${id}/usage`,
+      method: "GET",
+    }),
+  },
+
   // Seller order endpoints
   SELLER_ORDERS: {
     getMyOrders: (): ApiEndpoint => ({

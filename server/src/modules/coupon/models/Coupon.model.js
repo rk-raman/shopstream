@@ -37,7 +37,7 @@ const couponSchema = new mongoose.Schema(
     },
     validTo: {
       type: Date,
-      required: true,
+      default: null,
     },
     usageLimit: {
       type: Number,
@@ -90,9 +90,9 @@ couponSchema.methods.isValid = function (orderAmount, userId) {
   const now = new Date();
 
   if (!this.isActive) return { valid: false, message: "Coupon is inactive" };
-  if (now < this.validFrom)
+  if (this.validFrom && now < this.validFrom)
     return { valid: false, message: "Coupon is not yet active" };
-  if (now > this.validTo)
+  if (this.validTo && now > this.validTo)
     return { valid: false, message: "Coupon has expired" };
   if (this.usageLimit && this.usedCount >= this.usageLimit)
     return { valid: false, message: "Coupon usage limit reached" };
