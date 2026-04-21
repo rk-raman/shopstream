@@ -1,5 +1,6 @@
 const orderService = require("../services/order.service");
 const trackingService = require("../services/tracking.service");
+const invoiceService = require("../services/invoice.service");
 const ApiError = require("../../../shared/utils/apiError");
 const asyncHandler = require("../../../shared/utils/asyncHandler");
 
@@ -326,6 +327,23 @@ const getSellerCustomerDetails = asyncHandler(async (req, res) => {
   return res.success(result, "Customer details retrieved successfully");
 });
 
+// Download invoice PDF
+const downloadInvoice = asyncHandler(async (req, res) => {
+  const { orderId } = req.params;
+  const userId = req.user._id.toString();
+  const role = req.user.role;
+
+  const pdfStream = await invoiceService.generateInvoice(orderId, userId, role);
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="invoice-${orderId}.pdf"`
+  );
+
+  pdfStream.pipe(res);
+});
+
 module.exports = {
   // Basic order operations
   createOrder,
@@ -358,4 +376,7 @@ module.exports = {
   // Seller customers
   getSellerCustomers,
   getSellerCustomerDetails,
+
+  // Invoice
+  downloadInvoice,
 };

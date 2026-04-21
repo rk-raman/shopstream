@@ -345,6 +345,20 @@ export default function OrderDetailPage() {
             <span>Request Return</span>
           </button>
         )}
+        <button
+          onClick={async () => {
+            try {
+              await orderService.downloadInvoice(orderId);
+              toast.success("Invoice downloaded");
+            } catch (err: any) {
+              toast.error(err.message || "Failed to download invoice");
+            }
+          }}
+          className="inline-flex items-center justify-center space-x-2 px-5 py-2.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors font-medium"
+        >
+          <Download className="w-4 h-4" />
+          <span>Download Invoice</span>
+        </button>
         <button className="inline-flex items-center justify-center space-x-2 px-5 py-2.5 border border-gray-300 rounded hover:bg-gray-50 transition-colors">
           <HelpCircle className="w-4 h-4 text-gray-600" />
           <span className="text-gray-600">Need Help?</span>

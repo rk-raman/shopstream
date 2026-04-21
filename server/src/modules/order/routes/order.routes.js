@@ -92,6 +92,13 @@ router.post(
   orderController.requestReturn
 );
 
+// Download invoice PDF (customer, seller, admin)
+router.get(
+  "/:orderId/invoice",
+  authenticate,
+  orderController.downloadInvoice
+);
+
 // Get order tracking
 router.get(
   "/:orderId/tracking",

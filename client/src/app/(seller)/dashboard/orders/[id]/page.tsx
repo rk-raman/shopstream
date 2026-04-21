@@ -15,6 +15,7 @@ import {
   CheckCircle,
   AlertCircle,
   User,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -206,13 +207,42 @@ export default function SellerOrderDetailPage() {
             Placed on {formatDate(order.createdAt)}
           </p>
         </div>
-        <span
-          className={`inline-block px-4 py-1.5 rounded-full text-sm font-semibold ${
-            STATUS_CONFIG[order.status]?.variant || "bg-gray-100 text-gray-700"
-          }`}
-        >
-          {STATUS_CONFIG[order.status]?.label || order.status}
-        </span>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              try {
+                const endpoint = `/orders/${orderId}/invoice`;
+                const response = await (await import("@/lib/api/axiosSeller")).default.get(endpoint, {
+                  responseType: "blob",
+                });
+                const blob = new Blob([response.data], { type: "application/pdf" });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = `invoice-${order.orderNumber}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+                toast.success("Invoice downloaded");
+              } catch {
+                toast.error("Failed to download invoice");
+              }
+            }}
+          >
+            <Download className="w-4 h-4 mr-1" />
+            Invoice
+          </Button>
+          <span
+            className={`inline-block px-4 py-1.5 rounded-full text-sm font-semibold ${
+              STATUS_CONFIG[order.status]?.variant || "bg-gray-100 text-gray-700"
+            }`}
+          >
+            {STATUS_CONFIG[order.status]?.label || order.status}
+          </span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

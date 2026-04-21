@@ -323,6 +323,10 @@ export const API_ENDPOINTS = {
       url: `/orders/${id}/tracking`,
       method: "GET",
     }),
+    downloadInvoice: (id: string): ApiEndpoint => ({
+      url: `/orders/${id}/invoice`,
+      method: "GET",
+    }),
   },
 
   // Payment endpoints

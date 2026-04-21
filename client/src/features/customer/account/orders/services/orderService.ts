@@ -70,6 +70,28 @@ export const orderService = {
       );
     }
   },
+  // Download invoice PDF
+  downloadInvoice: async (orderId: string): Promise<void> => {
+    try {
+      const endpoint = API_ENDPOINTS.ORDERS.downloadInvoice(orderId);
+      const response = await axiosCustomer.get(endpoint.url, {
+        responseType: "blob",
+      });
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `invoice-${orderId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to download invoice"
+      );
+    }
+  },
 };
 
 export default orderService;
